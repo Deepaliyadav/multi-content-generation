@@ -125,6 +125,20 @@ export default function ContentPane({
     }
   };
 
+  // Built once so either layout can place it: beside the structured data for
+  // the infographic, or beside the script for the reel cover.
+  const visualNode = output.svg ? (
+    <div className="visual-col">
+      <div
+        className={`visual-wrap ${format.id === 'reel' ? 'tall' : ''}`}
+        dangerouslySetInnerHTML={{ __html: output.svg }}
+      />
+      <button className="btn-download" onClick={() => downloadPng(output.svg, format.id)}>
+        ↓ Download PNG
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div className="content-pane">
       <div className="pane-toolbar">
@@ -166,9 +180,10 @@ export default function ContentPane({
           <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
             {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
           </button>
+          {showsCopy && (
+            <span className="edit-hint spacer">Click any text below to edit it directly.</span>
+          )}
         </div>
-
-        {showsCopy && <div className="edit-hint">Click any text below to edit it directly.</div>}
       </div>
 
       {isStale && (
@@ -217,61 +232,42 @@ export default function ContentPane({
         <div className="compare-col">
           {comparing && <div className="compare-label">{format.label}</div>}
 
-          {output.svg && (
-            <div style={{ marginBottom: showsCopy && output.blocks?.length ? 20 : 0 }}>
-              <div
-                className={`visual-wrap ${format.id === 'reel' ? 'tall' : ''}`}
-                dangerouslySetInnerHTML={{ __html: output.svg }}
+          {/* The graphic and the words about it belong side by side — a full-width
+              stack pushed the data a screen below the picture it describes. */}
+          {output.visual?.kind === 'infographic' ? (
+            <div className="visual-split">
+              {visualNode}
+              <div className="visual-meta">
+                <div className="eyebrow" style={{ marginBottom: 4 }}>Structured data behind the graphic</div>
+                <div><b>Title:</b> {output.visual.title}</div>
+                <div>
+                  <b>Visual type:</b>{' '}
+                  {output.visual.chart?.type === 'none'
+                    ? `${(output.visual.stats || []).length} stat tiles`
+                    : `${(output.visual.stats || []).length} stat tiles + ${output.visual.chart?.type} chart`}
+                  {output.visual.chart?.type !== 'none' && output.visual.chart?.series
+                    ? ` (${output.visual.chart.series.map((x) => `${x.label} ${x.value}`).join(', ')})`
+                    : ''}
+                </div>
+                {(output.visual.stats || []).map((s, i) => (
+                  <div key={i}><b>{s.label}:</b> {s.value}{s.note ? ` — ${s.note}` : ''}</div>
+                ))}
+                {output.visual.source && <div><b>Source:</b> {output.visual.source}</div>}
+              </div>
+            </div>
+          ) : (
+            showsCopy && (
+              <FormatPreview
+                format={format}
+                output={output}
+                flag={flag}
+                edit={edit}
+                language={language}
+                publish={publish}
+                voice={voice}
+                visual={visualNode}
               />
-              <div className="btn-row">
-                <button className="btn btn-sm" onClick={() => downloadPng(output.svg, format.id)}>
-                  Download PNG
-                </button>
-                <span className="meter">
-                  {format.id === 'reel' ? '1080 × 1920 cover' : '1080 × 1080 graphic'} · text rendered from the fact ledger
-                </span>
-                {output.backgroundSource && (
-                  <span
-                    className="chip"
-                    title="The backdrop is generated atmosphere, not documentary imagery. All text over it is drawn from the fact ledger."
-                  >
-                    AI backdrop · {output.backgroundSource}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {showsCopy && (
-            <FormatPreview
-              format={format}
-              output={output}
-              flag={flag}
-              edit={edit}
-              language={language}
-              publish={publish}
-              voice={voice}
-            />
-          )}
-
-          {output.visual?.kind === 'infographic' && (
-            <div className="visual-meta">
-              <div className="eyebrow" style={{ marginBottom: 4 }}>Structured data behind the graphic</div>
-              <div><b>Title:</b> {output.visual.title}</div>
-              <div>
-                <b>Visual type:</b>{' '}
-                {output.visual.chart?.type === 'none'
-                  ? `${(output.visual.stats || []).length} stat tiles`
-                  : `${(output.visual.stats || []).length} stat tiles + ${output.visual.chart?.type} chart`}
-                {output.visual.chart?.type !== 'none' && output.visual.chart?.series
-                  ? ` (${output.visual.chart.series.map((x) => `${x.label} ${x.value}`).join(', ')})`
-                  : ''}
-              </div>
-              {(output.visual.stats || []).map((s, i) => (
-                <div key={i}><b>{s.label}:</b> {s.value}{s.note ? ` — ${s.note}` : ''}</div>
-              ))}
-              {output.visual.source && <div><b>Source:</b> {output.visual.source}</div>}
-            </div>
+            )
           )}
         </div>
       </div>

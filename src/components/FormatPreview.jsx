@@ -267,64 +267,67 @@ function CarouselPreview({ output, flag, edit, tall = false, publish }) {
   const captionText = (captionBlock?.lines || []).join('\n\n');
   const hashtags = tagsBlock?.lines || [];
 
-  return (
-    <>
-      <div className="ig-wrap">
-        <div
-          className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(bi, 0) || flag(bi, 1) ? 'stale-slide' : ''}`}
-          style={bg ? { backgroundImage: `url(${bg})` } : undefined}
-        >
-          <div className="ig-copy">
-            <Ed bi={bi} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
-            {slide.lines?.[1] && (
-              <Ed bi={bi} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
-            )}
-          </div>
-          {bg && <span className="ai-mark">AI-generated image</span>}
-        </div>
-
-        <div className="ig-controls">
-          <div className="ig-counter">
-            {slide.label} · {k + 1} of {n}
-          </div>
-          <div className="ig-nav">
-            <button onClick={() => setI((v) => (v - 1 + n) % n)} aria-label="Previous slide">
-              ‹
-            </button>
-            <button onClick={() => setI((v) => (v + 1) % n)} aria-label="Next slide">
-              ›
-            </button>
-          </div>
-          <div className="ig-dots">
-            {slides.map((_, si) => (
-              <span key={si} className={`ig-dot ${si === k ? 'on' : ''}`} />
-            ))}
-          </div>
-          {bg && (
-            <p className="ig-note">
-              Generated illustration for this slide, not documentary photography — every
-              word on top of it comes from the fact ledger.
-            </p>
+  const deck = (
+    <div className="ig-col">
+      <div
+        className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(bi, 0) || flag(bi, 1) ? 'stale-slide' : ''}`}
+        style={bg ? { backgroundImage: `url(${bg})` } : undefined}
+      >
+        <div className="ig-copy">
+          <Ed bi={bi} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
+          {slide.lines?.[1] && (
+            <Ed bi={bi} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
           )}
         </div>
+        {bg && <span className="ai-mark">AI-generated image</span>}
       </div>
 
-      {captionBlock && (
-        <div className="ig-caption">
-          <div className="block-label">Caption</div>
-          <Lines lines={captionBlock.lines} bi={blocks.indexOf(captionBlock)} flag={flag} edit={edit} />
-          {hashtags[0] && (
-            <Ed
-              bi={blocks.indexOf(tagsBlock)}
-              li={0}
-              text={hashtags[0]}
-              flag={flag}
-              edit={edit}
-              className="line mono"
-              style={{ marginTop: 10 }}
-            />
-          )}
+      {/* Under the picture, where a carousel's controls belong — beside it they
+          stranded a column of empty space next to a tall card. */}
+      <div className="ig-controls-row">
+        <div className="ig-nav">
+          <button onClick={() => setI((v) => (v - 1 + n) % n)} aria-label="Previous slide">
+            ‹
+          </button>
+          <button onClick={() => setI((v) => (v + 1) % n)} aria-label="Next slide">
+            ›
+          </button>
         </div>
+        <div className="ig-dots">
+          {slides.map((_, si) => (
+            <span key={si} className={`ig-dot ${si === k ? 'on' : ''}`} />
+          ))}
+        </div>
+        <span className="ig-counter">
+          {slide.label} · {k + 1} of {n}
+        </span>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {captionBlock ? (
+        <div className="visual-split">
+          {deck}
+          <div className="ig-caption">
+            <div className="block-label">Caption</div>
+            <Lines lines={captionBlock.lines} bi={blocks.indexOf(captionBlock)} flag={flag} edit={edit} />
+            {hashtags[0] && (
+              <Ed
+                bi={blocks.indexOf(tagsBlock)}
+                li={0}
+                text={hashtags[0]}
+                flag={flag}
+                edit={edit}
+                className="line mono"
+                style={{ marginTop: 10 }}
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        deck
       )}
 
       {publish && (
@@ -386,12 +389,6 @@ function InstaPostPreview({ output, flag, edit, publish }) {
             style={{ marginTop: 12 }}
           />
         )}
-        {bg && (
-          <p className="ig-note" style={{ maxWidth: 'none', marginTop: 14 }}>
-            Generated illustration, not documentary photography — every word on top of
-            it comes from the fact ledger.
-          </p>
-        )}
         <PublishToInstagram
           publish={publish}
           cards={[{ background: bg, headline: hook?.lines[0] }]}
@@ -410,7 +407,7 @@ function InstaPostPreview({ output, flag, edit, publish }) {
  * on-screen highlights are graphics, not speech — voicing them would give a
  * runtime estimate for words nobody says.
  */
-function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel, fileBase }) {
+function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel, fileBase, visual }) {
   const blocks = output.blocks || [];
   const [readAt, setReadAt] = useState(null);
 
@@ -443,6 +440,9 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
         onProgress={setReadAt}
       />
     )}
+    <div className={visual ? 'visual-split' : ''}>
+    {visual}
+    <div className="script-col">
     <table className="script-table">
       <thead>
         <tr>
@@ -476,6 +476,8 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
         )}
       </tbody>
     </table>
+    </div>
+    </div>
     </>
   );
 }
@@ -538,7 +540,7 @@ function BlocksPreview({ output, flag, edit }) {
 
 /* ── router ───────────────────────────────────────────────────────────── */
 
-export default function FormatPreview({ format, output, flag, edit, language, publish, voice }) {
+export default function FormatPreview({ format, output, flag, edit, language, publish, voice, visual }) {
   const p = { output, flag, edit };
   switch (format.id) {
     case 'translation':
@@ -571,7 +573,7 @@ export default function FormatPreview({ format, output, flag, edit, language, pu
         />
       );
     case 'reel':
-      return <ScriptPreview {...p} cueHeader="Beat" voice={voice} readLabel="voiceover" fileBase="reel-script" />;
+      return <ScriptPreview {...p} cueHeader="Beat" voice={voice} readLabel="voiceover" fileBase="reel-script" visual={visual} />;
     case 'photostory':
       return <PhotostoryPreview {...p} />;
     default:

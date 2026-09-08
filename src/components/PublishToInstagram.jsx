@@ -81,7 +81,6 @@ export default function PublishToInstagram({ publish, cards, caption, hashtags, 
               : ''}{' '}
             It cannot be undone from here.
           </div>
-          <pre className="publish-preview">{[caption, (hashtags || []).join(' ')].filter(Boolean).join('\n\n')}</pre>
           <div className="btn-row" style={{ marginTop: 0 }}>
             <button className="btn btn-sm btn-primary" onClick={send}>
               Yes — post it now

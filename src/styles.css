@@ -899,16 +899,10 @@ label.field-label {
   border-radius: 3px;
   padding: 3px 7px;
 }
-.ig-note {
-  max-width: 230px;
-  margin: 0;
-  font-size: 11.5px;
-  font-style: italic;
-  line-height: 1.55;
-  color: var(--text-faint);
-}
+
 .ig-slide.stale-slide { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgba(217, 164, 65, .35); }
-.ig-controls { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+.ig-col { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.ig-controls-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .ig-nav { display: flex; gap: 8px; }
 .ig-nav button {
   width: 34px; height: 34px; border-radius: 50%;
@@ -1022,20 +1016,6 @@ label.field-label {
   font-size: 13px;
   line-height: 1.6;
   color: var(--text);
-}
-.publish-preview {
-  margin: 0;
-  max-height: 180px;
-  overflow-y: auto;
-  background: var(--bg-sunken);
-  border: 1px solid var(--line-soft);
-  border-radius: 2px;
-  padding: 11px 13px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-dim);
-  white-space: pre-wrap;
 }
 .publish-error {
   border-left: 3px solid var(--red);
@@ -1237,12 +1217,7 @@ label.field-label {
 }
 .voice-preview:hover { border-color: var(--teal); color: var(--teal); }
 
-.ig-caption {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line-soft);
-  max-width: 620px;
-}
+.ig-caption { min-width: 0; max-width: 620px; }
 
 /* ── read-along ───────────────────────────────────────────────────────── */
 
@@ -1288,3 +1263,37 @@ label.field-label {
   cursor: not-allowed;
 }
 .ig-mark { flex: none; }
+
+/* ── visual beside its copy ───────────────────────────────────────────── */
+
+/* A graphic and the words about it belong on one screen, not stacked a scroll
+   apart. The visual column sizes to the artwork; the copy takes the rest. */
+.visual-split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .visual-split { grid-template-columns: 1fr; }
+}
+
+.visual-col { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.script-col { min-width: 0; }
+
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--teal);
+  color: var(--bg-sunken);
+  border: none;
+  padding: 9px 16px;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 0 0 3px rgba(79, 168, 160, .16);
+}
+.btn-download:hover { filter: brightness(1.1); }
+.btn-download:active { transform: translateY(1px); }
