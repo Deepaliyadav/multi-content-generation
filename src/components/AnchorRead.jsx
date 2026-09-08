@@ -12,13 +12,15 @@ import VoicePicker, { loadStoredVoice } from './VoicePicker.jsx';
  * The audio is a read-through for the desk: it stays in the browser, and the
  * download is a local save, not a publish.
  */
-export default function AnchorRead({ voice, text, label = 'anchor script', fileBase = 'script' }) {
+export default function AnchorRead({ voice, text, label = 'anchor script', fileBase = 'script', onProgress }) {
   const [state, setState] = useState('idle'); // idle | loading | ready
   const [error, setError] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [chosenVoice, setChosenVoice] = useState(() => loadStoredVoice() || voice?.voiceId || null);
   const audioRef = useRef(null);
   const urlRef = useRef(null);
+  const alignRef = useRef(null);
+  const rafRef = useRef(0);
 
   const chars = text.trim().length;
   // ~150 words a minute is the usual read rate for broadcast copy.
@@ -31,12 +33,52 @@ export default function AnchorRead({ voice, text, label = 'anchor script', fileB
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = null;
     audioRef.current = null;
+    alignRef.current = null;
+    stopFollowing(true);
     setState('idle');
     setPlaying(false);
     setError(null);
   }, [text, chosenVoice]);
 
-  useEffect(() => () => urlRef.current && URL.revokeObjectURL(urlRef.current), []);
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(rafRef.current);
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    },
+    []
+  );
+
+  /**
+   * Walk the character alignment on each frame and report which character is
+   * being spoken. `timeupdate` fires about four times a second — far too coarse
+   * for words to light up in time with the voice — so this rides the frame loop
+   * while audio is playing and stops the moment it is not.
+   */
+  function follow() {
+    const audio = audioRef.current;
+    const align = alignRef.current;
+    if (!audio || !align || !onProgress) return;
+    const t = audio.currentTime;
+    const { starts, scale } = align;
+    // Linear from the last position: playback is monotonic, so this is O(1)
+    // per frame in practice rather than a search over the whole script.
+    let i = align.cursor || 0;
+    if (t < (starts[i] ?? 0)) i = 0;
+    while (i + 1 < starts.length && starts[i + 1] <= t) i += 1;
+    align.cursor = i;
+    onProgress(Math.round(i * scale));
+    rafRef.current = requestAnimationFrame(follow);
+  }
+
+  function startFollowing() {
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(follow);
+  }
+
+  function stopFollowing(clear) {
+    cancelAnimationFrame(rafRef.current);
+    if (clear && onProgress) onProgress(null);
+  }
 
   /** Render once, then reuse — both Play and Download go through this. */
   async function ensureAudio() {
@@ -48,17 +90,29 @@ export default function AnchorRead({ voice, text, label = 'anchor script', fileB
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voiceId: chosenVoice }),
     });
+    const j = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
       setState('idle');
       throw new Error(j.error || `Voice failed (${res.status})`);
     }
-    const url = URL.createObjectURL(await res.blob());
+
+    const blob = await (await fetch(j.audio)).blob();
+    const url = URL.createObjectURL(blob);
     urlRef.current = url;
+
+    // ElevenLabs aligns against the text it was given, so indexes normally map
+    // one-to-one onto our script. If the model normalised the text (numerals
+    // read as words), the lengths diverge — scale rather than highlight the
+    // wrong word.
+    const chars = j.alignment?.characters || [];
+    alignRef.current = chars.length
+      ? { starts: j.alignment.starts, scale: chars.length === text.length ? 1 : text.length / chars.length, cursor: 0 }
+      : null;
+
     const audio = new Audio(url);
-    audio.onplay = () => setPlaying(true);
-    audio.onpause = () => setPlaying(false);
-    audio.onended = () => setPlaying(false);
+    audio.onplay = () => { setPlaying(true); startFollowing(); };
+    audio.onpause = () => { setPlaying(false); stopFollowing(false); };
+    audio.onended = () => { setPlaying(false); stopFollowing(true); };
     audioRef.current = audio;
     setState('ready');
     return url;

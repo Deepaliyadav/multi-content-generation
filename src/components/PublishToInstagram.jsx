@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { renderInstaCard } from '../lib/igcard.js';
 import * as api from '../lib/api.js';
 
+const InstagramMark = () => (
+  <svg className="ig-mark" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="17.6" cy="6.4" r="1.4" fill="currentColor" />
+  </svg>
+);
+
 /**
  * Publishing is the one irreversible thing this app does — everything else is a
  * draft on screen. So it is deliberately two steps: the button arms, and a
@@ -86,7 +94,7 @@ export default function PublishToInstagram({ publish, cards, caption, hashtags, 
       ) : (
         <div className="btn-row" style={{ marginTop: 0 }}>
           <button
-            className="btn btn-sm"
+            className="btn-instagram"
             disabled={!ready || stage === 'sending'}
             title={publish?.hint || undefined}
             onClick={() => setStage('confirm')}
@@ -94,14 +102,14 @@ export default function PublishToInstagram({ publish, cards, caption, hashtags, 
             {stage === 'sending' ? (
               <><span className="spinner" /> Posting…</>
             ) : (
-              `${isStory ? 'Post to Instagram Stories' : 'Post to Instagram'}${n > 1 ? ` · ${n}` : ''}`
+              <>
+                <InstagramMark />
+                {isStory ? 'Post to Instagram Stories' : 'Post to Instagram'}
+                {n > 1 ? ` · ${n}` : ''}
+              </>
             )}
           </button>
-          <span className="meter">
-            {ready
-              ? `Renders ${n === 1 ? 'the card' : 'each card'}, uploads to ${publish?.host || 'storage'}, then posts through Zernio.`
-              : publish?.hint || 'Publishing is not configured.'}
-          </span>
+          {!ready && <span className="meter">{publish?.hint || 'Publishing is not configured.'}</span>}
         </div>
       )}
     </div>

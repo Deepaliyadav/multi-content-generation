@@ -20,6 +20,12 @@ const DEFAULT_MODEL = 'eleven_multilingual_v2';
 // round trip quick.
 const OUTPUT_FORMAT = 'mp3_44100_128';
 
+// The `with-timestamps` variant costs the same and returns character-level
+// alignment alongside the audio. That is what lets the script follow the read
+// word by word instead of guessing from an average speaking rate.
+const ENDPOINT = (voice) =>
+  `${API}/${encodeURIComponent(voice)}/with-timestamps?output_format=${OUTPUT_FORMAT}`;
+
 export const voiceId = () => (process.env.ELEVENLABS_VOICE_ID || '').trim();
 const API_ROOT = 'https://api.elevenlabs.io/v1';
 export const voiceModel = () => (process.env.ELEVENLABS_MODEL || DEFAULT_MODEL).trim();
@@ -102,12 +108,11 @@ export async function speak(text, chosenVoice) {
   const hit = cache.get(key);
   if (hit) return { ...hit, cached: true };
 
-  const res = await fetch(`${API}/${encodeURIComponent(voice)}?output_format=${OUTPUT_FORMAT}`, {
+  const res = await fetch(ENDPOINT(voice), {
     method: 'POST',
     headers: {
       'xi-api-key': process.env.ELEVENLABS_API_KEY,
       'Content-Type': 'application/json',
-      Accept: 'audio/mpeg',
     },
     body: JSON.stringify({
       text: script,
@@ -128,8 +133,21 @@ export async function speak(text, chosenVoice) {
     throw new Error(`ElevenLabs HTTP ${res.status}: ${msg}`);
   }
 
-  const buffer = Buffer.from(await res.arrayBuffer());
-  const entry = { buffer, contentType: 'audio/mpeg' };
+  const data = await res.json();
+  const a = data.alignment || {};
+  const entry = {
+    audioBase64: data.audio_base64 || '',
+    contentType: 'audio/mpeg',
+    // Renamed on the way out: the wire names are a mouthful to thread through
+    // the UI, and the shape is the thing that matters.
+    alignment: a.characters
+      ? {
+          characters: a.characters,
+          starts: a.character_start_times_seconds || [],
+          ends: a.character_end_times_seconds || [],
+        }
+      : null,
+  };
   cache.set(key, entry);
   while (cache.size > MAX_CACHED) cache.delete(cache.keys().next().value);
   return { ...entry, cached: false };

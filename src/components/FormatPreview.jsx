@@ -18,12 +18,29 @@ const DEVANAGARI = /^(hindi|marathi|nepali|sanskrit|bhojpuri)$/i;
  * The text is only committed on blur — React never re-renders mid-keystroke,
  * so the caret cannot jump.
  */
-function Ed({ as: Tag = 'p', bi, li, text, flag, edit, className = '', style }) {
+/**
+ * Split a line into words that keep their original offsets, so a character
+ * position from the voice alignment can be resolved to the exact word.
+ */
+function wordsWithOffsets(text) {
+  const out = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(text))) out.push({ word: m[0], start: m.index, end: m.index + m[0].length });
+  return out;
+}
+
+function Ed({ as: Tag = 'p', bi, li, text, flag, edit, className = '', style, readAt }) {
   const f = flag(bi, li);
-  const editable = typeof edit === 'function' && bi >= 0 && li >= 0;
+  const reading = typeof readAt === 'number';
+  // Editing is suspended while this line is being read: swapping the text for
+  // per-word spans inside a contentEditable would fight the caret, and nobody
+  // types into a line while listening to it.
+  const editable = !reading && typeof edit === 'function' && bi >= 0 && li >= 0;
+
   return (
     <Tag
-      className={`${className} ${f ? 'stale-line' : ''}`.trim()}
+      className={`${className} ${f ? 'stale-line' : ''} ${reading ? 'reading' : ''}`.trim()}
       style={style}
       title={f || undefined}
       contentEditable={editable || undefined}
@@ -37,7 +54,18 @@ function Ed({ as: Tag = 'p', bi, li, text, flag, edit, className = '', style }) 
           : undefined
       }
     >
-      {text}
+      {reading
+        ? wordsWithOffsets(text).map((w, i) => (
+            <span
+              key={i}
+              className={
+                readAt >= w.start && readAt < w.end ? 'word now' : readAt >= w.end ? 'word said' : 'word'
+              }
+            >
+              {w.word}{' '}
+            </span>
+          ))
+        : text}
     </Tag>
   );
 }
@@ -384,16 +412,36 @@ function InstaPostPreview({ output, flag, edit, publish }) {
  */
 function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel, fileBase }) {
   const blocks = output.blocks || [];
-  const spokenText = (
-    spoken ? blocks.filter((b) => spoken.some((k) => String(b.label).toLowerCase().includes(k))) : blocks
-  )
-    .flatMap((b) => b.lines || [])
-    .join(' ');
+  const [readAt, setReadAt] = useState(null);
+
+  // Build the spoken script and remember where each line sits inside it, so a
+  // character offset from the voice can be resolved back to a specific line.
+  const spokenBlocks = spoken
+    ? blocks.filter((b) => spoken.some((k) => String(b.label).toLowerCase().includes(k)))
+    : blocks;
+  const spans = [];
+  let offset = 0;
+  for (const b of spokenBlocks) {
+    const bi = blocks.indexOf(b);
+    (b.lines || []).forEach((l, li) => {
+      spans.push({ bi, li, start: offset, end: offset + l.length });
+      offset += l.length + 1; // the joining space
+    });
+  }
+  const spokenText = spokenBlocks.flatMap((b) => b.lines || []).join(' ');
+
+  const active = readAt == null ? null : spans.find((s) => readAt >= s.start && readAt < s.end);
 
   return (
     <>
     {voice && (
-      <AnchorRead voice={voice} text={spokenText} label={readLabel || 'read'} fileBase={fileBase || 'script'} />
+      <AnchorRead
+        voice={voice}
+        text={spokenText}
+        label={readLabel || 'read'}
+        fileBase={fileBase || 'script'}
+        onProgress={setReadAt}
+      />
     )}
     <table className="script-table">
       <thead>
@@ -405,10 +453,23 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
       <tbody>
         {blocks.flatMap((b, bi) =>
           (b.lines || []).map((l, li) => (
-            <tr key={`${bi}-${li}`} className={flag(bi, li) ? 'stale-row' : ''}>
+            <tr
+              key={`${bi}-${li}`}
+              className={`${flag(bi, li) ? 'stale-row' : ''} ${
+                active && active.bi === bi && active.li === li ? 'reading-row' : ''
+              }`.trim()}
+            >
               <td className="cue">{li === 0 ? b.label : ''}</td>
               <td>
-                <Ed bi={bi} li={li} text={l} flag={flag} edit={edit} className="script-line" />
+                <Ed
+                  bi={bi}
+                  li={li}
+                  text={l}
+                  flag={flag}
+                  edit={edit}
+                  className="script-line"
+                  readAt={active && active.bi === bi && active.li === li ? readAt - active.start : undefined}
+                />
               </td>
             </tr>
           ))

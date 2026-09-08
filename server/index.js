@@ -303,9 +303,11 @@ app.post('/api/voice', async (req, res) => {
     if (!voiceReady()) return res.status(400).json({ error: voiceHint() });
     const { text, voiceId: chosen } = req.body;
     const audio = await speak(text, chosen);
-    res.set('Content-Type', audio.contentType);
-    res.set('X-Cached', audio.cached ? '1' : '0');
-    res.send(audio.buffer);
+    res.json({
+      audio: `data:${audio.contentType};base64,${audio.audioBase64}`,
+      alignment: audio.alignment,
+      cached: !!audio.cached,
+    });
   } catch (e) {
     // A read-through failing is a nuisance, not a server fault — say why in a
     // shape the button can render.

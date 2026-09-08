@@ -125,7 +125,7 @@ export const trendsReady = !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHR
  * trending silently vanishes from the sweep. So the search agent just reports
  * what it found, and a second, tool-free call turns those notes into JSON.
  */
-export async function trendingTopics({ maxUses = 3 } = {}) {
+export async function trendingTopics({ maxUses = 4, seedTopics = [] } = {}) {
   if (!trendsReady)
     throw new Error('Trending topics need ANTHROPIC_API_KEY (the web_search tool runs on the Messages API).');
 
@@ -133,7 +133,6 @@ export async function trendingTopics({ maxUses = 3 } = {}) {
   const msg = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL || 'claude-opus-5',
     max_tokens: 5000,
-    output_config: { effort: 'low' },
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: maxUses }],
     system: `${CLUSTER_SYSTEM}
 
@@ -141,22 +140,36 @@ You have a web search tool. Use it to find what is genuinely trending in India r
     messages: [
       {
         role: 'user',
-        content: `Find the news topics trending in India in the last few hours — X/Twitter trends, heavily discussed stories, and breaking news getting search traffic.
+        content: `Today is ${new Date().toISOString().slice(0, 10)}. Find the India news stories breaking or gaining traction in the last few hours.
 
-Search, then write up the 6-10 distinct topics a national Hindi/English news desk should consider covering. Skip pure entertainment gossip, promotional hashtags and anything you cannot corroborate.
+Search for SPECIFIC events, not for the phrase "trending". General queries like "India top news today" return publisher home pages and are useless — query named events, places, people and incidents${seedTopics.length ? `, and check whether any of these the wires are carrying are spiking: ${seedTopics.slice(0, 8).join('; ')}` : ''}. Refine your queries based on what the first results actually surface.
 
-For each topic write a short paragraph: what the story is, what is actually established, which beat it belongs to, and where you saw it trending. Plain prose is fine — you do not need to format it as data.`,
-      },
+Then write up the distinct topics a national Hindi/English news desk should consider, in plain prose: what the story is, what is actually established, its beat, and where you saw it. Skip entertainment gossip and promotional hashtags.
+
+If your searches only return home pages and site descriptions, say so plainly and report only the topics you could genuinely corroborate — an honest short list beats a padded one. Do not guess.`,      },
     ],
   });
 
   const notes = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
   const searches = msg.content.filter((b) => b.type === 'web_search_tool_result').length;
-  if (!notes.trim()) return { searches, clusters: [] };
+
+  // Server-tool errors arrive as HTTP 200 with an error object where a result
+  // list should be, so a failed search looks like a quiet shrug unless checked.
+  const failures = msg.content
+    .filter((b) => b.type === 'web_search_tool_result' && !Array.isArray(b.content))
+    .map((b) => b.content?.error_code || 'unknown_error');
+  if (failures.length && failures.length === searches)
+    throw new Error(`Every web search failed (${[...new Set(failures)].join(', ')}).`);
+
+  if (!notes.trim()) return { searches, clusters: [], note: 'The search agent returned nothing.' };
 
   const res = await completeJson({
     system: CLUSTER_SYSTEM,
     user: `Turn these research notes into structured entries. Use only what the notes say — add nothing.
+
+Extract EVERY specific, corroborated story the notes contain. Research notes routinely mention that some queries came back empty or that a lead did not stand up — that is normal reporting, not a reason to discard the leads that did stand up. Judge each story on its own.
+
+Return an empty list only if the notes contain no specific story at all. Never manufacture a topic to fill the list, and never drop a good one because the notes also record a failure.
 
 NOTES
 ${notes}
@@ -286,6 +299,17 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
   const checkedAll = [];
 
   /**
+   * Wire headlines give the search agent concrete things to hunt for, which is
+   * the difference between useful results and a page of publisher home pages.
+   * Trending therefore waits for clustering — about ten seconds — but the desk
+   * is already reading the wire list by then, so nothing feels slower.
+   */
+  const seedForTrending = [];
+  let seedReady;
+  const seeded = new Promise((r) => (seedReady = r));
+  if (!useRss) seedReady();
+
+  /**
    * Publish a lane the moment it is ready.
    *
    * The wires cluster in about 13 seconds; the search agent takes far longer.
@@ -308,24 +332,31 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
         out.sources = sources;
         out.swept = items.length;
         onEvent({ type: 'sources', sources, swept: items.length });
-        if (!items.length) return;
+        if (!items.length) return seedReady();
         onEvent({ type: 'phase', phase: `Clustering ${Math.min(items.length, SWEEP_LIMIT)} wire items into distinct stories…` });
         const rssClusters = await clusterItems(items.slice(0, SWEEP_LIMIT));
+        seedForTrending.push(...rssClusters.slice(0, 8).map((c) => c.headline));
+        seedReady();
         onEvent({ type: 'clustered', origin: 'rss', count: rssClusters.length });
         await publish(rssClusters, 'rss');
       })().catch((e) => {
         out.errors.push(`RSS sweep: ${e.message}`);
         onEvent({ type: 'error', scope: 'rss', error: e.message });
-      })
+      }).finally(() => seedReady())
     );
 
   if (useTrending && trendsReady)
     jobs.push(
       (async () => {
-        onEvent({ type: 'phase', phase: 'Searching for what is trending…' });
-        const t = await trendingTopics();
+        await seeded;
+        onEvent({ type: 'phase', phase: 'Searching for what is breaking elsewhere…' });
+        const t = await trendingTopics({ seedTopics: seedForTrending });
         out.searches = t.searches;
         onEvent({ type: 'clustered', origin: 'trending', count: t.clusters.length, searches: t.searches });
+        if (!t.clusters.length)
+          out.errors.push(
+            `Trending: ${t.note || `${t.searches} searches ran but nothing could be corroborated.`}`
+          );
         await publish(t.clusters, 'trending');
       })().catch((e) => {
         out.errors.push(`Trending: ${e.message}`);
