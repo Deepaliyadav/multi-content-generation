@@ -32,34 +32,12 @@ Rules you never break:
 - Write each cluster's headline yourself, in neutral desk English. Never copy a competitor's headline; you are describing what the story is, not republishing it.
 - Never invent detail that is not in the items you were given.`;
 
-export async function clusterItems(items) {
-  const list = items
-    .map((it, i) => `[${i}] (${it.source}) ${it.title}${it.summary ? `\n     ${it.summary.slice(0, 180)}` : ''}`)
-    .join('\n');
-
-  const res = await completeJson({
-    system: CLUSTER_SYSTEM,
-    user: `Here are the newest items from competitor wires. Group them into distinct stories.
-
-${list}
-
-Return the 10-16 most newsworthy distinct clusters, most significant first. Drop listicles, horoscopes, sponsored posts and pure entertainment gossip.
-
-For each cluster:
-- "headline": your own neutral English description of the story, max 14 words.
-- "summary": 1-2 sentences, only what the items actually say.
-- "beat": one of India, World, Politics, Business, Sport, Crime, Health, Tech, Entertainment.
-- "topics": 2-4 short keyword tags (use the language the story is reported in where that is a proper noun).
-- "items": the [index] numbers belonging to this cluster.
-
-Return JSON: {"clusters":[{"headline":"...","summary":"...","beat":"...","topics":["..."],"items":[0,4]}]}`,
-    maxTokens: 6000,
-    effort: 'medium',
-  });
-
+function parseClusters(res, items, offset) {
   return (res.clusters || [])
     .map((c) => {
-      const idx = (c.items || []).filter((i) => Number.isInteger(i) && items[i]);
+      const idx = (c.items || [])
+        .map((i) => i - offset)
+        .filter((i) => Number.isInteger(i) && items[i]);
       return {
         headline: String(c.headline || '').trim(),
         summary: String(c.summary || '').trim(),
@@ -77,10 +55,76 @@ Return JSON: {"clusters":[{"headline":"...","summary":"...","beat":"...","topics
     .filter((c) => c.headline && c.sources.length);
 }
 
+async function clusterBatch(items, offset, want) {
+  const list = items
+    .map((it, i) => `[${i + offset}] (${it.source}) ${it.title}${it.summary ? `\n     ${it.summary.slice(0, 160)}` : ''}`)
+    .join('\n');
+
+  const res = await completeJson({
+    system: CLUSTER_SYSTEM,
+    user: `Here are items from competitor wires. Group them into distinct stories.
+
+${list}
+
+Return the ${want} most newsworthy distinct clusters, most significant first. Drop listicles, horoscopes, sponsored posts and pure entertainment gossip.
+
+For each cluster:
+- "headline": your own neutral English description of the story, max 14 words.
+- "summary": 1-2 sentences, only what the items actually say.
+- "beat": one of India, World, Politics, Business, Sport, Crime, Health, Tech, Entertainment.
+- "topics": 2-4 short keyword tags.
+- "items": the [index] numbers belonging to this cluster, exactly as numbered above.
+
+Return JSON: {"clusters":[{"headline":"...","summary":"...","beat":"...","topics":["..."],"items":[0,4]}]}`,
+    maxTokens: 4000,
+    effort: 'medium',
+  });
+  return parseClusters(res, items, offset);
+}
+
+/**
+ * Cluster the sweep.
+ *
+ * Split across parallel calls rather than one long one: a single request over
+ * the whole sweep was the dominant cost in a 110-second round trip, because the
+ * output is large and generated serially. Two half-size calls overlap.
+ */
+export async function clusterItems(items) {
+  const BATCH = Number(process.env.LSS_CLUSTER_BATCH || 22);
+  const batches = [];
+  for (let i = 0; i < items.length; i += BATCH) batches.push({ slice: items.slice(i, i + BATCH), offset: i });
+
+  const perBatch = Math.max(5, Math.ceil(14 / batches.length));
+  const results = await Promise.all(
+    batches.map((b) =>
+      clusterBatch(b.slice, b.offset, perBatch).catch(() => [])
+    )
+  );
+
+  // Same story can surface in more than one batch; fold those together.
+  const merged = [];
+  for (const c of results.flat()) {
+    const dup = merged.find(
+      (m) => overlapScore(m.headline, c.headline) > 0.55 || overlapScore(m.summary, c.summary) > 0.6
+    );
+    if (dup) dup.sources.push(...c.sources);
+    else merged.push(c);
+  }
+  return merged;
+}
+
 /* ── 2. trending topics via web search ────────────────────────────────── */
 
 export const trendsReady = !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 
+/**
+ * Trending topics, in two passes.
+ *
+ * One pass asking a tool-using agent to both search AND close on a JSON object
+ * is unreliable — it finishes in prose often enough that the parse fails and
+ * trending silently vanishes from the sweep. So the search agent just reports
+ * what it found, and a second, tool-free call turns those notes into JSON.
+ */
 export async function trendingTopics({ maxUses = 4 } = {}) {
   if (!trendsReady)
     throw new Error('Trending topics need ANTHROPIC_API_KEY (the web_search tool runs on the Messages API).');
@@ -88,49 +132,53 @@ export async function trendingTopics({ maxUses = 4 } = {}) {
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL || 'claude-opus-5',
-    max_tokens: 6000,
+    max_tokens: 5000,
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: maxUses }],
     system: `${CLUSTER_SYSTEM}
 
-You have a web search tool. Use it to find what is genuinely trending in India right now on social platforms and search.`,
+You have a web search tool. Use it to find what is genuinely trending in India right now.`,
     messages: [
       {
         role: 'user',
-        content: `Find the news topics trending in India in the last few hours — X/Twitter trends, what is being discussed heavily, and breaking stories getting search traffic.
+        content: `Find the news topics trending in India in the last few hours — X/Twitter trends, heavily discussed stories, and breaking news getting search traffic.
 
-Search, then report 6-10 distinct topics a national Hindi/English news desk should consider covering. Skip pure entertainment gossip, promotional hashtags and anything you cannot corroborate.
+Search, then write up the 6-10 distinct topics a national Hindi/English news desk should consider covering. Skip pure entertainment gossip, promotional hashtags and anything you cannot corroborate.
 
-For each: "headline" (your own neutral English description, max 14 words), "summary" (1-2 sentences of what is actually established), "beat", "topics" (2-4 tags), and "evidence" (max 12 words on where you saw it trending).
-
-End your reply with ONLY this JSON object and nothing after it:
-{"topics":[{"headline":"...","summary":"...","beat":"...","topics":["..."],"evidence":"..."}]}`,
+For each topic write a short paragraph: what the story is, what is actually established, which beat it belongs to, and where you saw it trending. Plain prose is fine — you do not need to format it as data.`,
       },
     ],
   });
 
-  const text = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+  const notes = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
   const searches = msg.content.filter((b) => b.type === 'web_search_tool_result').length;
+  if (!notes.trim()) return { searches, clusters: [] };
 
-  const start = text.lastIndexOf('{"topics"');
-  const raw = start === -1 ? text.slice(text.lastIndexOf('{')) : text.slice(start);
-  let parsed;
-  try {
-    parsed = JSON.parse(raw.slice(0, raw.lastIndexOf('}') + 1));
-  } catch {
-    throw new Error(`Could not parse trending topics from the search agent: ${text.slice(-200)}`);
-  }
+  const res = await completeJson({
+    system: CLUSTER_SYSTEM,
+    user: `Turn these research notes into structured entries. Use only what the notes say — add nothing.
+
+NOTES
+${notes}
+
+Return JSON:
+{"topics":[{"headline":"neutral English description, max 14 words","summary":"1-2 sentences of what is established","beat":"India|World|Politics|Business|Sport|Crime|Health|Tech|Entertainment","topics":["tag"],"evidence":"max 12 words on where it was trending"}]}`,
+    maxTokens: 4000,
+    effort: 'low',
+  });
 
   return {
     searches,
-    clusters: (parsed.topics || []).map((t) => ({
-      headline: String(t.headline || '').trim(),
-      summary: String(t.summary || '').trim(),
-      beat: String(t.beat || 'India').trim(),
-      topics: (t.topics || []).map(String).slice(0, 4),
-      evidence: String(t.evidence || '').trim(),
-      sources: [],
-      origin: 'trending',
-    })).filter((c) => c.headline),
+    clusters: (res.topics || [])
+      .map((t) => ({
+        headline: String(t.headline || '').trim(),
+        summary: String(t.summary || '').trim(),
+        beat: String(t.beat || 'India').trim(),
+        topics: (t.topics || []).map(String).slice(0, 4),
+        evidence: String(t.evidence || '').trim(),
+        sources: [],
+        origin: 'trending',
+      }))
+      .filter((c) => c.headline),
   };
 }
 
@@ -148,21 +196,22 @@ A false "already filed" means the desk misses a story. A false "recommend" waste
 export async function checkFiled(clusters) {
   // Cheap retrieval first: only clusters with a plausible CMS neighbour cost a
   // judgement call. Everything else is unambiguously new.
-  const withCandidates = [];
-  for (const c of clusters) {
-    const query = [c.headline, ...(c.topics || [])].join(' ');
-    let hits = [];
-    try {
-      hits = await cms.search({ query, limit: 5 });
-    } catch (e) {
-      c.cmsError = String(e.message || e);
-    }
-    // Keep the retrieval honest: drop weak lexical noise before the model sees it.
-    c.candidates = (hits || []).filter(
-      (h) => Math.max(overlapScore(c.headline, h.headline), overlapScore(c.summary || '', h.headline)) > 0.12
-    );
-    if (c.candidates.length) withCandidates.push(c);
-  }
+  await Promise.all(
+    clusters.map(async (c) => {
+      const query = [c.headline, ...(c.topics || [])].join(' ');
+      let hits = [];
+      try {
+        hits = await cms.search({ query, limit: 5 });
+      } catch (e) {
+        c.cmsError = String(e.message || e);
+      }
+      // Keep the retrieval honest: drop weak lexical noise before the model sees it.
+      c.candidates = (hits || []).filter(
+        (h) => Math.max(overlapScore(c.headline, h.headline), overlapScore(c.summary || '', h.headline)) > 0.12
+      );
+    })
+  );
+  const withCandidates = clusters.filter((c) => c.candidates?.length);
 
   for (const c of clusters) {
     if (!c.candidates?.length) {
@@ -216,38 +265,67 @@ Return JSON:
 
 /* ── orchestration ────────────────────────────────────────────────────── */
 
-export async function discover({ useRss = true, useTrending = true } = {}) {
+/**
+ * Run a sweep, reporting progress as it goes.
+ *
+ * This streams rather than returning once, because the whole job takes long
+ * enough that a single response times out in the browser and reads as a dead
+ * endpoint. Sources land in about a second, the story list as soon as clustering
+ * finishes, and the filed/unfiled verdicts after that — so the desk sees work
+ * happening instead of a spinner.
+ *
+ * `onEvent` is optional; without it this resolves to the same final object as
+ * before.
+ */
+export async function discover({ useRss = true, useTrending = true } = {}, onEvent = () => {}) {
   const started = Date.now();
   const out = { sources: [], clusters: [], cms: { label: cmsLabel, simulated: cmsSimulated }, errors: [] };
 
+  const jobs = [];
   let rssClusters = [];
   let trendClusters = [];
 
-  const jobs = [];
   if (useRss)
     jobs.push(
       (async () => {
+        onEvent({ type: 'phase', phase: 'Reading competitor wires…' });
         const { sources, items } = await fetchAll(configuredFeeds());
         out.sources = sources;
         out.swept = items.length;
+        onEvent({ type: 'sources', sources, swept: items.length });
         if (!items.length) return;
+        onEvent({ type: 'phase', phase: `Clustering ${Math.min(items.length, SWEEP_LIMIT)} wire items into distinct stories…` });
         rssClusters = await clusterItems(items.slice(0, SWEEP_LIMIT));
-      })().catch((e) => out.errors.push(`RSS sweep: ${e.message}`))
+        onEvent({ type: 'clustered', origin: 'rss', count: rssClusters.length });
+      })().catch((e) => {
+        out.errors.push(`RSS sweep: ${e.message}`);
+        onEvent({ type: 'error', scope: 'rss', error: e.message });
+      })
     );
 
   if (useTrending && trendsReady)
     jobs.push(
       (async () => {
+        onEvent({ type: 'phase', phase: 'Searching for what is trending…' });
         const t = await trendingTopics();
         out.searches = t.searches;
         trendClusters = t.clusters;
-      })().catch((e) => out.errors.push(`Trending: ${e.message}`))
+        onEvent({ type: 'clustered', origin: 'trending', count: t.clusters.length, searches: t.searches });
+      })().catch((e) => {
+        out.errors.push(`Trending: ${e.message}`);
+        onEvent({ type: 'error', scope: 'trending', error: e.message });
+      })
     );
   else if (useTrending) out.errors.push('Trending topics need ANTHROPIC_API_KEY.');
 
   await Promise.all(jobs);
 
   const all = [...rssClusters, ...trendClusters];
+  // Show the desk the list before the CMS verdicts land — the headlines are
+  // useful on their own, and the check is the slower half.
+  onEvent({ type: 'preliminary', clusters: all.map((c) => ({ ...c, status: 'checking' })) });
+
+  onEvent({ type: 'phase', phase: `Checking ${all.length} stories against ${cmsLabel}…` });
   out.clusters = await checkFiled(all);
   out.ms = Date.now() - started;
   out.counts = {
@@ -255,6 +333,7 @@ export async function discover({ useRss = true, useTrending = true } = {}) {
     recommend: out.clusters.filter((c) => c.status === 'recommend').length,
     alreadyFiled: out.clusters.filter((c) => c.status === 'already_filed').length,
   };
+  onEvent({ type: 'done', ...out });
   return out;
 }
 

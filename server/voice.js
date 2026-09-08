@@ -21,6 +21,7 @@ const DEFAULT_MODEL = 'eleven_multilingual_v2';
 const OUTPUT_FORMAT = 'mp3_44100_128';
 
 export const voiceId = () => (process.env.ELEVENLABS_VOICE_ID || '').trim();
+const API_ROOT = 'https://api.elevenlabs.io/v1';
 export const voiceModel = () => (process.env.ELEVENLABS_MODEL || DEFAULT_MODEL).trim();
 export const voiceReady = () => !!((process.env.ELEVENLABS_API_KEY || '').trim() && voiceId());
 
@@ -43,19 +44,65 @@ export const MAX_CHARS = 5000;
 const cache = new Map(); // key -> { buffer, contentType }
 const MAX_CACHED = 24;
 
-export async function speak(text) {
+/**
+ * The full voice roster, trimmed to what the picker needs.
+ *
+ * Cached: the list runs to hundreds of entries, changes rarely, and re-fetching
+ * it every time someone opens the picker would make the panel feel slow for no
+ * reason. The raw records carry ~30 fields each — sending those to the browser
+ * would be most of a megabyte of things nothing reads.
+ */
+let rosterCache = null;
+const ROSTER_TTL_MS = 10 * 60 * 1000;
+
+export async function listVoices() {
   if (!voiceReady()) throw new Error(voiceHint() || 'ElevenLabs is not configured.');
+  if (rosterCache && rosterCache.expires > Date.now()) return rosterCache.voices;
+
+  const res = await fetch(`${API_ROOT}/voices`, {
+    headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY },
+  });
+  if (!res.ok) throw new Error(`ElevenLabs HTTP ${res.status}: could not list voices.`);
+
+  const { voices = [] } = await res.json();
+  const trimmed = voices
+    .map((v) => ({
+      id: v.voice_id,
+      name: v.name,
+      category: v.category,
+      // Enough to search and to tell voices apart; the full blurb is marketing
+      // copy that would triple the payload.
+      description: v.description ? String(v.description).replace(/\s+/g, ' ').trim().slice(0, 160) : null,
+      previewUrl: v.preview_url || null,
+      accent: v.labels?.accent || null,
+      gender: v.labels?.gender || null,
+      age: v.labels?.age || null,
+      useCase: v.labels?.use_case || null,
+      language: v.labels?.language || null,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  rosterCache = { voices: trimmed, expires: Date.now() + ROSTER_TTL_MS };
+  return trimmed;
+}
+
+export async function speak(text, chosenVoice) {
+  if (!voiceReady()) throw new Error(voiceHint() || 'ElevenLabs is not configured.');
+
+  // An explicitly chosen voice wins; the env value is the default, not a lock.
+  const voice = String(chosenVoice || '').trim() || voiceId();
+  if (!/^[A-Za-z0-9]{16,40}$/.test(voice)) throw new Error('That voice id does not look valid.');
 
   const script = String(text ?? '').trim();
   if (!script) throw new Error('Nothing to read.');
   if (script.length > MAX_CHARS)
     throw new Error(`That script is ${script.length} characters; the read-through is capped at ${MAX_CHARS}.`);
 
-  const key = createHash('sha1').update(`${voiceId()}|${voiceModel()}|${speed()}|${script}`).digest('hex');
+  const key = createHash('sha1').update(`${voice}|${voiceModel()}|${speed()}|${script}`).digest('hex');
   const hit = cache.get(key);
   if (hit) return { ...hit, cached: true };
 
-  const res = await fetch(`${API}/${encodeURIComponent(voiceId())}?output_format=${OUTPUT_FORMAT}`, {
+  const res = await fetch(`${API}/${encodeURIComponent(voice)}?output_format=${OUTPUT_FORMAT}`, {
     method: 'POST',
     headers: {
       'xi-api-key': process.env.ELEVENLABS_API_KEY,

@@ -20,7 +20,7 @@ import { scanOutput, iterLines } from './facts.js';
 import { publishToInstagram, composeCaption, zernioReady, zernioHint, MAX_MEDIA_ITEMS, CONTENT_TYPES } from './publish.js';
 import { shelveDataUrl, readShelved, publicBase, publicUrlHint } from './media.js';
 import { uploadSlides, supabaseReady, supabaseHint, supabaseBucket, newRunId } from './storage.js';
-import { speak, voiceReady, voiceHint, voiceId, voiceModel, MAX_CHARS as VOICE_MAX_CHARS } from './voice.js';
+import { speak, listVoices, voiceReady, voiceHint, voiceId, voiceModel, MAX_CHARS as VOICE_MAX_CHARS } from './voice.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -105,10 +105,20 @@ app.get('/api/meta', (_req, res) => {
 /* ── story discovery (competitor wires + trending topics) ─────────────── */
 
 app.post('/api/discover', async (req, res) => {
+  const { useRss = true, useTrending = true } = req.body || {};
+  res.writeHead(200, {
+    'Content-Type': 'application/x-ndjson; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = (o) => res.write(`${JSON.stringify(o)}\n`);
   try {
-    const { useRss = true, useTrending = true } = req.body || {};
-    res.json(await discover({ useRss, useTrending }));
-  } catch (e) { fail(res, e); }
+    await discover({ useRss, useTrending }, send);
+  } catch (e) {
+    send({ type: 'fatal', error: String(e?.message || e) });
+  }
+  res.end();
 });
 
 /** Turn a recommendation into an attributed starter draft the desk can edit. */
@@ -279,11 +289,20 @@ app.post('/api/patch-visual', async (req, res) => {
  * Read a script aloud. Returns mp3 bytes, which the browser plays directly —
  * nothing is stored, uploaded or published.
  */
+app.get('/api/voices', async (_req, res) => {
+  try {
+    if (!voiceReady()) return res.status(400).json({ error: voiceHint() });
+    res.json({ voices: await listVoices(), defaultVoiceId: voiceId() });
+  } catch (e) {
+    res.status(400).json({ error: String(e?.message || e) });
+  }
+});
+
 app.post('/api/voice', async (req, res) => {
   try {
     if (!voiceReady()) return res.status(400).json({ error: voiceHint() });
-    const { text } = req.body;
-    const audio = await speak(text);
+    const { text, voiceId: chosen } = req.body;
+    const audio = await speak(text, chosen);
     res.set('Content-Type', audio.contentType);
     res.set('X-Cached', audio.cached ? '1' : '0');
     res.send(audio.buffer);

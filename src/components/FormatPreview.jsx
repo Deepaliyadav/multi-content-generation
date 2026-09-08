@@ -349,7 +349,7 @@ function InstaPostPreview({ output, flag, edit, publish }) {
  * on-screen highlights are graphics, not speech — voicing them would give a
  * runtime estimate for words nobody says.
  */
-function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel }) {
+function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel, fileBase }) {
   const blocks = output.blocks || [];
   const spokenText = (
     spoken ? blocks.filter((b) => spoken.some((k) => String(b.label).toLowerCase().includes(k))) : blocks
@@ -359,6 +359,9 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
 
   return (
     <>
+    {voice && (
+      <AnchorRead voice={voice} text={spokenText} label={readLabel || 'read'} fileBase={fileBase || 'script'} />
+    )}
     <table className="script-table">
       <thead>
         <tr>
@@ -379,7 +382,6 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
         )}
       </tbody>
     </table>
-    {voice && <AnchorRead voice={voice} text={spokenText} label={readLabel || 'read'} />}
     </>
   );
 }
@@ -462,7 +464,7 @@ export default function FormatPreview({ format, output, flag, edit, language, pu
     case 'insta_post':
       return <InstaPostPreview {...p} publish={publish} />;
     case 'video_script':
-      return <ScriptPreview {...p} cueHeader="Segment" voice={voice} readLabel="voiceover" />;
+      return <ScriptPreview {...p} cueHeader="Segment" voice={voice} readLabel="voiceover" fileBase="video-script" />;
     case 'tv_script':
       return (
         <ScriptPreview
@@ -471,10 +473,11 @@ export default function FormatPreview({ format, output, flag, edit, language, pu
           voice={voice}
           spoken={['anchor']}
           readLabel="anchor script"
+          fileBase="tv-anchor-script"
         />
       );
     case 'reel':
-      return <ScriptPreview {...p} cueHeader="Beat" voice={voice} readLabel="voiceover" />;
+      return <ScriptPreview {...p} cueHeader="Beat" voice={voice} readLabel="voiceover" fileBase="reel-script" />;
     case 'photostory':
       return <PhotostoryPreview {...p} />;
     default:
