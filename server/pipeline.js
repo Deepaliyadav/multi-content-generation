@@ -121,14 +121,14 @@ function shape(raw) {
   };
 }
 
-export async function generateOne({ formatId, story, facts, language }) {
+export async function generateOne({ formatId, story, facts, language, steer }) {
   const f = FORMAT_BY_ID[formatId];
   const started = Date.now();
 
   let out = shape(
     await completeJson({
       system: generateSystem(),
-      user: generatePrompt({ formatId, story, facts, language }),
+      user: generatePrompt({ formatId, story, facts, language, steer }),
       maxTokens: f.maxTokens,
       effort: 'medium',
     })

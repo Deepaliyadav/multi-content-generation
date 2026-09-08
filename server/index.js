@@ -83,7 +83,7 @@ app.post('/api/facts', async (req, res) => {
 /* ── generation (streamed, one JSON object per line) ──────────────────── */
 
 app.post('/api/generate', async (req, res) => {
-  const { story, facts, language, only } = req.body;
+  const { story, facts, language, only, steer } = req.body;
   res.writeHead(200, {
     'Content-Type': 'application/x-ndjson; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
@@ -99,7 +99,7 @@ app.post('/api/generate', async (req, res) => {
     await pooled(ids, CONCURRENCY, async (formatId) => {
       send({ type: 'format:start', formatId, verb: PROGRESS_VERB[formatId] });
       try {
-        const output = await generateOne({ formatId, story, facts, language });
+        const output = await generateOne({ formatId, story, facts, language, steer });
         send({ type: 'format:done', formatId, output });
       } catch (e) {
         send({ type: 'format:error', formatId, error: String(e?.message || e) });

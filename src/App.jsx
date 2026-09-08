@@ -21,7 +21,6 @@ export default function App() {
   const [status, setStatus] = useState({});
   const [times, setTimes] = useState({});
   const [errors, setErrors] = useState({});
-  const [published, setPublished] = useState({});
 
   const [diff, setDiff] = useState(null);
   const [staleReport, setStaleReport] = useState({});
@@ -31,6 +30,7 @@ export default function App() {
   const [metrics, setMetrics] = useState({});
   const [selected, setSelected] = useState(() => new Set());
   const [active, setActive] = useState(null); // the format id in the pane
+  const [ledgerOpen, setLedgerOpen] = useState(false);
   const [phase, setPhase] = useState('Extracting facts');
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
@@ -51,13 +51,11 @@ export default function App() {
   }, []);
 
   const allFormats = meta?.formats || [];
-  const groups = meta?.groups || [];
   /** Only the formats this run actually asked for. */
   const formats = useMemo(
     () => allFormats.filter((f) => selected.has(f.id)),
     [allFormats, selected]
   );
-  const changedLabels = useMemo(() => (diff?.changed || []).map((c) => c.label), [diff]);
   const staleIds = useMemo(
     () => formats.filter((f) => staleReport[f.id]?.stale).map((f) => f.id),
     [formats, staleReport]
@@ -83,7 +81,6 @@ export default function App() {
     setStatus({});
     setTimes({});
     setErrors({});
-    setPublished({});
     setDiff(null);
     setScanning(false);
     setStaleReport({});
@@ -186,10 +183,11 @@ export default function App() {
 
   /* ── targeted regeneration ──────────────────────────────────────────── */
 
-  async function regenerate(formatId) {
+  async function regenerate(formatId, steer = '') {
     const st = staleReport[formatId];
-    // Nothing stale to patch — the toolbar's Regenerate rewrites from scratch.
-    if (!st?.stale) return rewrite(formatId);
+    // A desk note is a request to rewrite, not to patch — so it wins over the
+    // line-level patch path even when the format is also stale.
+    if (steer.trim() || !st?.stale) return rewrite(formatId, steer);
 
     setBusy(formatId);
     setError(null);
@@ -238,20 +236,19 @@ export default function App() {
   }
 
   /** A plain rewrite of one format against the current ledger. */
-  async function rewrite(formatId) {
+  async function rewrite(formatId, steer = '') {
     if (!facts.length) return;
     setBusy(formatId);
     setError(null);
     setErrors((e) => ({ ...e, [formatId]: undefined }));
     try {
-      await api.generate({ story, facts, language, only: [formatId] }, (ev) => {
+      await api.generate({ story, facts, language, only: [formatId], steer }, (ev) => {
         if (ev.type === 'format:done') {
           setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
           setTimes((t) => ({ ...t, [ev.formatId]: ev.output.ms }));
           setStatus((s) => ({ ...s, [ev.formatId]: 'done' }));
           setPatches((p) => ({ ...p, [ev.formatId]: null }));
           setVisualBefore((v) => ({ ...v, [ev.formatId]: null }));
-          setPublished((p) => ({ ...p, [ev.formatId]: false }));
         }
         if (ev.type === 'format:error') {
           setErrors((e) => ({ ...e, [ev.formatId]: ev.error }));
@@ -272,13 +269,12 @@ export default function App() {
 
   /* ── render ─────────────────────────────────────────────────────────── */
 
-  const showRail = stage !== 'compose';
+  const showRail = stage === 'working' || (stage === 'review' && ledgerOpen);
   const activeFormat = formats.find((f) => f.id === active) || formats[0] || null;
-  const activeIndex = activeFormat ? formats.findIndex((f) => f.id === activeFormat.id) + 1 : 0;
 
   return (
     <>
-      <Masthead meta={meta} metrics={metrics} />
+      <Masthead metrics={metrics} />
 
       <div className={`frame ${showRail ? 'split' : ''}`}>
         {showRail && (
@@ -455,44 +451,42 @@ export default function App() {
 
               <div className="output-head">
                 <div className="output-title">{story.headline || 'Rundown'}</div>
-                <button className="btn btn-sm" onClick={() => setStage('compose')}>
-                  ← New story
-                </button>
+                <div className="toolbar-actions">
+                  <button className="btn btn-sm" onClick={() => setLedgerOpen((v) => !v)}>
+                    {ledgerOpen ? 'Hide' : 'Show'} fact ledger · {facts.length}
+                  </button>
+                  <button className="btn btn-sm" onClick={() => setStage('compose')}>
+                    ← New story
+                  </button>
+                </div>
               </div>
 
               <div className="output-grid">
                 <FormatRail
                   formats={formats}
-                  groups={groups}
                   active={activeFormat?.id}
                   onSelect={setActive}
                   outputs={outputs}
                   status={status}
-                  times={times}
                   errors={errors}
                   staleReport={staleReport}
-                  published={published}
                 />
                 <ContentPane
                   key={activeFormat?.id}
-                  index={activeIndex}
                   format={activeFormat}
                   output={activeFormat ? outputs[activeFormat.id] : null}
                   error={activeFormat ? errors[activeFormat.id] : null}
                   status={activeFormat ? status[activeFormat.id] : null}
-                  state={activeFormat && published[activeFormat.id] ? 'published' : 'review'}
                   stale={activeFormat ? staleReport[activeFormat.id] : null}
                   patches={activeFormat ? patches[activeFormat.id] : null}
                   visualBefore={activeFormat ? visualBefore[activeFormat.id] : null}
-                  changedLabels={changedLabels}
                   language={language}
                   story={story}
                   busy={busy === activeFormat?.id}
-                  onApprove={() => setPublished((p) => ({ ...p, [activeFormat.id]: true }))}
                   onSave={(blocks) =>
                     setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }))
                   }
-                  onRegenerate={() => regenerate(activeFormat.id)}
+                  onRegenerate={(steer) => regenerate(activeFormat.id, steer)}
                 />
               </div>
             </>

@@ -49,14 +49,19 @@ export function generateSystem() {
 You are producing ONE named output format. Formats on this desk are not interchangeable — a judge will read all thirteen side by side, and any two that read alike is a failure. Obey the format's hard rules exactly, including every count and character limit.`;
 }
 
-export function generatePrompt({ formatId, story, facts, language }) {
+export function generatePrompt({ formatId, story, facts, language, steer }) {
   const f = FORMAT_BY_ID[formatId];
   const rules = f.rules({ language });
+  // A desk note steers tone and emphasis only — it can never license a fact
+  // that is not in the ledger, so it sits below the hard rules, not above them.
+  const note = steer?.trim()
+    ? `\nEDITOR'S NOTE for this rewrite (tone and emphasis only — it does NOT relax any rule above, and no fact outside the ledger may enter):\n${steer.trim()}\n`
+    : '';
   return `FORMAT: ${f.label} — ${f.blurb}
 
 HARD RULES for this format:
 ${rules.map((r, i) => `${i + 1}. ${r}`).join('\n')}
-
+${note}
 STRUCTURE:
 ${f.blockContract}
 

@@ -10,40 +10,65 @@ const indexOfBlock = (blocks, block) => (blocks || []).indexOf(block);
 /** Scripts that read as Devanagari get the Devanagari face and looser leading. */
 const DEVANAGARI = /^(hindi|marathi|nepali|sanskrit|bhojpuri)$/i;
 
-/* Every renderer takes the same `flag(bi, li)` so line-level staleness
-   highlighting survives the move from plain blocks to styled previews. */
+/**
+ * One editable unit of copy. Every renderer goes through this, so click-to-edit
+ * and line-level staleness highlighting behave identically in all of them.
+ * The text is only committed on blur — React never re-renders mid-keystroke,
+ * so the caret cannot jump.
+ */
+function Ed({ as: Tag = 'p', bi, li, text, flag, edit, className = '', style }) {
+  const f = flag(bi, li);
+  const editable = typeof edit === 'function' && bi >= 0 && li >= 0;
+  return (
+    <Tag
+      className={`${className} ${f ? 'stale-line' : ''}`.trim()}
+      style={style}
+      title={f || undefined}
+      contentEditable={editable || undefined}
+      suppressContentEditableWarning={editable || undefined}
+      onBlur={
+        editable
+          ? (e) => {
+              const next = e.currentTarget.textContent.trim();
+              if (next && next !== text) edit(bi, li, next);
+            }
+          : undefined
+      }
+    >
+      {text}
+    </Tag>
+  );
+}
 
-function Lines({ lines, bi, flag, className = 'line' }) {
-  return (lines || []).map((l, li) => {
-    const f = flag(bi, li);
-    return (
-      <p key={li} className={`${className} ${f ? 'stale-line' : ''}`} title={f || undefined}>
-        {l}
-      </p>
-    );
-  });
+function Lines({ lines, bi, flag, edit, className = 'line' }) {
+  return (lines || []).map((l, li) => (
+    <Ed key={li} bi={bi} li={li} text={l} flag={flag} edit={edit} className={className} />
+  ));
 }
 
 /* ── article & translation ────────────────────────────────────────────── */
 
-function ArticlePreview({ output, flag, language }) {
+function ArticlePreview({ output, flag, edit, language }) {
   const blocks = output.blocks || [];
   const head = byLabel(blocks, 'Headline');
   const body = byLabel(blocks, 'Body');
   const hi = DEVANAGARI.test(String(language || ''));
-  const hb = indexOfBlock(blocks, head);
-  const bb = indexOfBlock(blocks, body);
 
   return (
     <div className={`article ${hi ? 'hindi' : ''}`}>
       <div className="kicker">{language ? `${language} edition` : 'Web article'}</div>
       {head && (
-        <h2 className={flag(hb, 0) ? 'stale-line' : ''} title={flag(hb, 0) || undefined}>
-          {head.lines[0]}
-        </h2>
+        <Ed
+          as="h2"
+          bi={indexOfBlock(blocks, head)}
+          li={0}
+          text={head.lines[0]}
+          flag={flag}
+          edit={edit}
+        />
       )}
       <div className="body">
-        <Lines lines={body?.lines} bi={bb} flag={flag} />
+        <Lines lines={body?.lines} bi={indexOfBlock(blocks, body)} flag={flag} edit={edit} />
       </div>
     </div>
   );
@@ -51,33 +76,29 @@ function ArticlePreview({ output, flag, language }) {
 
 /* ── article highlights ───────────────────────────────────────────────── */
 
-function PointsPreview({ output, flag }) {
+function PointsPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const block = byLabel(blocks, 'Key points') || blocks[0];
   const bi = indexOfBlock(blocks, block);
   return (
     <div className="points">
-      {(block?.lines || []).map((l, li) => {
-        const f = flag(bi, li);
-        return (
-          <div key={li} className={`point ${f ? 'stale-line' : ''}`} title={f || undefined}>
-            <span className="dnum">{String(li + 1).padStart(2, '0')}</span>
-            <span>{l}</span>
-          </div>
-        );
-      })}
+      {(block?.lines || []).map((l, li) => (
+        <div key={li} className="point">
+          <span className="dnum">{String(li + 1).padStart(2, '0')}</span>
+          <Ed as="span" bi={bi} li={li} text={l} flag={flag} edit={edit} />
+        </div>
+      ))}
     </div>
   );
 }
 
 /* ── X / Twitter ──────────────────────────────────────────────────────── */
 
-function TweetPreview({ output, flag, story }) {
+function TweetPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const post = byLabel(blocks, 'Post') || blocks[0];
   const bi = indexOfBlock(blocks, post);
   const meta = output.meta || {};
-  const f = flag(bi, 0);
   return (
     <>
       <div className="tweet">
@@ -88,9 +109,15 @@ function TweetPreview({ output, flag, story }) {
             <div className="tweet-handle">@rundowndesk · now</div>
           </div>
         </div>
-        <div className={`tweet-text ${f ? 'stale-line' : ''}`} title={f || undefined}>
-          {(post?.lines || []).join('\n')}
-        </div>
+        <Ed
+          as="div"
+          bi={bi}
+          li={0}
+          text={(post?.lines || []).join('\n')}
+          flag={flag}
+          edit={edit}
+          className="tweet-text"
+        />
         <div className="tweet-icons">
           <span>↺ 0</span>
           <span>♡ 0</span>
@@ -98,25 +125,22 @@ function TweetPreview({ output, flag, story }) {
         </div>
       </div>
       {meta.chars != null && (
-        <div className={`charcount ${meta.chars > meta.limit ? 'over' : ''}`}>
+        <div className="charcount" style={meta.chars > meta.limit ? { color: 'var(--red)' } : undefined}>
           {meta.chars}/{meta.limit} characters · +{(meta.total ?? meta.chars) - meta.chars} for the link
         </div>
       )}
-      {story?.headline && <div className="charcount">linking to: {story.headline}</div>}
     </>
   );
 }
 
 /* ── push notification ────────────────────────────────────────────────── */
 
-function PushPreview({ output, flag }) {
+function PushPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const title = byLabel(blocks, 'Title');
   const body = byLabel(blocks, 'Body');
   const meta = output.meta || {};
   const now = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  const ft = flag(indexOfBlock(blocks, title), 0);
-  const fb = flag(indexOfBlock(blocks, body), 0);
   const over = meta.titleChars > 40 || meta.bodyChars > 120;
 
   return (
@@ -129,12 +153,24 @@ function PushPreview({ output, flag }) {
             <span className="notif-app-name">RUNDOWN</span>
             <span className="notif-app-time">now</span>
           </div>
-          <div className={`notif-title ${ft ? 'stale-line' : ''}`} title={ft || undefined}>
-            {title?.lines[0]}
-          </div>
-          <div className={`notif-body ${fb ? 'stale-line' : ''}`} title={fb || undefined}>
-            {body?.lines[0]}
-          </div>
+          <Ed
+            as="div"
+            bi={indexOfBlock(blocks, title)}
+            li={0}
+            text={title?.lines[0]}
+            flag={flag}
+            edit={edit}
+            className="notif-title"
+          />
+          <Ed
+            as="div"
+            bi={indexOfBlock(blocks, body)}
+            li={0}
+            text={body?.lines[0]}
+            flag={flag}
+            edit={edit}
+            className="notif-body"
+          />
         </div>
       </div>
       {meta.titleChars != null && (
@@ -148,23 +184,28 @@ function PushPreview({ output, flag }) {
 
 /* ── newsletter ───────────────────────────────────────────────────────── */
 
-function NewsletterPreview({ output, flag }) {
+function NewsletterPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const stand = byLabel(blocks, 'Standfirst');
   const blurb = byLabel(blocks, 'Blurb');
   const more = byLabel(blocks, 'Read more');
-  const fs = flag(indexOfBlock(blocks, stand), 0);
 
   return (
     <div className="mail">
       <div className="mail-head">
-        <div className={`mail-subject ${fs ? 'stale-line' : ''}`} title={fs || undefined}>
-          {stand?.lines[0]}
-        </div>
+        <Ed
+          as="div"
+          bi={indexOfBlock(blocks, stand)}
+          li={0}
+          text={stand?.lines[0]}
+          flag={flag}
+          edit={edit}
+          className="mail-subject"
+        />
         <div className="mail-pre">Rundown Daily · to you</div>
       </div>
       <div className="mail-body">
-        <Lines lines={blurb?.lines} bi={indexOfBlock(blocks, blurb)} flag={flag} className="" />
+        <Lines lines={blurb?.lines} bi={indexOfBlock(blocks, blurb)} flag={flag} edit={edit} className="" />
         {more?.lines[0] && <span className="mail-cta">{more.lines[0]} →</span>}
       </div>
     </div>
@@ -173,7 +214,7 @@ function NewsletterPreview({ output, flag }) {
 
 /* ── instagram carousel / story ───────────────────────────────────────── */
 
-function CarouselPreview({ output, flag }) {
+function CarouselPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const [i, setI] = useState(0);
   useEffect(() => setI(0), [output]);
@@ -182,14 +223,14 @@ function CarouselPreview({ output, flag }) {
   if (!n) return null;
   const idx = Math.min(i, n - 1);
   const slide = blocks[idx];
-  const fh = flag(idx, 0);
-  const fc = flag(idx, 1);
 
   return (
     <div className="ig-wrap">
-      <div className={`ig-slide ${fh || fc ? 'stale-slide' : ''}`}>
-        <p className="ig-head">{slide.lines?.[0]}</p>
-        {slide.lines?.[1] && <p className="ig-sub">{slide.lines[1]}</p>}
+      <div className={`ig-slide ${flag(idx, 0) || flag(idx, 1) ? 'stale-slide' : ''}`}>
+        <Ed bi={idx} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
+        {slide.lines?.[1] && (
+          <Ed bi={idx} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
+        )}
       </div>
       <div className="ig-controls">
         <div className="ig-counter">
@@ -215,25 +256,37 @@ function CarouselPreview({ output, flag }) {
 
 /* ── instagram post ───────────────────────────────────────────────────── */
 
-function InstaPostPreview({ output, flag }) {
+function InstaPostPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   const hook = byLabel(blocks, 'Hook');
   const caption = byLabel(blocks, 'Caption');
   const tags = byLabel(blocks, 'Hashtags');
-  const fh = flag(indexOfBlock(blocks, hook), 0);
 
   return (
     <div className="ig-wrap">
-      <div className={`ig-slide ${fh ? 'stale-slide' : ''}`}>
-        <p className="ig-head">{hook?.lines[0]}</p>
+      <div className={`ig-slide ${flag(indexOfBlock(blocks, hook), 0) ? 'stale-slide' : ''}`}>
+        <Ed
+          bi={indexOfBlock(blocks, hook)}
+          li={0}
+          text={hook?.lines[0]}
+          flag={flag}
+          edit={edit}
+          className="ig-head"
+        />
       </div>
       <div style={{ maxWidth: 380, minWidth: 240, flex: 1 }}>
         <div className="block-label">Caption</div>
-        <Lines lines={caption?.lines} bi={indexOfBlock(blocks, caption)} flag={flag} />
+        <Lines lines={caption?.lines} bi={indexOfBlock(blocks, caption)} flag={flag} edit={edit} />
         {tags?.lines[0] && (
-          <p className="line mono" style={{ marginTop: 12 }}>
-            {tags.lines[0]}
-          </p>
+          <Ed
+            bi={indexOfBlock(blocks, tags)}
+            li={0}
+            text={tags.lines[0]}
+            flag={flag}
+            edit={edit}
+            className="line mono"
+            style={{ marginTop: 12 }}
+          />
         )}
       </div>
     </div>
@@ -242,27 +295,26 @@ function InstaPostPreview({ output, flag }) {
 
 /* ── scripts (video / tv / reel) ──────────────────────────────────────── */
 
-function ScriptPreview({ output, flag, cueHeader = 'Cue' }) {
+function ScriptPreview({ output, flag, edit, cueHeader = 'Cue' }) {
   const blocks = output.blocks || [];
   return (
     <table className="script-table">
       <thead>
         <tr>
-          <th style={{ width: 110 }}>{cueHeader}</th>
+          <th style={{ width: 120 }}>{cueHeader}</th>
           <th>Copy</th>
         </tr>
       </thead>
       <tbody>
         {blocks.flatMap((b, bi) =>
-          (b.lines || []).map((l, li) => {
-            const f = flag(bi, li);
-            return (
-              <tr key={`${bi}-${li}`} className={f ? 'stale-row' : ''} title={f || undefined}>
-                <td className="cue">{li === 0 ? b.label : ''}</td>
-                <td>{l}</td>
-              </tr>
-            );
-          })
+          (b.lines || []).map((l, li) => (
+            <tr key={`${bi}-${li}`} className={flag(bi, li) ? 'stale-row' : ''}>
+              <td className="cue">{li === 0 ? b.label : ''}</td>
+              <td>
+                <Ed bi={bi} li={li} text={l} flag={flag} edit={edit} className="script-line" />
+              </td>
+            </tr>
+          ))
         )}
       </tbody>
     </table>
@@ -271,7 +323,7 @@ function ScriptPreview({ output, flag, cueHeader = 'Cue' }) {
 
 /* ── photostory ───────────────────────────────────────────────────────── */
 
-function PhotostoryPreview({ output, flag }) {
+function PhotostoryPreview({ output, flag, edit }) {
   const blocks = output.blocks || [];
   return (
     <table className="script-table">
@@ -282,25 +334,33 @@ function PhotostoryPreview({ output, flag }) {
         </tr>
       </thead>
       <tbody>
-        {blocks.map((b, bi) => {
-          const f0 = flag(bi, 0);
-          const f1 = flag(bi, 1);
-          return (
-            <tr key={bi} className={f0 || f1 ? 'stale-row' : ''}>
-              <td className="time">{String(bi + 1).padStart(2, '0')}</td>
-              <td>
-                <p className="line direction" style={{ marginBottom: 6 }} title={f0 || undefined}>
-                  {b.lines?.[0]}
-                </p>
-                {b.lines?.[1] && (
-                  <p className="line" style={{ margin: 0 }} title={f1 || undefined}>
-                    {b.lines[1]}
-                  </p>
-                )}
-              </td>
-            </tr>
-          );
-        })}
+        {blocks.map((b, bi) => (
+          <tr key={bi} className={flag(bi, 0) || flag(bi, 1) ? 'stale-row' : ''}>
+            <td className="time">{String(bi + 1).padStart(2, '0')}</td>
+            <td>
+              <Ed
+                bi={bi}
+                li={0}
+                text={b.lines?.[0]}
+                flag={flag}
+                edit={edit}
+                className="line direction"
+                style={{ marginBottom: 6 }}
+              />
+              {b.lines?.[1] && (
+                <Ed
+                  bi={bi}
+                  li={1}
+                  text={b.lines[1]}
+                  flag={flag}
+                  edit={edit}
+                  className="line"
+                  style={{ margin: 0 }}
+                />
+              )}
+            </td>
+          </tr>
+        ))}
       </tbody>
     </table>
   );
@@ -308,54 +368,44 @@ function PhotostoryPreview({ output, flag }) {
 
 /* ── generic fallback ─────────────────────────────────────────────────── */
 
-function BlocksPreview({ output, flag, lineClass }) {
+function BlocksPreview({ output, flag, edit }) {
   return (output.blocks || []).map((b, bi) => (
     <div className="block" key={bi}>
       <div className="block-label">{b.label}</div>
-      {(b.lines || []).map((l, li) => {
-        const f = flag(bi, li);
-        return (
-          <p
-            key={li}
-            className={`line ${lineClass ? lineClass(b.label, li) : ''} ${f ? 'stale-line' : ''}`}
-            title={f || undefined}
-          >
-            {l}
-          </p>
-        );
-      })}
+      <Lines lines={b.lines} bi={bi} flag={flag} edit={edit} />
     </div>
   ));
 }
 
 /* ── router ───────────────────────────────────────────────────────────── */
 
-export default function FormatPreview({ format, output, flag, language, story }) {
+export default function FormatPreview({ format, output, flag, edit, language }) {
+  const p = { output, flag, edit };
   switch (format.id) {
     case 'translation':
-      return <ArticlePreview output={output} flag={flag} language={language} />;
+      return <ArticlePreview {...p} language={language} />;
     case 'highlights':
-      return <PointsPreview output={output} flag={flag} />;
+      return <PointsPreview {...p} />;
     case 'twitter':
-      return <TweetPreview output={output} flag={flag} story={story} />;
+      return <TweetPreview {...p} />;
     case 'push':
-      return <PushPreview output={output} flag={flag} />;
+      return <PushPreview {...p} />;
     case 'newsletter':
-      return <NewsletterPreview output={output} flag={flag} />;
+      return <NewsletterPreview {...p} />;
     case 'insta_carousel':
     case 'insta_story':
-      return <CarouselPreview output={output} flag={flag} />;
+      return <CarouselPreview {...p} />;
     case 'insta_post':
-      return <InstaPostPreview output={output} flag={flag} />;
+      return <InstaPostPreview {...p} />;
     case 'video_script':
-      return <ScriptPreview output={output} flag={flag} cueHeader="Segment" />;
+      return <ScriptPreview {...p} cueHeader="Segment" />;
     case 'tv_script':
-      return <ScriptPreview output={output} flag={flag} cueHeader="Cue" />;
+      return <ScriptPreview {...p} cueHeader="Cue" />;
     case 'reel':
-      return <ScriptPreview output={output} flag={flag} cueHeader="Beat" />;
+      return <ScriptPreview {...p} cueHeader="Beat" />;
     case 'photostory':
-      return <PhotostoryPreview output={output} flag={flag} />;
+      return <PhotostoryPreview {...p} />;
     default:
-      return <BlocksPreview output={output} flag={flag} />;
+      return <BlocksPreview {...p} />;
   }
 }

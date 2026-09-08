@@ -2,27 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import DiffView from './DiffView.jsx';
 import FormatPreview from './FormatPreview.jsx';
 
-/* Blocks <-> plain text, so inline editing works for every format. */
-const toText = (blocks) => (blocks || []).map((b) => `## ${b.label}\n${b.lines.join('\n')}`).join('\n\n');
+/* Blocks -> plain text, for the clipboard and the compare view. */
+const toText = (blocks) =>
+  (blocks || []).map((b) => `## ${b.label}\n${b.lines.join('\n')}`).join('\n\n');
 
-function fromText(text) {
-  const blocks = [];
-  let cur = null;
-  for (const raw of text.split('\n')) {
-    const m = /^##\s*(.+)$/.exec(raw.trim());
-    if (m) {
-      cur = { label: m[1].trim(), lines: [] };
-      blocks.push(cur);
-    } else if (raw.trim()) {
-      if (!cur) {
-        cur = { label: 'Text', lines: [] };
-        blocks.push(cur);
-      }
-      cur.lines.push(raw.trim());
-    }
-  }
-  return blocks.filter((b) => b.lines.length);
-}
+const PRESETS = ['Punchier', 'Shorter', 'More formal'];
 
 function downloadPng(svg, name) {
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -50,28 +34,29 @@ function downloadPng(svg, name) {
 
 /**
  * The single content pane the rail drives — one format at a time, rendered the
- * way it will actually be seen, not as a wall of labelled lines.
+ * way it will actually be seen, edited in place, and rewritten with a note to
+ * the desk rather than a form.
  */
 export default function ContentPane({
-  index, format, output, state, stale, patches, visualBefore,
-  changedLabels, onSave, onApprove, onRegenerate, busy, error, language, story, status,
+  format, output, stale, patches, visualBefore,
+  onSave, onRegenerate, busy, error, language, story, status,
 }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [steer, setSteer] = useState('');
   const [copied, setCopied] = useState(false);
+  const [comparing, setComparing] = useState(false);
 
-  // A different format in the pane is a different document — never carry an
-  // open edit or a "copied" flash across.
+  // A different format in the pane is a different document — never carry a
+  // half-typed note, a compare view or a "copied" flash across.
   useEffect(() => {
-    setEditing(false);
+    setSteer('');
     setCopied(false);
+    setComparing(false);
   }, [format?.id]);
 
   const staleKeys = useMemo(
     () => new Map((stale?.staleLines || []).map((l) => [l.key, l.changeLabels])),
     [stale]
   );
-  const changedSet = useMemo(() => new Set(changedLabels || []), [changedLabels]);
 
   /* Returns a tooltip string when the line is stale, else '' — so renderers
      can use it both as a truthiness test and as the title attribute. */
@@ -80,34 +65,40 @@ export default function ContentPane({
     return labels ? `Outdated: ${labels.join(', ')}` : '';
   };
 
+  /** Commit one in-place edit back into the block structure. */
+  const edit = (bi, li, text) => {
+    const blocks = (output.blocks || []).map((b, i) =>
+      i === bi ? { ...b, lines: b.lines.map((l, j) => (j === li ? text : l)) } : b
+    );
+    onSave(blocks);
+  };
+
   if (!format) {
-    return <div className="content-pane"><div className="empty">Pick a format from the rail.</div></div>;
+    return (
+      <div className="content-pane">
+        <div className="empty">Pick a format from the rail.</div>
+      </div>
+    );
   }
 
   if (!output) {
-    const running = status === 'running';
     return (
       <div className="content-pane">
         <div className="pane-toolbar">
           <div className="toolbar-row">
-            <div>
-              <div className="pane-label">
-                {String(index).padStart(2, '0')} · {format.label}
-              </div>
-              <div className="pane-title">{format.blurb}</div>
-            </div>
+            <div className="pane-label">{format.label}</div>
           </div>
         </div>
         {error ? (
           <div className="error-box" style={{ marginTop: 0 }}>
             <b>This format failed.</b> {error}
             <div className="btn-row">
-              <button className="btn btn-sm" disabled={busy} onClick={onRegenerate}>
+              <button className="btn btn-sm" disabled={busy} onClick={() => onRegenerate('')}>
                 Try again
               </button>
             </div>
           </div>
-        ) : running ? (
+        ) : status === 'running' ? (
           <>
             <div className="loading-line">{format.verb || 'Writing'}…</div>
             <div className="ticker-track"><div className="ticker-bar" /></div>
@@ -120,9 +111,8 @@ export default function ContentPane({
   }
 
   const isStale = !!stale?.stale;
-  const meta = output.meta || {};
   // The infographic's text blocks are the graphic's own data, shown in the
-  // structured-data panel instead — so it has no copy to preview.
+  // structured-data panel instead — so it has no copy to preview or edit.
   const showsCopy = format.id !== 'infographic';
 
   const copy = async () => {
@@ -131,7 +121,7 @@ export default function ContentPane({
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      /* clipboard blocked — the Edit view still exposes the raw text */
+      /* clipboard blocked — the compare view still exposes the raw text */
     }
   };
 
@@ -139,100 +129,50 @@ export default function ContentPane({
     <div className="content-pane">
       <div className="pane-toolbar">
         <div className="toolbar-row">
-          <div>
-            <div className="pane-label">
-              {String(index).padStart(2, '0')} · {format.label}
-            </div>
-            <div className="pane-title">{format.blurb}</div>
-          </div>
-
+          <div className="pane-label">{format.label}</div>
           <div className="toolbar-actions">
-            {editing ? (
-              <>
-                <button
-                  className="btn btn-sm btn-ink"
-                  onClick={() => {
-                    onSave(fromText(draft));
-                    setEditing(false);
-                  }}
-                >
-                  Save edit
-                </button>
-                <button className="btn btn-sm" onClick={() => setEditing(false)}>
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <button className={`btn-copy ${copied ? 'copied' : ''}`} onClick={copy}>
-                  {copied ? '✓ copied' : 'Copy'}
-                </button>
-                <button
-                  className="btn btn-sm"
-                  onClick={() => {
-                    setDraft(toText(output.blocks));
-                    setEditing(true);
-                  }}
-                >
-                  Edit
-                </button>
-                <button className="btn btn-sm" disabled={busy} onClick={onRegenerate}>
-                  {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
-                </button>
-                {state !== 'published' ? (
-                  <button className="btn btn-sm btn-ink" onClick={onApprove} disabled={isStale}>
-                    Approve
-                  </button>
-                ) : (
-                  <span className="state-line">
-                    <span className={`state-dot ${isStale ? 'stale' : 'published'}`} />
-                    {isStale ? 'Published · now stale' : 'Published'}
-                  </span>
-                )}
-              </>
-            )}
+            <button
+              className={`btn-copy ${comparing ? 'on' : ''}`}
+              onClick={() => setComparing((v) => !v)}
+            >
+              {comparing ? 'Hide source' : 'Compare with source'}
+            </button>
+            <button className={`btn-copy ${copied ? 'copied' : ''}`} onClick={copy}>
+              {copied ? '✓ copied' : 'Copy text'}
+            </button>
           </div>
         </div>
 
-        <div className="chip-row">
-          <span className="label">Facts used</span>
-          {(output.factUsage || []).length === 0 && <span className="fact-chip">none matched</span>}
-          {(output.factUsage || []).map((u) => (
-            <span
-              key={u.id}
-              className={`fact-chip ${
-                changedSet.has(u.label) ? 'changed' : u.verified ? 'verified' : 'claimed'
-              }`}
-              title={
-                changedSet.has(u.label)
-                  ? 'This fact changed in the source'
-                  : u.verified
-                  ? 'Found verbatim in this output'
-                  : 'Reported by the model — expressed in words or another language'
-              }
-            >
-              {u.label}
-              {!u.verified && ' ~'}
-            </span>
-          ))}
+        <input
+          className="regen-input"
+          value={steer}
+          placeholder="e.g. punchier, shorter, more formal"
+          onChange={(e) => setSteer(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !busy) onRegenerate(steer);
+          }}
+        />
 
-          <span className="spacer" />
-          {format.id === 'video_script' && meta.runtimeSeconds && (
-            <span className="meter">~<b>{meta.runtimeSeconds}</b>s read</span>
-          )}
-          {format.id === 'reel' && meta.words && (
-            <span className="meter">
-              <b>{meta.words}</b> words · ~{Math.round((meta.words / 140) * 60)}s
-            </span>
-          )}
-          {state !== 'published' && !editing && (
-            <span className="state-line"><span className="state-dot" />In review</span>
-          )}
+        <div className="preset-row">
+          {PRESETS.map((p) => (
+            <button
+              key={p}
+              className={`preset-chip ${steer === p ? 'on' : ''}`}
+              onClick={() => setSteer(p)}
+            >
+              {p}
+            </button>
+          ))}
+          <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
+            {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
+          </button>
         </div>
+
+        {showsCopy && <div className="edit-hint">Click any text below to edit it directly.</div>}
       </div>
 
       {isStale && (
-        <div className="banner" style={{ marginTop: 0, marginBottom: 16 }}>
+        <div className="banner" style={{ marginTop: 0, marginBottom: 18 }}>
           <span className="banner-mark">⚠</span>
           <div>
             <h3>Stale — contains an outdated fact</h3>
@@ -247,7 +187,12 @@ export default function ContentPane({
               {stale.method === 'model-located' && ' Located in translated copy.'}
             </p>
             <div className="btn-row">
-              <button className="btn btn-sm btn-primary" style={{ padding: '7px 14px', fontSize: 13 }} disabled={busy} onClick={onRegenerate}>
+              <button
+                className="btn btn-sm btn-primary"
+                style={{ padding: '7px 14px', fontSize: 13 }}
+                disabled={busy}
+                onClick={() => onRegenerate('')}
+              >
                 {busy ? <><span className="spinner" /> Patching…</> : 'Patch this one'}
               </button>
             </div>
@@ -257,10 +202,21 @@ export default function ContentPane({
 
       <DiffView patches={patches} visualBefore={visualBefore} />
 
-      {editing ? (
-        <textarea className="textarea card-edit" value={draft} onChange={(e) => setDraft(e.target.value)} />
-      ) : (
-        <>
+      <div className={comparing ? 'compare-grid' : ''}>
+        {comparing && (
+          <div className="compare-col">
+            <div className="compare-label">Source story</div>
+            <div className="compare-text">
+              <b>{story?.headline}</b>
+              {'\n\n'}
+              {story?.body}
+            </div>
+          </div>
+        )}
+
+        <div className="compare-col">
+          {comparing && <div className="compare-label">{format.label}</div>}
+
           {output.svg && (
             <div style={{ marginBottom: showsCopy && output.blocks?.length ? 20 : 0 }}>
               <div
@@ -291,8 +247,8 @@ export default function ContentPane({
               format={format}
               output={output}
               flag={flag}
+              edit={edit}
               language={language}
-              story={story}
             />
           )}
 
@@ -315,8 +271,8 @@ export default function ContentPane({
               {output.visual.source && <div><b>Source:</b> {output.visual.source}</div>}
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
 
       {!!(output.warnings || []).length && (
         <div className="warn">

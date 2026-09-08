@@ -5,7 +5,7 @@ const DATE_FMT = new Intl.DateTimeFormat('en-GB', {
   year: 'numeric',
 });
 
-export default function Masthead({ meta, metrics }) {
+export default function Masthead({ metrics }) {
   const fmt = (ms) => `${(ms / 1000).toFixed(1)}s`;
   const dateline = DATE_FMT.format(new Date()).toUpperCase();
 
@@ -51,12 +51,6 @@ export default function Masthead({ meta, metrics }) {
                 </small>
               )}
             </div>
-          )}
-          {meta && (
-            <span className="backend-chip">
-              <i>●</i>
-              {meta.backendLabel}
-            </span>
           )}
         </div>
       </div>
