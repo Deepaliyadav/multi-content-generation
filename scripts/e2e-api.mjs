@@ -1,0 +1,170 @@
+/**
+ * End-to-end test of the whole pipeline over HTTP.
+ *
+ * Deliberately UI-independent: it exercises generation, format contracts,
+ * grounding, the stale-detection loop and targeted patching through the API, so
+ * it keeps working across front-end refactors.
+ *
+ *   npm start &
+ *   npm run test:e2e
+ */
+const BASE = process.env.BASE_URL || 'http://localhost:8787';
+let failed = 0;
+const chk = (ok, label, extra = '') => {
+  if (!ok) failed++;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? ` — ${extra}` : ''}`);
+};
+const group = (n) => console.log(`\n── ${n} ──`);
+
+const post = async (p, body) => {
+  const r = await fetch(BASE + p, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || `${p} ${r.status}`);
+  return d;
+};
+
+const meta = await (await fetch(`${BASE}/api/meta`)).json();
+console.log(`\nbackend : ${meta.backendLabel}`);
+console.log(`images  : ${meta.imageProviderLabel}`);
+chk(meta.backendReady, 'model backend is ready');
+
+const sample = meta.samples.find((s) => s.updates?.length) || meta.samples[0];
+const story = { headline: sample.headline, body: sample.body };
+const language = 'Hindi';
+
+group('fact ledger');
+let t = Date.now();
+const { facts } = await post('/api/facts', { story });
+chk(facts.length >= 5, 'atomic facts extracted', `${facts.length} in ${Date.now() - t}ms`);
+chk(facts.every((f) => f.label && f.value), 'every fact has a label and a value');
+chk(facts.filter((f) => f.grounded).length / facts.length >= 0.7, 'most facts trace verbatim to the copy',
+    `${facts.filter((f) => f.grounded).length}/${facts.length}`);
+
+group('generation');
+t = Date.now();
+const outputs = {};
+const errors = {};
+const res = await fetch(`${BASE}/api/generate`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ story, facts, language }),
+});
+const reader = res.body.getReader();
+const dec = new TextDecoder();
+let buf = '';
+for (;;) {
+  const { value, done } = await reader.read();
+  if (done) break;
+  buf += dec.decode(value, { stream: true });
+  const lines = buf.split('\n');
+  buf = lines.pop() ?? '';
+  for (const l of lines) {
+    if (!l.trim()) continue;
+    const ev = JSON.parse(l);
+    if (ev.type === 'format:done') outputs[ev.formatId] = ev.output;
+    if (ev.type === 'format:error') errors[ev.formatId] = ev.error;
+  }
+}
+const genMs = Date.now() - t;
+const ids = meta.formats.map((f) => f.id);
+chk(Object.keys(outputs).length === 13, 'all 13 formats generated',
+    `${Object.keys(outputs).length}/13 in ${(genMs / 1000).toFixed(1)}s${Object.keys(errors).length ? ` · errors: ${JSON.stringify(errors)}` : ''}`);
+
+const warned = ids.filter((i) => outputs[i]?.warnings?.length);
+chk(warned.length === 0, 'no format contract or grounding violations',
+    warned.map((i) => `${i}: ${outputs[i].warnings.join('; ')}`).join(' | ') || 'none');
+
+group('format fidelity');
+const tv = outputs.tv_script;
+const tvLabels = (tv?.blocks || []).map((b) => b.label);
+chk(['Breaking strap', 'Ticker', 'On-screen highlights', 'Anchor script'].every((p) => tvLabels.includes(p)),
+    'TV script has its four labelled parts', tvLabels.join(' / '));
+chk((outputs.photostory?.blocks || []).every((b) => /^Frame \d/.test(b.label)),
+    'photostory is sequential frames', `${outputs.photostory?.blocks?.length} frames`);
+chk((outputs.insta_carousel?.blocks || []).every((b) => /^Slide \d/.test(b.label)),
+    'carousel is slide-structured, distinct from photostory');
+const tweet = (outputs.twitter?.blocks || []).flatMap((b) => b.lines).join(' ');
+chk([...tweet].length <= 257 && !/https?:\/\//.test(tweet), 'tweet fits 280 incl. link room',
+    `${[...tweet].length}/257`);
+const title = outputs.push?.blocks?.find((b) => /title/i.test(b.label))?.lines?.[0] ?? '';
+const pbody = outputs.push?.blocks?.find((b) => /body/i.test(b.label))?.lines?.[0] ?? '';
+chk([...title].length <= 40 && [...pbody].length <= 120, 'push limits enforced',
+    `title ${[...title].length}/40 · body ${[...pbody].length}/120`);
+const text = (o) => (o?.blocks || []).flatMap((b) => b.lines).join(' ');
+chk(text(outputs.insta_story).length < text(outputs.insta_post).length,
+    'insta story is materially shorter than the post',
+    `${text(outputs.insta_story).length} vs ${text(outputs.insta_post).length}`);
+const bodies = ids.map((i) => text(outputs[i]).replace(/\s+/g, ' ').trim()).filter(Boolean);
+chk(new Set(bodies).size === bodies.length, 'no two outputs are the same text');
+
+group('visuals');
+chk(!!outputs.infographic?.svg, 'infographic renders an image');
+chk(!!outputs.reel?.svg, 'reel cover renders an image');
+chk(!outputs.infographic?.backgroundSource, 'infographic is NEVER handed to an image model');
+if (meta.imageProvider) {
+  chk(outputs.reel?.backgroundSource === meta.imageProvider,
+      `reel backdrop generated by ${meta.imageProvider}`, String(outputs.reel?.backgroundSource));
+  chk(outputs.reel.svg.includes('<image'), 'backdrop is embedded in the cover');
+  chk(outputs.reel.svg.includes('AI-GENERATED IMAGE'), 'cover carries a burned-in AI disclosure');
+} else {
+  console.log('skip  no image provider configured');
+}
+
+group('edit propagation');
+const upd = sample.updates?.find((u) => /small/i.test(u.label)) || sample.updates?.[0];
+const story2 = { headline: upd.headline, body: upd.body };
+t = Date.now();
+const { facts: facts2, diff } = await post('/api/rediff', { story: story2, oldFacts: facts });
+chk(diff.changed.length >= 1, 'the edit produced a real fact correction',
+    diff.changed.map((c) => `${c.label}: ${c.oldValue} → ${c.newValue}`).join(' | '));
+chk(!diff.changed.some((c) => c.oldValue === c.newValue), 'no no-op change rows');
+
+const payload = ids.filter((i) => outputs[i]).map((i) => ({
+  formatId: i, blocks: outputs[i].blocks, visual: outputs[i].visual, factsUsed: outputs[i].factsUsed,
+}));
+const scan = await post('/api/scan', { outputs: payload, changes: diff.changed });
+chk(scan.staleCount > 0, 'affected formats are flagged', `${scan.staleCount}/${scan.total}`);
+chk(scan.staleCount < scan.total, 'unaffected formats are NOT flagged',
+    ids.filter((i) => !scan.report[i]?.stale).join(', ') || 'none clean');
+chk(scan.staleLines < scan.totalLines * 0.35, 'flagging is line-precise, not blanket',
+    `${scan.staleLines}/${scan.totalLines} lines in ${(Date.now() - t) / 1000}s`);
+
+group('targeted patch');
+const victim = ids.find((i) => scan.report[i]?.staleLines?.length);
+const before = outputs[victim];
+const { svg: _drop, ...lean } = before;
+const { output: after, patches } = await post('/api/patch', {
+  formatId: victim, output: lean,
+  keys: scan.report[victim].staleLines.map((l) => l.key),
+  changes: diff.changed, facts: facts2, story: story2, language,
+});
+chk(patches.length > 0, `patched ${victim}`, patches.map((p) => `${p.before.slice(0, 30)}… → ${p.after.slice(0, 30)}…`).join(' | '));
+const flat = (o) => (o.blocks || []).flatMap((b) => b.lines);
+const bl = flat(before);
+const al = flat(after);
+chk(bl.length === al.length, 'no lines added or removed by the patch');
+const touched = bl.filter((l, i) => l !== al[i]).length;
+chk(touched === patches.length, 'exactly the flagged lines changed, nothing else',
+    `${touched} changed of ${bl.length}`);
+const rescan = await post('/api/scan', { outputs: [{ formatId: victim, blocks: after.blocks, visual: after.visual, factsUsed: after.factsUsed }], changes: diff.changed });
+chk(!rescan.report[victim]?.stale, 'patched output is no longer stale');
+
+const igStale = scan.report.infographic?.staleVisual;
+if (igStale) {
+  const { svg: _d2, ...igLean } = outputs.infographic;
+  const { output: igAfter } = await post('/api/patch-visual', {
+    formatId: 'infographic', output: igLean, changes: diff.changed, facts: facts2, story: story2, language,
+  });
+  const bs = outputs.infographic.visual.stats.map((s) => `${s.label}=${s.value}`);
+  const as = igAfter.visual.stats.map((s) => `${s.label}=${s.value}`);
+  chk(bs.length === as.length, 'infographic keeps the same stat slots');
+  chk(bs.filter((x, i) => x !== as[i]).length <= diff.changed.length,
+      'only the corrected figures moved', `${bs.filter((x, i) => x !== as[i]).join(', ') || 'none'}`);
+}
+
+console.log(`\n${failed ? `${failed} CHECK(S) FAILED` : 'all API end-to-end checks passed'}`);
+process.exit(failed ? 1 : 0);

@@ -326,10 +326,28 @@ export function renderReelCover(v = {}, opts = {}) {
     parts.push(textBlock(sf, M, y + 78, 34, { fill: '#c9c7c0', lh: 1.35 }));
   }
 
+  // Disclosure, burned into the artwork.
+  //
+  // A UI chip disappears the moment someone exports the PNG and posts it, so the
+  // mark has to live in the image itself.
+  if (bg) {
+    const chipY = H - 268;
+    parts.push(
+      `<rect x="${M}" y="${chipY}" width="316" height="46" rx="3" fill="#000000" fill-opacity="0.55" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2"/>`
+    );
+    parts.push(
+      textBlock(['AI-GENERATED IMAGE'], M + 18, chipY + 31, 21, {
+        fill: '#ffffff',
+        weight: 700,
+        spacing: '1.8',
+      })
+    );
+  }
+
   // Foot rule + mark
   parts.push(`<rect x="${M}" y="${H - 190}" width="120" height="6" fill="${t.accent}"/>`);
   parts.push(
-    textBlock(['REEL COVER · LIVING STORY SYNC'], M, H - 130, 22, {
+    textBlock([bg ? 'REEL COVER · ILLUSTRATIVE, NOT DOCUMENTARY' : 'REEL COVER · LIVING STORY SYNC'], M, H - 130, 22, {
       fill: '#8b8880',
       weight: 700,
       spacing: '2',

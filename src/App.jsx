@@ -4,7 +4,8 @@ import Masthead from './components/Masthead.jsx';
 import Composer from './components/Composer.jsx';
 import FactLedger from './components/FactLedger.jsx';
 import ProgressPanel from './components/ProgressPanel.jsx';
-import OutputCard from './components/OutputCard.jsx';
+import FormatRail from './components/FormatRail.jsx';
+import ContentPane from './components/ContentPane.jsx';
 
 export default function App() {
   const [meta, setMeta] = useState(null);
@@ -28,7 +29,8 @@ export default function App() {
   const [visualBefore, setVisualBefore] = useState({});
 
   const [metrics, setMetrics] = useState({});
-  const [tab, setTab] = useState('article');
+  const [selected, setSelected] = useState(() => new Set());
+  const [active, setActive] = useState(null); // the format id in the pane
   const [phase, setPhase] = useState('Extracting facts');
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
@@ -38,20 +40,40 @@ export default function App() {
   const [sourceDraft, setSourceDraft] = useState({ headline: '', body: '' });
 
   useEffect(() => {
-    api.getMeta().then(setMeta).catch((e) => setError(String(e.message || e)));
+    api
+      .getMeta()
+      .then((m) => {
+        setMeta(m);
+        // Everything is on by default — the desk drops what it doesn't need.
+        setSelected(new Set((m.formats || []).map((f) => f.id)));
+      })
+      .catch((e) => setError(String(e.message || e)));
   }, []);
 
-  const formats = meta?.formats || [];
+  const allFormats = meta?.formats || [];
   const groups = meta?.groups || [];
+  /** Only the formats this run actually asked for. */
+  const formats = useMemo(
+    () => allFormats.filter((f) => selected.has(f.id)),
+    [allFormats, selected]
+  );
   const changedLabels = useMemo(() => (diff?.changed || []).map((c) => c.label), [diff]);
   const staleIds = useMemo(
     () => formats.filter((f) => staleReport[f.id]?.stale).map((f) => f.id),
     [formats, staleReport]
   );
 
+  const toggleFormat = (id) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
   /* ── generate ───────────────────────────────────────────────────────── */
 
   async function runGenerate() {
+    const ids = allFormats.filter((f) => selected.has(f.id)).map((f) => f.id);
     setError(null);
     setStage('working');
     setPhase('Extracting facts');
@@ -68,16 +90,17 @@ export default function App() {
     setPatches({});
     setVisualBefore({});
     setMetrics({});
+    setActive(ids[0] ?? null);
 
     try {
       const { facts: got } = await api.extractFacts(story);
       setFacts(got);
       setExtracting(false);
       setPhase('Writing the formats');
-      setStatus(Object.fromEntries(formats.map((f) => [f.id, 'queued'])));
+      setStatus(Object.fromEntries(ids.map((id) => [id, 'queued'])));
 
       const t0 = performance.now();
-      await api.generate({ story, facts: got, language }, (ev) => {
+      await api.generate({ story, facts: got, language, only: ids }, (ev) => {
         if (ev.type === 'format:start') setStatus((s) => ({ ...s, [ev.formatId]: 'running' }));
         if (ev.type === 'format:done') {
           setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
@@ -88,11 +111,10 @@ export default function App() {
           setErrors((e) => ({ ...e, [ev.formatId]: ev.error }));
           setStatus((s) => ({ ...s, [ev.formatId]: 'error' }));
         }
-        if (ev.type === 'done')
-          setMetrics((m) => ({ ...m, genMs: ev.ms, genCount: formats.length }));
+        if (ev.type === 'done') setMetrics((m) => ({ ...m, genMs: ev.ms, genCount: ids.length }));
         if (ev.type === 'fatal') setError(ev.error);
       });
-      setMetrics((m) => ({ ...m, genMs: m.genMs ?? performance.now() - t0, genCount: formats.length }));
+      setMetrics((m) => ({ ...m, genMs: m.genMs ?? performance.now() - t0, genCount: ids.length }));
       setStage('review');
     } catch (e) {
       setExtracting(false);
@@ -153,7 +175,7 @@ export default function App() {
         totalLines,
       }));
       const firstStale = formats.find((f) => report[f.id]?.stale);
-      if (firstStale) setTab(firstStale.group);
+      if (firstStale) setActive(firstStale.id);
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -166,7 +188,9 @@ export default function App() {
 
   async function regenerate(formatId) {
     const st = staleReport[formatId];
-    if (!st) return;
+    // Nothing stale to patch — the toolbar's Regenerate rewrites from scratch.
+    if (!st?.stale) return rewrite(formatId);
+
     setBusy(formatId);
     setError(null);
     try {
@@ -213,20 +237,50 @@ export default function App() {
     }
   }
 
+  /** A plain rewrite of one format against the current ledger. */
+  async function rewrite(formatId) {
+    if (!facts.length) return;
+    setBusy(formatId);
+    setError(null);
+    setErrors((e) => ({ ...e, [formatId]: undefined }));
+    try {
+      await api.generate({ story, facts, language, only: [formatId] }, (ev) => {
+        if (ev.type === 'format:done') {
+          setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
+          setTimes((t) => ({ ...t, [ev.formatId]: ev.output.ms }));
+          setStatus((s) => ({ ...s, [ev.formatId]: 'done' }));
+          setPatches((p) => ({ ...p, [ev.formatId]: null }));
+          setVisualBefore((v) => ({ ...v, [ev.formatId]: null }));
+          setPublished((p) => ({ ...p, [ev.formatId]: false }));
+        }
+        if (ev.type === 'format:error') {
+          setErrors((e) => ({ ...e, [ev.formatId]: ev.error }));
+          setStatus((s) => ({ ...s, [ev.formatId]: 'error' }));
+        }
+        if (ev.type === 'fatal') setError(ev.error);
+      });
+    } catch (e) {
+      setError(`${formatId}: ${String(e.message || e)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function regenerateAll() {
     for (const id of staleIds) await regenerate(id); // sequential: readable on a projector
   }
 
   /* ── render ─────────────────────────────────────────────────────────── */
 
-  const visibleFormats = formats.filter((f) => f.group === tab);
   const showRail = stage !== 'compose';
+  const activeFormat = formats.find((f) => f.id === active) || formats[0] || null;
+  const activeIndex = activeFormat ? formats.findIndex((f) => f.id === activeFormat.id) + 1 : 0;
 
   return (
     <>
       <Masthead meta={meta} metrics={metrics} />
 
-      <div className={`frame ${showRail ? '' : 'solo'}`}>
+      <div className={`frame ${showRail ? 'split' : ''}`}>
         {showRail && (
           <aside className="rail">
             <FactLedger
@@ -239,16 +293,20 @@ export default function App() {
           </aside>
         )}
 
-        <main>
+        <main style={{ minWidth: 0 }}>
           {meta && !meta.backendReady && (
             <div className="error-box">
               <b>No model backend available.</b> {meta.backendHint}
-              <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--ink-2)' }}>
+              <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--text-dim)' }}>
                 Restart the server after setting one — the app cannot generate until then.
               </div>
             </div>
           )}
-          {error && <div className="error-box"><b>Something went wrong.</b> {error}</div>}
+          {error && (
+            <div className="error-box">
+              <b>Something went wrong.</b> {error}
+            </div>
+          )}
 
           {stage === 'compose' && (
             <Composer
@@ -258,6 +316,11 @@ export default function App() {
               language={language}
               setLanguage={setLanguage}
               busy={busy || (meta && !meta.backendReady)}
+              formats={allFormats}
+              selected={selected}
+              onToggleFormat={toggleFormat}
+              onSelectAll={() => setSelected(new Set(allFormats.map((f) => f.id)))}
+              onSelectNone={() => setSelected(new Set())}
               onLoadSample={(s) => {
                 setStory({ headline: s.headline, body: s.body });
                 setSample(s);
@@ -268,19 +331,23 @@ export default function App() {
 
           {stage === 'working' && (
             <>
-              <section className="panel" style={{ marginBottom: 16 }}>
+              <section className="panel">
                 <div className="panel-head">
+                  <span className="panel-num">03</span>
                   <h2>{phase}</h2>
                   <span className="count">
-                    <span className="spinner" /> &nbsp;working
+                    <span className="spinner" /> working
                   </span>
                 </div>
                 <div className="panel-body">
-                  <p className="hint" style={{ fontSize: 14 }}>
+                  <p className="panel-sub" style={{ margin: 0 }}>
                     {extracting
                       ? 'Facts are extracted before a single word is generated — every format is written against that ledger, and nothing outside it may appear.'
                       : 'Each format is written to its own contract: character ceilings, slide counts and part structures are checked in code, not just requested in the prompt.'}
                   </p>
+                  <div className="ticker-track" style={{ marginTop: 14 }}>
+                    <div className="ticker-bar" />
+                  </div>
                 </div>
               </section>
               {!extracting && (
@@ -290,8 +357,9 @@ export default function App() {
           )}
 
           {sourceOpen && (
-            <section className="panel" style={{ marginBottom: 16, borderColor: 'var(--ink)' }}>
+            <section className="panel" style={{ borderColor: 'var(--gold)' }}>
               <div className="panel-head">
+                <span className="panel-num">↻</span>
                 <h2>Edit source story</h2>
                 <span className="count">the story is developing</span>
               </div>
@@ -318,7 +386,7 @@ export default function App() {
                     <span className="eyebrow" style={{ display: 'block', marginBottom: 7 }}>
                       Or apply a developing update
                     </span>
-                    <div className="btn-row">
+                    <div className="btn-row" style={{ marginTop: 0 }}>
                       {sample.updates.map((u) => (
                         <button
                           key={u.label}
@@ -338,7 +406,7 @@ export default function App() {
                 )}
               </div>
               <div className="card-foot">
-                <button className="btn btn-primary" disabled={busy === 'source'} onClick={applySourceEdit}>
+                <button className="btn btn-ink" disabled={busy === 'source'} onClick={applySourceEdit}>
                   {busy === 'source' ? <><span className="spinner" /> Re-checking…</> : 'Update source & re-check formats'}
                 </button>
                 <button className="btn" onClick={() => setSourceOpen(false)}>Cancel</button>
@@ -375,57 +443,57 @@ export default function App() {
                     </p>
                     {!scanning && !!staleIds.length && (
                       <div className="btn-row">
-                        <button className="btn btn-sm btn-ink" disabled={!!busy} onClick={regenerateAll}>
+                        <button className="btn btn-sm btn-primary" style={{ padding: '7px 14px', fontSize: 13 }} disabled={!!busy} onClick={regenerateAll}>
                           {busy && busy !== 'source' ? <><span className="spinner" /> Patching…</> : `Patch all ${staleIds.length} stale formats`}
                         </button>
-                        <span className="meter">
-                          Patched one at a time so you can watch each before / after.
-                        </span>
+                        <span className="meter">Patched one at a time so you can watch each before / after.</span>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              <nav className="tabs">
-                {groups.map((g) => {
-                  const inGroup = formats.filter((f) => f.group === g.id);
-                  const staleHere = inGroup.filter((f) => staleReport[f.id]?.stale).length;
-                  return (
-                    <button
-                      key={g.id}
-                      className={`tab ${tab === g.id ? 'active' : ''}`}
-                      onClick={() => setTab(g.id)}
-                    >
-                      {g.label}
-                      <span className="n">{inGroup.length}</span>
-                      {!!staleHere && <span className="stale-dot" title={`${staleHere} stale`} />}
-                    </button>
-                  );
-                })}
-              </nav>
+              <div className="output-head">
+                <div className="output-title">{story.headline || 'Rundown'}</div>
+                <button className="btn btn-sm" onClick={() => setStage('compose')}>
+                  ← New story
+                </button>
+              </div>
 
-              <div className="cards">
-                {visibleFormats.map((f) => (
-                  <OutputCard
-                    key={f.id}
-                    index={formats.findIndex((x) => x.id === f.id) + 1}
-                    format={f}
-                    output={outputs[f.id]}
-                    error={errors[f.id]}
-                    state={published[f.id] ? 'published' : 'review'}
-                    stale={staleReport[f.id]}
-                    patches={patches[f.id]}
-                    visualBefore={visualBefore[f.id]}
-                    changedLabels={changedLabels}
-                    busy={busy === f.id}
-                    onApprove={() => setPublished((p) => ({ ...p, [f.id]: true }))}
-                    onSave={(blocks) =>
-                      setOutputs((o) => ({ ...o, [f.id]: { ...o[f.id], blocks } }))
-                    }
-                    onRegenerate={() => regenerate(f.id)}
-                  />
-                ))}
+              <div className="output-grid">
+                <FormatRail
+                  formats={formats}
+                  groups={groups}
+                  active={activeFormat?.id}
+                  onSelect={setActive}
+                  outputs={outputs}
+                  status={status}
+                  times={times}
+                  errors={errors}
+                  staleReport={staleReport}
+                  published={published}
+                />
+                <ContentPane
+                  key={activeFormat?.id}
+                  index={activeIndex}
+                  format={activeFormat}
+                  output={activeFormat ? outputs[activeFormat.id] : null}
+                  error={activeFormat ? errors[activeFormat.id] : null}
+                  status={activeFormat ? status[activeFormat.id] : null}
+                  state={activeFormat && published[activeFormat.id] ? 'published' : 'review'}
+                  stale={activeFormat ? staleReport[activeFormat.id] : null}
+                  patches={activeFormat ? patches[activeFormat.id] : null}
+                  visualBefore={activeFormat ? visualBefore[activeFormat.id] : null}
+                  changedLabels={changedLabels}
+                  language={language}
+                  story={story}
+                  busy={busy === activeFormat?.id}
+                  onApprove={() => setPublished((p) => ({ ...p, [activeFormat.id]: true }))}
+                  onSave={(blocks) =>
+                    setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }))
+                  }
+                  onRegenerate={() => regenerate(activeFormat.id)}
+                />
               </div>
             </>
           )}

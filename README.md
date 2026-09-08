@@ -178,7 +178,21 @@ regeneration deterministic — and because the spec is structured data, it is
 checkable against the fact ledger like any text output. Colours are the validated
 data-visualisation reference palette; single-series charts are directly labelled.
 
-No external image API is required, and none is configured.
+This works with no image API at all. With one configured (`OPENAI_API_KEY` or
+`GEMINI_API_KEY`), the **reel cover additionally gets a generated backdrop**, with
+the kicker, headline and figure still drawn in code over it.
+
+Two deliberate limits, both about not lying with pictures:
+
+- **The infographic is never sent to an image model.** Diffusion models cannot
+  render exact figures — "8 dead" comes back as "B dead" often enough that it
+  would break the one guarantee this tool provides. Its numbers stay code-drawn.
+- **The backdrop defaults to a non-photographic treatment** (`LSS_IMAGE_STYLE`).
+  A photoreal backdrop of a real casualty event is synthetic imagery that looks
+  like documentary evidence of something nobody photographed. `photographic` is
+  available, but you have to ask for it. Either way the cover carries a burned-in
+  **AI-GENERATED IMAGE** mark, so the disclosure survives being exported and
+  posted — a UI badge would not.
 
 ## Grounding
 

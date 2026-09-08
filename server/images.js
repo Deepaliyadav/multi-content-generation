@@ -103,24 +103,47 @@ export const imageProviderLabel = imageProviderId
 /**
  * Build a background prompt from the cover spec.
  *
- * Describes setting and mood only. Never asks for text (models mangle it, and
- * the text is drawn in code afterwards anyway) and never asks for identifiable
- * people or a depiction of the specific event, which would manufacture
- * documentary-looking imagery of something nobody photographed.
+ * Default style is deliberately NON-photographic.
+ *
+ * A photoreal backdrop of a real casualty event is synthetic documentary
+ * imagery of something nobody photographed — a picture that looks like evidence
+ * and is not. Newsrooms get burned by exactly that. So the default asks for an
+ * abstract, obviously-illustrative treatment, and the photoreal mode is an
+ * explicit opt-in via LSS_IMAGE_STYLE=photographic. Either way the rendered
+ * cover carries a visible AI-GENERATED IMAGE mark.
  */
+export const imageStyle = (process.env.LSS_IMAGE_STYLE || 'abstract').toLowerCase();
+
 export function coverPrompt(visual, story) {
   const mood =
     visual?.tone === 'urgent' ? 'tense, high-contrast, deep shadows'
     : visual?.tone === 'somber' ? 'muted, restrained, overcast'
     : 'clean, neutral, calm';
-  return [
-    'Abstract editorial background image for a news video cover.',
-    `Subject matter, for atmosphere only: ${story?.headline || ''}.`,
+
+  const common = [
     `Mood: ${mood}.`,
-    'Wide empty space in the lower two thirds for text overlay.',
-    'Cinematic, desaturated, slightly out of focus.',
+    'Vertical 9:16. Keep the lower two thirds visually quiet and dark for text overlay.',
     'ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions.',
-    'No recognisable faces, no identifiable individuals, no depiction of casualties.',
+  ];
+
+  if (imageStyle === 'photographic') {
+    return [
+      'Abstract editorial background image for a news video cover.',
+      `Subject matter, for atmosphere only: ${story?.headline || ''}.`,
+      ...common,
+      'Cinematic, desaturated, slightly out of focus.',
+      'No recognisable faces, no identifiable individuals, no depiction of casualties.',
+    ].join(' ');
+  }
+
+  // Abstract default: evokes the subject without pretending to document it.
+  return [
+    'Abstract, non-photographic graphic background for a news video cover.',
+    'Style: editorial illustration — flat geometric shapes, coarse halftone and paper grain, torn-paper edges, limited palette.',
+    'It must be obviously an illustration and must NOT resemble a photograph.',
+    `Loose thematic reference only, no literal scene: ${visual?.kicker || 'news'}.`,
+    ...common,
+    'No people, no faces, no vehicles, no buildings, no rubble, no depiction of any real event or its aftermath.',
   ].join(' ');
 }
 

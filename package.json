@@ -11,7 +11,8 @@
     "verify": "node scripts/acceptance.mjs",
     "audit:grounding": "node scripts/grounding-audit.mjs",
     "test:unit": "node scripts/unit.mjs",
-    "test:providers": "node scripts/check-providers.mjs"
+    "test:providers": "node scripts/check-providers.mjs",
+    "test:e2e": "node scripts/e2e-api.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.0",
