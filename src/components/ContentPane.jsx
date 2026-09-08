@@ -122,6 +122,10 @@ function Pane({
   }
 
   const isStale = !!stale?.stale;
+  // Only the translation is a like-for-like rendering of the source, so only it
+  // has something to compare against. Splitting the pane in two for a carousel
+  // or a photo essay just squeezes a layout that is already side by side.
+  const canCompare = format.id === 'translation';
   // The infographic's text blocks are the graphic's own data, shown in the
   // structured-data panel instead — so it has no copy to preview or edit.
   const showsCopy = format.id !== 'infographic';
@@ -158,12 +162,14 @@ function Pane({
         <div className="toolbar-row">
           <div className="pane-label">{format.label}</div>
           <div className="toolbar-actions">
-            <button
-              className={`btn-copy ${comparing ? 'on' : ''}`}
-              onClick={() => setComparing((v) => !v)}
-            >
-              {comparing ? 'Hide source' : 'Compare with source'}
-            </button>
+            {canCompare && (
+              <button
+                className={`btn-copy ${comparing ? 'on' : ''}`}
+                onClick={() => setComparing((v) => !v)}
+              >
+                {comparing ? 'Hide source' : 'Compare with source'}
+              </button>
+            )}
             <button className={`btn-copy ${copied ? 'copied' : ''}`} onClick={copy}>
               {copied ? '✓ copied' : 'Copy text'}
             </button>
@@ -230,8 +236,8 @@ function Pane({
 
       <DiffView patches={patches} visualBefore={visualBefore} />
 
-      <div className={comparing ? 'compare-grid' : ''}>
-        {comparing && (
+      <div className={comparing && canCompare ? 'compare-grid' : ''}>
+        {comparing && canCompare && (
           <div className="compare-col">
             <div className="compare-label">Source story</div>
             <div className="compare-text">
@@ -243,7 +249,7 @@ function Pane({
         )}
 
         <div className="compare-col">
-          {comparing && <div className="compare-label">{format.label}</div>}
+          {comparing && canCompare && <div className="compare-label">{format.label}</div>}
 
           {/* The graphic and the words about it belong side by side — a full-width
               stack pushed the data a screen below the picture it describes. */}

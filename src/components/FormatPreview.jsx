@@ -279,15 +279,25 @@ function CarouselPreview({ output, flag, edit, tall = false, publish }) {
         <button
           className="preview-btn"
           title="Preview this card at full size"
-          onClick={async () => {
-            const src = await renderInstaCard({
-              background: bg,
-              headline: slide.lines?.[0],
-              caption: slide.lines?.[1],
-              shape: tall ? 'story' : 'square',
-            });
-            preview({ src, label: `${slide.label} · ${tall ? '1080 × 1920' : '1080 × 1080'}`, file: `slide_${k}` });
-          }}
+          onClick={() =>
+            preview({
+              count: n,
+              start: k,
+              resolve: async (si) => {
+                const { b: s2 } = slides[si];
+                return {
+                  src: await renderInstaCard({
+                    background: output.backgrounds?.[si] || output.background,
+                    headline: s2.lines?.[0],
+                    caption: s2.lines?.[1],
+                    shape: tall ? 'story' : 'square',
+                  }),
+                  label: `${s2.label} · ${tall ? '1080 × 1920' : '1080 × 1080'}`,
+                  file: `slide_${si + 1}`,
+                };
+              },
+            })
+          }
         >
           ⤢
         </button>
@@ -533,7 +543,17 @@ function PhotostoryPreview({ output, flag, edit }) {
                   <button
                     className="preview-btn"
                     title="Preview this frame at full size"
-                    onClick={() => preview({ src: shot, label: `Frame ${bi + 1}`, file: `frame_${bi + 1}` })}
+                    onClick={() =>
+                      preview({
+                        count: blocks.length,
+                        start: bi,
+                        resolve: (fi) => ({
+                          src: output.backgrounds?.[fi],
+                          label: `Frame ${fi + 1} · ${String(blocks[fi]?.lines?.[0] ?? '').replace(/^\[|\]$/g, '')}`,
+                          file: `frame_${fi + 1}`,
+                        }),
+                      })
+                    }
                   >
                     ⤢
                   </button>

@@ -871,7 +871,9 @@ label.field-label {
 
 /* With a backdrop the slide becomes an image: the copy needs its own ground to
    stay readable whatever the model returned, so a wash sits between the two. */
-.ig-slide.tall { width: 270px; min-height: 480px; }
+.ig-slide.tall { width: 220px; min-height: 391px; padding: 20px; }
+.ig-slide.tall .ig-head { font-size: 16px; }
+.ig-slide.tall .ig-sub { font-size: 11.5px; }
 .ig-slide.has-bg { background-size: cover; background-position: center; border-color: var(--line); }
 .ig-slide.has-bg::before {
   content: '';
@@ -901,7 +903,7 @@ label.field-label {
 }
 
 .ig-slide.stale-slide { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgba(217, 164, 65, .35); }
-.ig-col { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.ig-col { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .ig-controls-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .ig-nav { display: flex; gap: 8px; }
 .ig-nav button {
@@ -1416,3 +1418,40 @@ button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
 .essay-empty { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); font-style: italic; }
 
 .essay-copy { min-width: 0; padding-top: 2px; }
+
+/* Stepping through a set: the arrows sit over the plate, not under it. */
+.preview-body { position: relative; align-items: center; }
+
+.preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-nav:hover { border-color: var(--teal); color: var(--teal); background: rgba(0, 0, 0, .78); }
+.preview-nav.prev { left: 14px; }
+.preview-nav.next { right: 14px; }
+
+.preview-count { color: var(--text-faint); }
+
+.preview-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.preview-foot .ig-dot { border: none; padding: 0; cursor: pointer; }
