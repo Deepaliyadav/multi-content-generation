@@ -40,7 +40,10 @@ export default function PublishToInstagram({ publish, cards, caption, hashtags, 
       <div className="publish-box done">
         <span className="publish-mark">✓</span>
         <div>
-          <b>Posted to Instagram{isStory ? ' Stories' : ''}.</b>{' '}
+          <b>
+            Posted to Instagram{isStory ? ' Stories' : ''}
+            {result?.frames > 1 ? ` — ${result.frames} separate stories` : ''}.
+          </b>{' '}
           {result?.platformPostUrl ? (
             <a href={result.platformPostUrl} target="_blank" rel="noreferrer">
               View the post ↗
@@ -60,8 +63,15 @@ export default function PublishToInstagram({ publish, cards, caption, hashtags, 
       {stage === 'confirm' ? (
         <>
           <div className="publish-warn">
-            This posts {n} {noun} to the live Instagram account
-            {isStory ? ' as a Story' : ''} now. It cannot be undone from here.
+            This posts {n} {noun} to the live Instagram account now.
+            {isStory && n > 1
+              ? ` Instagram has no multi-image story, so this goes out as ${n} consecutive stories.`
+              : isStory
+              ? ' It goes out as a Story.'
+              : n > 1
+              ? ' They go out as one carousel post.'
+              : ''}{' '}
+            It cannot be undone from here.
           </div>
           <pre className="publish-preview">{[caption, (hashtags || []).join(' ')].filter(Boolean).join('\n\n')}</pre>
           <div className="btn-row" style={{ marginTop: 0 }}>

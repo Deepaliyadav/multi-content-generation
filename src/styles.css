@@ -1236,3 +1236,10 @@ label.field-label {
   color: var(--text-dim);
 }
 .voice-preview:hover { border-color: var(--teal); color: var(--teal); }
+
+.ig-caption {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  max-width: 620px;
+}

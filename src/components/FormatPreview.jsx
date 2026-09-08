@@ -221,66 +221,99 @@ function CarouselPreview({ output, flag, edit, tall = false, publish }) {
   const [i, setI] = useState(0);
   useEffect(() => setI(0), [output]);
 
-  const n = blocks.length;
+  // The carousel carries Caption and Hashtags blocks alongside its slides; the
+  // story does not. Keeping each slide's ORIGINAL block index matters — that is
+  // what line-level staleness is keyed on — while the pictures are indexed by
+  // slide order, because copy blocks never got one.
+  const isCopy = (b) => /^(caption|hashtags)$/i.test(String(b.label).trim());
+  const slides = blocks.map((b, bi) => ({ b, bi })).filter(({ b }) => !isCopy(b));
+  const captionBlock = blocks.find((b) => /^caption$/i.test(String(b.label).trim()));
+  const tagsBlock = blocks.find((b) => /^hashtags$/i.test(String(b.label).trim()));
+
+  const n = slides.length;
   if (!n) return null;
-  const idx = Math.min(i, n - 1);
-  const slide = blocks[idx];
-  // Each slide has its own art-directed picture; `background` is the fallback
-  // for a run where only some images came back.
-  const bg = output.backgrounds?.[idx] || output.background;
+  const k = Math.min(i, n - 1);
+  const { b: slide, bi } = slides[k];
+  const bg = output.backgrounds?.[k] || output.background;
+
+  const captionText = (captionBlock?.lines || []).join('\n\n');
+  const hashtags = tagsBlock?.lines || [];
 
   return (
-    <div className="ig-wrap">
-      <div
-        className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(idx, 0) || flag(idx, 1) ? 'stale-slide' : ''}`}
-        style={bg ? { backgroundImage: `url(${bg})` } : undefined}
-      >
-        <div className="ig-copy">
-          <Ed bi={idx} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
-          {slide.lines?.[1] && (
-            <Ed bi={idx} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
+    <>
+      <div className="ig-wrap">
+        <div
+          className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(bi, 0) || flag(bi, 1) ? 'stale-slide' : ''}`}
+          style={bg ? { backgroundImage: `url(${bg})` } : undefined}
+        >
+          <div className="ig-copy">
+            <Ed bi={bi} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
+            {slide.lines?.[1] && (
+              <Ed bi={bi} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
+            )}
+          </div>
+          {bg && <span className="ai-mark">AI-generated image</span>}
+        </div>
+
+        <div className="ig-controls">
+          <div className="ig-counter">
+            {slide.label} · {k + 1} of {n}
+          </div>
+          <div className="ig-nav">
+            <button onClick={() => setI((v) => (v - 1 + n) % n)} aria-label="Previous slide">
+              ‹
+            </button>
+            <button onClick={() => setI((v) => (v + 1) % n)} aria-label="Next slide">
+              ›
+            </button>
+          </div>
+          <div className="ig-dots">
+            {slides.map((_, si) => (
+              <span key={si} className={`ig-dot ${si === k ? 'on' : ''}`} />
+            ))}
+          </div>
+          {bg && (
+            <p className="ig-note">
+              Generated illustration for this slide, not documentary photography — every
+              word on top of it comes from the fact ledger.
+            </p>
           )}
         </div>
-        {bg && <span className="ai-mark">AI-generated image</span>}
       </div>
-      <div className="ig-controls">
-        <div className="ig-counter">
-          {slide.label} · {idx + 1} of {n}
+
+      {captionBlock && (
+        <div className="ig-caption">
+          <div className="block-label">Caption</div>
+          <Lines lines={captionBlock.lines} bi={blocks.indexOf(captionBlock)} flag={flag} edit={edit} />
+          {hashtags[0] && (
+            <Ed
+              bi={blocks.indexOf(tagsBlock)}
+              li={0}
+              text={hashtags[0]}
+              flag={flag}
+              edit={edit}
+              className="line mono"
+              style={{ marginTop: 10 }}
+            />
+          )}
         </div>
-        <div className="ig-nav">
-          <button onClick={() => setI((v) => (v - 1 + n) % n)} aria-label="Previous slide">
-            ‹
-          </button>
-          <button onClick={() => setI((v) => (v + 1) % n)} aria-label="Next slide">
-            ›
-          </button>
-        </div>
-        <div className="ig-dots">
-          {blocks.map((b, bi) => (
-            <span key={bi} className={`ig-dot ${bi === idx ? 'on' : ''}`} />
-          ))}
-        </div>
-        {bg && (
-          <p className="ig-note">
-            Generated illustration for this slide, not documentary photography — every
-            word on top of it comes from the fact ledger.
-          </p>
-        )}
-        {publish && (
-          <PublishToInstagram
-            publish={publish}
-            contentType={tall ? 'story' : 'post'}
-            shape={tall ? 'story' : 'square'}
-            cards={blocks.slice(0, 10).map((b, bi) => ({
-              background: output.backgrounds?.[bi] || output.background,
-              headline: b.lines?.[0],
-              caption: b.lines?.[1],
-            }))}
-            caption={blocks.map((b) => (b.lines || []).join(' ')).join('\n\n')}
-          />
-        )}
-      </div>
-    </div>
+      )}
+
+      {publish && (
+        <PublishToInstagram
+          publish={publish}
+          contentType={tall ? 'story' : 'post'}
+          shape={tall ? 'story' : 'square'}
+          cards={slides.slice(0, 10).map(({ b }, si) => ({
+            background: output.backgrounds?.[si] || output.background,
+            headline: b.lines?.[0],
+            caption: b.lines?.[1],
+          }))}
+          caption={captionText || slides.map(({ b }) => (b.lines || []).join(' ')).join('\n\n')}
+          hashtags={hashtags}
+        />
+      )}
+    </>
   );
 }
 

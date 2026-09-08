@@ -17,6 +17,7 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
   const [useTrending, setUseTrending] = useState(true);
   const [result, setResult] = useState(null);
   const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState(null);
   const [error, setError] = useState(null);
   const [drafting, setDrafting] = useState(null);
   const [filed, setFiled] = useState(() => new Set());
@@ -28,19 +29,61 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
     setRunning(true);
     setError(null);
     setResult(null);
+    setPhase('Starting…');
     try {
       const r = await fetch('/api/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ useRss, useTrending }),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || `Sweep failed (${r.status})`);
-      setResult(data);
+      if (!r.ok || !r.body) {
+        let msg = `Sweep failed (${r.status})`;
+        try {
+          msg = (await r.json()).error || msg;
+        } catch {
+          /* non-JSON error body */
+        }
+        throw new Error(msg);
+      }
+
+      // NDJSON: the sweep is far too slow to arrive as one response, so it
+      // reports as it goes and the list fills in underneath the reader.
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let ev;
+          try {
+            ev = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          if (ev.type === 'phase') setPhase(ev.phase);
+          else if (ev.type === 'sources')
+            setResult((p) => ({ ...(p || {}), sources: ev.sources, swept: ev.swept }));
+          else if (ev.type === 'preliminary' || ev.type === 'checked')
+            // Lanes land at different times, so merge by origin instead of
+            // replacing — otherwise trending wipes the wire list and back again.
+            setResult((p) => {
+              const kept = (p?.clusters || []).filter((c) => c.origin !== ev.origin);
+              return { ...(p || {}), clusters: [...kept, ...ev.clusters] };
+            });
+          else if (ev.type === 'done') setResult((p) => ({ ...ev, clusters: ev.clusters?.length ? ev.clusters : p?.clusters }));
+          else if (ev.type === 'fatal') throw new Error(ev.error);
+        }
+      }
     } catch (e) {
       setError(String(e.message || e));
     } finally {
       setRunning(false);
+      setPhase(null);
     }
   }
 
@@ -79,7 +122,11 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
 
   const clusters = result?.clusters || [];
   const shown = clusters.filter((c) =>
-    filter === 'all' ? true : filter === 'recommend' ? c.status === 'recommend' : c.status === 'already_filed'
+    filter === 'all'
+      ? true
+      : filter === 'recommend'
+      ? c.status === 'recommend' || c.status === 'checking'
+      : c.status === 'already_filed'
   );
 
   return (
@@ -139,9 +186,7 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                 )}
               </button>
               <span className="meter">
-                {running
-                  ? 'Reading the wires, searching what is trending, then checking every story against the CMS…'
-                  : `Checked against ${d?.cmsLabel || 'the CMS'}`}
+                {running ? phase || 'Working…' : `Checked against ${d?.cmsLabel || 'the CMS'}`}
               </span>
             </div>
 
@@ -163,14 +208,14 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
               </div>
             )}
 
-            {result && (
+            {result?.clusters && (
               <>
                 <div className="sweep-stats">
                   <span>
                     <b>{result.swept ?? 0}</b> wire items
                   </span>
                   <span>
-                    <b>{result.counts?.total ?? 0}</b> distinct stories
+                    <b>{result.counts?.total ?? result.clusters?.length ?? 0}</b> distinct stories
                   </span>
                   <span className="good">
                     <b>{result.counts?.recommend ?? 0}</b> to file
@@ -201,12 +246,13 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                 <div className="sweep-list">
                   {shown.map((c, i) => {
                     const idx = clusters.indexOf(c);
+                    const checking = c.status === 'checking';
                     const isFiled = c.status === 'already_filed' || filed.has(idx);
                     return (
-                      <article key={idx} className={`sweep-row ${isFiled ? 'is-filed' : ''}`}>
+                      <article key={idx} className={`sweep-row ${isFiled || checking ? 'is-filed' : ''}`}>
                         <div className="sweep-row-head">
-                          <span className={`chip ${isFiled ? 'done' : 'recommend'}`}>
-                            {isFiled ? 'Already filed' : 'Recommend filing'}
+                          <span className={`chip ${checking ? 'done' : isFiled ? 'done' : 'recommend'}`}>
+                            {checking ? 'Checking CMS…' : isFiled ? 'Already filed' : 'Recommend filing'}
                           </span>
                           <span className="chip">{c.beat}</span>
                           <span className="chip">{c.origin === 'trending' ? 'trending' : 'wire'}</span>

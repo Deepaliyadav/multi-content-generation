@@ -135,8 +135,12 @@ function slideCopy(formatId, output) {
     const text = [hook?.lines?.[0], caption?.lines?.[0]].filter(Boolean).join(' — ');
     return text ? [text] : [];
   }
-  // Carousel and story are one block per slide.
-  return blocks.map((b) => (b.lines || []).join(' — ')).filter(Boolean);
+  // Carousel and story are one block per slide — but the carousel also carries
+  // Caption and Hashtags blocks, which are copy for under the post, not slides.
+  return blocks
+    .filter((b) => !/^(caption|hashtags)$/i.test(String(b.label).trim()))
+    .map((b) => (b.lines || []).join(' — '))
+    .filter(Boolean);
 }
 
 const SOCIAL_BACKDROP_ASPECT = {

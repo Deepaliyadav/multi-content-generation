@@ -95,6 +95,8 @@ export default function AnchorRead({ voice, text, label = 'anchor script', fileB
     <div className="anchor-read">
       {error && <div className="publish-error">{error}</div>}
       <div className="anchor-row">
+        {voice?.ready && <VoicePicker selectedId={chosenVoice} onSelect={setChosenVoice} />}
+
         <button
           className="btn-regen anchor-play"
           disabled={!voice?.ready || state === 'loading'}
@@ -132,8 +134,6 @@ export default function AnchorRead({ voice, text, label = 'anchor script', fileB
         >
           ↓ Download mp3
         </button>
-
-        {voice?.ready && <VoicePicker selectedId={chosenVoice} onSelect={setChosenVoice} />}
 
         <span className="meter">
           {voice?.ready

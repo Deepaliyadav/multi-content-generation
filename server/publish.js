@@ -68,6 +68,19 @@ export async function publishToInstagram({
   if (!CONTENT_TYPES.includes(contentType))
     throw new Error(`Unknown Instagram content type: ${contentType}`);
 
+  // A Story is one image. Instagram has no such thing as a multi-image story
+  // container — a three-card story is three consecutive stories — so sending
+  // three mediaItems in one call publishes only the first and silently drops
+  // the rest. Split them into one call per frame instead, in order, each with
+  // its own idempotency key.
+  if (contentType === 'story' && imageUrls.length > 1) {
+    const posts = [];
+    for (const url of imageUrls.slice(0, MAX_MEDIA_ITEMS)) {
+      posts.push(await publishToInstagram({ content, imageUrls: [url], contentType }));
+    }
+    return { ...posts[0], frames: posts.length, posts };
+  }
+
   const platform = { platform: 'instagram', accountId: zernioAccountId };
   // Feed posts carry no platformSpecificData at all — the key is added only for
   // stories, so the default request stays byte-identical to what already works.
@@ -116,6 +129,7 @@ export async function publishToInstagram({
     platformPostId: ig.platformPostId ?? null,
     platformPostUrl: ig.platformPostUrl ?? null,
     contentType,
+    frames: 1,
     requestId,
   };
 }

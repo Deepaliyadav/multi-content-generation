@@ -141,16 +141,20 @@ export const FORMATS = [
       'Slide 1 must be a scroll-stopping hook.',
       'The LAST slide must be a clear takeaway or call to action.',
       'This is social-hook driven — do not write it as a sequential photo narrative.',
+      'Also write the post caption that sits under the carousel: 2–4 short sentences, plus 4–6 hashtags.',
     ],
     blockContract:
-      'One block per slide: {"label":"Slide 1","lines":[headline, caption]}. 5–7 blocks.',
+      'One block per slide: {"label":"Slide 1","lines":[headline, caption]}, 5–7 slide blocks. THEN two more blocks: {"label":"Caption","lines":[2–4 sentences, one per line]} and {"label":"Hashtags","lines":[1 string of space-separated hashtags]}.',
     validate: (o) => {
       const errs = [];
-      const n = (o.blocks || []).length;
-      if (n < 5 || n > 7) errs.push(`Needs 5–7 slides, got ${n}.`);
-      for (const b of o.blocks || [])
+      const slides = (o.blocks || []).filter((b) => /^slide/i.test(b.label));
+      if (slides.length < 5 || slides.length > 7)
+        errs.push(`Needs 5–7 slides, got ${slides.length}.`);
+      for (const b of slides)
         if ((b.lines || []).length !== 2)
           errs.push(`${b.label} must have exactly 2 lines (headline + caption).`);
+      if (!blockByLabel(o, 'Caption')) errs.push('Missing Caption block.');
+      if (!blockByLabel(o, 'Hashtags')) errs.push('Missing Hashtags block.');
       return errs;
     },
   },

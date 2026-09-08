@@ -10,6 +10,9 @@ const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
  */
 function sizeOf(format, out) {
   const blocks = out.blocks || [];
+  // The carousel's Caption and Hashtags blocks are copy for under the post —
+  // counting them would report nine slides for a seven-slide carousel.
+  const slideBlocks = blocks.filter((b) => !/^(caption|hashtags)$/i.test(String(b.label).trim()));
   const lines = blocks.flatMap((b) => b.lines || []);
   const meta = out.meta || {};
   const allWords = lines.reduce((n, l) => n + words(l), 0);
@@ -22,7 +25,7 @@ function sizeOf(format, out) {
     case 'insta_story':
       return plural(blocks.length, 'card');
     case 'insta_carousel':
-      return plural(blocks.length, 'slide');
+      return plural(slideBlocks.length, 'slide');
     case 'insta_post':
       return plural(allWords, 'word');
     case 'twitter':

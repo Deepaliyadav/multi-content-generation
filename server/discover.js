@@ -125,7 +125,7 @@ export const trendsReady = !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHR
  * trending silently vanishes from the sweep. So the search agent just reports
  * what it found, and a second, tool-free call turns those notes into JSON.
  */
-export async function trendingTopics({ maxUses = 4 } = {}) {
+export async function trendingTopics({ maxUses = 3 } = {}) {
   if (!trendsReady)
     throw new Error('Trending topics need ANTHROPIC_API_KEY (the web_search tool runs on the Messages API).');
 
@@ -133,6 +133,7 @@ export async function trendingTopics({ maxUses = 4 } = {}) {
   const msg = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL || 'claude-opus-5',
     max_tokens: 5000,
+    output_config: { effort: 'low' },
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: maxUses }],
     system: `${CLUSTER_SYSTEM}
 
@@ -282,8 +283,22 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
   const out = { sources: [], clusters: [], cms: { label: cmsLabel, simulated: cmsSimulated }, errors: [] };
 
   const jobs = [];
-  let rssClusters = [];
-  let trendClusters = [];
+  const checkedAll = [];
+
+  /**
+   * Publish a lane the moment it is ready.
+   *
+   * The wires cluster in about 13 seconds; the search agent takes far longer.
+   * Holding the wire stories back until search finishes made the desk stare at
+   * an empty list for a minute and a half for no reason.
+   */
+  const publish = async (clusters, origin) => {
+    if (!clusters.length) return;
+    onEvent({ type: 'preliminary', origin, clusters: clusters.map((c) => ({ ...c, status: 'checking' })) });
+    const checked = await checkFiled(clusters);
+    checkedAll.push(...checked);
+    onEvent({ type: 'checked', origin, clusters: checked });
+  };
 
   if (useRss)
     jobs.push(
@@ -295,8 +310,9 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
         onEvent({ type: 'sources', sources, swept: items.length });
         if (!items.length) return;
         onEvent({ type: 'phase', phase: `Clustering ${Math.min(items.length, SWEEP_LIMIT)} wire items into distinct stories…` });
-        rssClusters = await clusterItems(items.slice(0, SWEEP_LIMIT));
+        const rssClusters = await clusterItems(items.slice(0, SWEEP_LIMIT));
         onEvent({ type: 'clustered', origin: 'rss', count: rssClusters.length });
+        await publish(rssClusters, 'rss');
       })().catch((e) => {
         out.errors.push(`RSS sweep: ${e.message}`);
         onEvent({ type: 'error', scope: 'rss', error: e.message });
@@ -309,8 +325,8 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
         onEvent({ type: 'phase', phase: 'Searching for what is trending…' });
         const t = await trendingTopics();
         out.searches = t.searches;
-        trendClusters = t.clusters;
         onEvent({ type: 'clustered', origin: 'trending', count: t.clusters.length, searches: t.searches });
+        await publish(t.clusters, 'trending');
       })().catch((e) => {
         out.errors.push(`Trending: ${e.message}`);
         onEvent({ type: 'error', scope: 'trending', error: e.message });
@@ -320,13 +336,7 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
 
   await Promise.all(jobs);
 
-  const all = [...rssClusters, ...trendClusters];
-  // Show the desk the list before the CMS verdicts land — the headlines are
-  // useful on their own, and the check is the slower half.
-  onEvent({ type: 'preliminary', clusters: all.map((c) => ({ ...c, status: 'checking' })) });
-
-  onEvent({ type: 'phase', phase: `Checking ${all.length} stories against ${cmsLabel}…` });
-  out.clusters = await checkFiled(all);
+  out.clusters = checkedAll;
   out.ms = Date.now() - started;
   out.counts = {
     total: out.clusters.length,
