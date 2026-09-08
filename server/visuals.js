@@ -256,26 +256,38 @@ const TONES = {
   neutral: { bg: '#0f1114', accent: '#2a78d6', wash: '#12233a' },
 };
 
-export function renderReelCover(v = {}) {
+export function renderReelCover(v = {}, opts = {}) {
   const W = 1080;
   const H = 1920;
   const M = 88;
   const t = TONES[v.tone] || TONES.neutral;
+  const bg = opts.background; // optional generated backdrop (data: URI)
   const parts = [];
+
+  // Over a photographic backdrop the wash has to work harder, or white type on
+  // a bright frame becomes unreadable.
+  const washTop = bg ? 0.55 : 0.95;
+  const washMid = bg ? 0.82 : 1;
+  const washBot = bg ? 0.97 : 1;
 
   parts.push(`<defs>
     <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${t.wash}" stop-opacity="0.95"/>
-      <stop offset="55%" stop-color="${t.bg}" stop-opacity="1"/>
-      <stop offset="100%" stop-color="${t.bg}" stop-opacity="1"/>
+      <stop offset="0%" stop-color="${t.wash}" stop-opacity="${washTop}"/>
+      <stop offset="55%" stop-color="${t.bg}" stop-opacity="${washMid}"/>
+      <stop offset="100%" stop-color="${t.bg}" stop-opacity="${washBot}"/>
     </linearGradient>
   </defs>`);
   parts.push(`<rect width="${W}" height="${H}" fill="${t.bg}"/>`);
+  if (bg)
+    parts.push(
+      `<image href="${bg}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`
+    );
   parts.push(`<rect width="${W}" height="${H}" fill="url(#wash)"/>`);
 
   // Faint desk grid — texture, not decoration.
-  for (let gy = 0; gy < H; gy += 60)
-    parts.push(`<line x1="0" y1="${gy}" x2="${W}" y2="${gy}" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>`);
+  if (!bg)
+    for (let gy = 0; gy < H; gy += 60)
+      parts.push(`<line x1="0" y1="${gy}" x2="${W}" y2="${gy}" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>`);
 
   // Kicker chip
   const kicker = String(v.kicker || 'NEWS').toUpperCase().slice(0, 18);
@@ -331,9 +343,10 @@ function svg(w, h, inner) {
 }
 
 /** Render whichever visual an output carries. Returns an SVG string or null. */
-export function renderVisual(visual) {
+export function renderVisual(visual, opts = {}) {
   if (!visual) return null;
+  // The infographic is never handed to an image model: its figures must be exact.
   if (visual.kind === 'infographic') return renderInfographic(visual);
-  if (visual.kind === 'cover') return renderReelCover(visual);
+  if (visual.kind === 'cover') return renderReelCover(visual, opts);
   return null;
 }

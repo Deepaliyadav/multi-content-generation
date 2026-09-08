@@ -139,11 +139,14 @@ const scan = await page.evaluate(() => ({
   banner: document.querySelector('.banner h3')?.textContent,
   detail: document.querySelector('.banner p')?.textContent,
   metric: document.querySelectorAll('.metric')[1]?.textContent,
-  changed: document.querySelectorAll('.fact.changed').length,
+  // Count only rows carrying an old → new arrow. A dropped fact also gets the
+  // .changed class, and an earlier version of this check passed on one of those
+  // while the scan had in fact found nothing.
+  corrected: document.querySelectorAll('.fact.changed .fact-arrow').length,
 }));
 check(/\d+ of \d+ formats are now stale/.test(scan.banner || ''), 'Stale verdict banner', scan.banner);
 check(/\d+\.\ds/.test(scan.metric || ''), 'Stale-scan timer', scan.metric);
-check(scan.changed >= 1, 'Ledger shows the changed fact as old → new');
+check(scan.corrected >= 1, 'Ledger shows a corrected fact as old → new', `${scan.corrected} corrections`);
 
 const verdicts = [];
 for (let i = 0; i < gen.tabs; i++) {

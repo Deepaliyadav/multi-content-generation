@@ -30,13 +30,40 @@ the masthead.
 | `ANTHROPIC_API_KEY` is set | Anthropic Messages API (`@anthropic-ai/sdk`) | Preferred. Faster, cheaper, 13-way fan-out. |
 | No key | Local Claude Code binary, headless | Zero setup — uses the machine's existing Claude Code login. |
 
+Configuration comes from a `.env` file in the project root, or from real shell
+variables (which always win over the file):
+
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...   # optional but recommended for a live demo
+cp .env.example .env        # then fill in what you need
 ```
 
-Both paths run the same prompts through the same pipeline. Environment overrides:
-`LSS_MODEL` (default `claude-opus-5`), `LSS_BACKEND` (`sdk` | `cli`),
-`LSS_CONCURRENCY`, `PORT`.
+`.env` is gitignored; `.env.example` is committed and lists every supported
+variable. The app runs with none of them set. Values are never logged or sent to
+the browser — the boot banner prints variable *names* only.
+
+Both paths run the same prompts through the same pipeline. Supported variables
+(all optional): `ANTHROPIC_API_KEY`, `LSS_MODEL` (default `claude-opus-5`),
+`LSS_BACKEND` (`sdk` | `cli`), `LSS_CLAUDE_PATH`, `LSS_CONCURRENCY`, `PORT`.
+
+`server/env.js` loads the file and is imported first by `server/llm.js`, which
+reads configuration in its module body — so the file is always parsed before any
+backend decision is made, whichever entry point starts the process.
+
+The server finds the Claude Code binary itself — PATH, the usual install
+locations, then the newest `anthropic.claude-code-*` editor extension. It prints
+the resolved path on boot. If it finds nothing it says so immediately and the UI
+disables **Generate** with the reason, rather than failing on the first click.
+
+**Troubleshooting — `spawn claude ENOENT` / "No model backend available":**
+nothing was found. Either set a key, or point at the binary directly:
+
+```bash
+export LSS_CLAUDE_PATH="$HOME/.vscode/extensions/anthropic.claude-code-<version>-<platform>/resources/native-binary/claude"
+```
+
+Do **not** rely on `CLAUDE_CODE_EXECPATH` — that variable exists only inside a
+running Claude Code session, so a server started from a normal terminal will not
+see it.
 
 ### Verify it
 
@@ -44,6 +71,7 @@ The build ships with the harness used to develop it — worth re-running before 
 live demo.
 
 ```bash
+npm run test:unit           # 40 fast checks — matching, drift guard, backstop, backend resolution
 npm start &
 npm run verify              # 24 end-to-end checks in a real browser
 npm run audit:grounding     # traces every figure in all 13 outputs to the source
@@ -175,9 +203,11 @@ becomes *Published* only when a human clicks Approve.
 
 ```
 scripts/
+  unit.mjs            fast checks for the logic that must be right by construction
   acceptance.mjs      24-check browser run
   grounding-audit.mjs figure-tracing audit
 server/
+  env.js        loads .env before anything reads config
   index.js      Express API + NDJSON streaming
   llm.js        two interchangeable model backends
   formats.js    the 13 format contracts + validators

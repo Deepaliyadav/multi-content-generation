@@ -11,6 +11,7 @@ import {
 } from './prompts.js';
 import { iterLines, setLine, verifyFactUsage, textCarriesValue } from './facts.js';
 import { renderVisual } from './visuals.js';
+import { generateBackground, coverPrompt, imageProviderId } from './images.js';
 
 /* ── fact ledger ──────────────────────────────────────────────────────── */
 
@@ -158,7 +159,17 @@ export async function generateOne({ formatId, story, facts, language }) {
   const { output, enforced } = enforceLimits(formatId, out);
   const finished = { ...output };
   if (f.meta) finished.meta = { ...finished.meta, ...f.meta(finished) };
-  finished.svg = renderVisual(finished.visual);
+
+  // Only the cover takes a generated backdrop, and only as atmosphere — the
+  // headline and figures on top of it are still drawn by us, so they stay exact.
+  if (finished.visual?.kind === 'cover' && imageProviderId) {
+    finished.background = await generateBackground({
+      prompt: coverPrompt(finished.visual, story),
+      aspect: '9:16',
+    });
+    finished.backgroundSource = finished.background ? imageProviderId : null;
+  }
+  finished.svg = renderVisual(finished.visual, { background: finished.background });
   return {
     formatId,
     ...finished,
@@ -168,9 +179,36 @@ export async function generateOne({ formatId, story, facts, language }) {
   };
 }
 
+/**
+ * Guard against extraction drift: the two ledgers are produced by separate
+ * calls, so one run may word a slot more specifically than the other. If one
+ * value's tokens are a subset of the other's, nothing a reader would act on has
+ * actually changed — flagging it would send an editor to re-check copy that is
+ * still correct, which is exactly the false alarm this tool exists to avoid.
+ * Token-aware (not substring) so "5" -> "50" is still a real change.
+ */
+const HEDGES = ['about', 'around', 'approximately', 'a', 'an', 'the', 'of'];
+
+const driftTokens = (v) =>
+  new Set(
+    String(v ?? '')
+      .toLowerCase()
+      .replace(/[.,;:'"()]/g, ' ')
+      .split(/\s+/)
+      .filter((t) => t && !HEDGES.includes(t))
+  );
+
+export function isDrift(a, b) {
+  const A = driftTokens(a);
+  const B = driftTokens(b);
+  if (!A.size || !B.size) return false;
+  const [small, large] = A.size <= B.size ? [A, B] : [B, A];
+  return [...small].every((t) => large.has(t));
+}
+
 /* ── ledger diff ──────────────────────────────────────────────────────── */
 
-export async function diffLedgers({ oldFacts, newFacts }) {
+export async function diffLedgers({ oldFacts, newFacts, story }) {
   const res = await completeJson({
     system: DIFF_SYSTEM,
     user: diffPrompt({ oldFacts, newFacts }),
@@ -179,28 +217,6 @@ export async function diffLedgers({ oldFacts, newFacts }) {
   });
   const byOld = Object.fromEntries(oldFacts.map((f) => [f.id, f]));
   const byNew = Object.fromEntries(newFacts.map((f) => [f.id, f]));
-  // Guard against extraction drift: the two ledgers are produced by separate
-  // calls, so one run may word a slot more specifically than the other. If one
-  // value's tokens are a subset of the other's, nothing a reader would act on
-  // has actually changed — flagging it would send an editor to re-check copy
-  // that is still correct, which is exactly the false alarm this tool exists to
-  // avoid. Token-aware (not substring) so "5" -> "50" is still a real change.
-  const tokens = (v) =>
-    new Set(
-      String(v ?? '')
-        .toLowerCase()
-        .replace(/[.,;:'"()]/g, ' ')
-        .split(/\s+/)
-        .filter((t) => t && !['about', 'around', 'approximately', 'a', 'an', 'the', 'of'].includes(t))
-    );
-  const isDrift = (a, b) => {
-    const A = tokens(a);
-    const B = tokens(b);
-    if (!A.size || !B.size) return false;
-    const [small, large] = A.size <= B.size ? [A, B] : [B, A];
-    return [...small].every((t) => large.has(t));
-  };
-
   const changed = (res.changed || [])
     .map((c) => ({
       oldId: c.oldId,
@@ -211,6 +227,8 @@ export async function diffLedgers({ oldFacts, newFacts }) {
       why: c.why || '',
     }))
     .filter((c) => c.oldValue && c.newValue && c.oldValue !== c.newValue && !isDrift(c.oldValue, c.newValue));
+  reconcileChanges({ changed, oldFacts, newFacts, story });
+
   return {
     changed,
     unchanged: res.unchanged || [],
@@ -252,7 +270,9 @@ export async function patchLines({ formatId, output, keys, changes, facts, story
   const { output: limited, enforced } = enforceLimits(formatId, next);
   const finished = { ...limited };
   if (f.meta) finished.meta = { ...finished.meta, ...f.meta(finished) };
-  finished.svg = renderVisual(finished.visual);
+  // Reuse the existing backdrop: only the wording changed, and a fresh image
+  // would make the patch look like a redesign rather than a correction.
+  finished.svg = renderVisual(finished.visual, { background: finished.background });
   return {
     output: {
       ...finished,
@@ -293,7 +313,7 @@ Return JSON: { "visual": { ...the corrected spec, same shape... } }`,
 
   const before = output.visual;
   const visual = res.visual && typeof res.visual === 'object' ? res.visual : before;
-  const finished = { ...output, visual, svg: renderVisual(visual) };
+  const finished = { ...output, visual, svg: renderVisual(visual, { background: output.background }) };
   if (f.meta) finished.meta = { ...finished.meta, ...f.meta(finished) };
   return {
     output: {
@@ -329,4 +349,58 @@ Return JSON: { "lines": [ { "key": "b0l1", "label": "the fact label it carries" 
   });
   const valid = new Set(lines.map((l) => l.key));
   return (res.lines || []).filter((r) => valid.has(r.key));
+}
+
+/**
+ * Deterministic staleness backstop, applied on top of the model's alignment.
+ *
+ * The aligner occasionally splits a single correction into a "removed" plus an
+ * "added" row, after which nothing downstream is flagged — the worst possible
+ * failure for this tool, because it reports all-clear on copy that is now wrong.
+ * So each old fact is also checked against the UPDATED SOURCE TEXT directly: if
+ * a concrete value is no longer anywhere in the story, published copy carrying
+ * it is stale, whatever the aligner decided.
+ *
+ * Restricted to concrete fact types — status/other values are usually
+ * paraphrases ("no arrests so far") and would raise false alarms.
+ *
+ * Mutates and returns `changed`.
+ */
+const CONCRETE_TYPES = new Set(['number', 'name', 'location', 'date', 'time', 'amount']);
+
+export function reconcileChanges({ changed, oldFacts, newFacts, story }) {
+  if (!story) return changed;
+  const srcNew = `${story.headline}\n${story.body}`;
+  const claimedOld = new Set(changed.map((c) => c.oldId));
+  const claimedNew = new Set(changed.map((c) => c.newId));
+  const slug = (l) => String(l ?? '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+  const overlap = (a, b) => {
+    const A = new Set(slug(a).split(/\s+/).filter(Boolean));
+    return slug(b).split(/\s+/).some((t) => t && A.has(t));
+  };
+
+  for (const of of oldFacts) {
+    if (claimedOld.has(of.id)) continue;
+    if (!CONCRETE_TYPES.has(of.type)) continue;
+    if (textCarriesValue(srcNew, of.value)) continue; // still supported by the copy
+
+    const cand =
+      newFacts.find((nf) => !claimedNew.has(nf.id) && slug(nf.label) === slug(of.label)) ||
+      newFacts.find((nf) => !claimedNew.has(nf.id) && overlap(nf.label, of.label)) ||
+      newFacts.find((nf) => !claimedNew.has(nf.id) && nf.type === of.type);
+    if (!cand) continue;
+    if (cand.value === of.value || isDrift(of.value, cand.value)) continue;
+
+    claimedOld.add(of.id);
+    claimedNew.add(cand.id);
+    changed.push({
+      oldId: of.id,
+      newId: cand.id,
+      label: of.label,
+      oldValue: of.value,
+      newValue: cand.value,
+      why: 'no longer stated in the source',
+    });
+  }
+  return changed;
 }

@@ -175,9 +175,10 @@ export default function App() {
       let vBefore = null;
 
       if (st.staleLines?.length) {
+        const { svg: _drop, ...lean } = next; // re-rendered server-side; no need to upload it
         const r = await api.patch({
           formatId,
-          output: next,
+          output: lean,
           keys: st.staleLines.map((l) => l.key),
           changes: diff.changed,
           facts,
@@ -188,9 +189,10 @@ export default function App() {
         patchList = r.patches;
       }
       if (st.staleVisual) {
+        const { svg: _drop2, ...lean2 } = next;
         const r = await api.patchVisual({
           formatId,
-          output: next,
+          output: lean2,
           changes: diff.changed,
           facts,
           story,
@@ -238,6 +240,14 @@ export default function App() {
         )}
 
         <main>
+          {meta && !meta.backendReady && (
+            <div className="error-box">
+              <b>No model backend available.</b> {meta.backendHint}
+              <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--ink-2)' }}>
+                Restart the server after setting one — the app cannot generate until then.
+              </div>
+            </div>
+          )}
           {error && <div className="error-box"><b>Something went wrong.</b> {error}</div>}
 
           {stage === 'compose' && (
@@ -247,7 +257,7 @@ export default function App() {
               setStory={setStory}
               language={language}
               setLanguage={setLanguage}
-              busy={busy}
+              busy={busy || (meta && !meta.backendReady)}
               onLoadSample={(s) => {
                 setStory({ headline: s.headline, body: s.body });
                 setSample(s);

@@ -9,11 +9,14 @@
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
     "verify": "node scripts/acceptance.mjs",
-    "audit:grounding": "node scripts/grounding-audit.mjs"
+    "audit:grounding": "node scripts/grounding-audit.mjs",
+    "test:unit": "node scripts/unit.mjs",
+    "test:providers": "node scripts/check-providers.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.21.2"
   },
   "devDependencies": {

@@ -173,8 +173,13 @@ export default function OutputCard({
                     Download PNG
                   </button>
                   <span className="meter">
-                    {format.id === 'reel' ? '1080 × 1920 cover' : '1080 × 1080 graphic'} · rendered from the fact ledger
+                    {format.id === 'reel' ? '1080 × 1920 cover' : '1080 × 1080 graphic'} · text rendered from the fact ledger
                   </span>
+                  {output.backgroundSource && (
+                    <span className="chip" title="The backdrop is generated atmosphere, not documentary imagery. All text over it is drawn from the fact ledger.">
+                      AI backdrop · {output.backgroundSource}
+                    </span>
+                  )}
                 </div>
               </div>
             )}

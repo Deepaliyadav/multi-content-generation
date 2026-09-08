@@ -4,7 +4,9 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { backend, backendLabel } from './llm.js';
+import { backend, backendLabel, backendReady, backendHint, cliPath, backendConcurrency } from './llm.js';
+import { envFileLoaded, envFilePath, envFileKeys } from './env.js';
+import { imageProviderId, imageProviderLabel } from './images.js';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
 import { SAMPLES } from './samples.js';
 import {
@@ -15,8 +17,9 @@ import { scanOutput, iterLines } from './facts.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
-// The CLI backend spawns a process per call, so it gets a smaller fan-out.
-const CONCURRENCY = Number(process.env.LSS_CONCURRENCY || (backend === 'sdk' ? 13 : 4));
+// Each backend declares its own sensible fan-out (the CLI one spawns a process
+// per call, so it gets a smaller one).
+const CONCURRENCY = Number(process.env.LSS_CONCURRENCY || backendConcurrency);
 
 const app = express();
 app.use(cors());
@@ -48,6 +51,10 @@ app.get('/api/meta', (_req, res) => {
   res.json({
     backend,
     backendLabel,
+    backendReady,
+    backendHint,
+    imageProvider: imageProviderId,
+    imageProviderLabel,
     languages: LANGUAGES,
     groups: GROUPS,
     samples: SAMPLES,
@@ -113,7 +120,7 @@ app.post('/api/rediff', async (req, res) => {
     const t = Date.now();
     const { story, oldFacts } = req.body;
     const facts = await extractFacts(story);
-    const diff = await diffLedgers({ oldFacts, newFacts: facts });
+    const diff = await diffLedgers({ oldFacts, newFacts: facts, story });
     res.json({ facts, diff, ms: Date.now() - t });
   } catch (e) { fail(res, e); }
 });
@@ -213,8 +220,20 @@ if (fs.existsSync(dist)) {
 
 app.listen(PORT, () => {
   console.log(`\n  Living Story Sync — API on http://localhost:${PORT}`);
+  // Names only — a value is never printed, logged, or sent to the browser.
+  if (envFileLoaded)
+    console.log(`  config: .env loaded (${envFileKeys.join(', ') || 'no entries'})`);
+  else console.log(`  config: no .env at ${envFilePath} — using shell environment`);
   console.log(`  LLM backend: ${backendLabel}  ·  fan-out ${CONCURRENCY}`);
-  if (backend === 'cli')
-    console.log('  (no ANTHROPIC_API_KEY found — using your local Claude Code login)\n');
-  else console.log('');
+  console.log(`  Images: ${imageProviderLabel}`);
+  if (backend === 'claude-cli' && backendReady) {
+    console.log('  (no API key set — using your local Claude Code login)');
+    console.log(`  claude binary: ${cliPath}\n`);
+  } else if (!backendReady) {
+    // Fail loudly at boot rather than on the first click of Generate.
+    console.error(`\n  ✗ NO MODEL BACKEND — the app will load but cannot generate.`);
+    console.error(`    ${backendHint}\n`);
+  } else {
+    console.log('');
+  }
 });

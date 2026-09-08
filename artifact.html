@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rundown — One story. Every platform.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171B;
+    --bg-panel:#1B1F24;
+    --bg-raised:#232830;
+    --bg-sunken:#0F1215;
+    --line:#333A40;
+    --line-soft:#272D33;
+    --text:#ECEAE3;
+    --text-dim:#9AA1A8;
+    --text-faint:#5C646C;
+    --red:#E14B36;
+    --teal:#4FA8A0;
+    --gold:#D9A441;
+    --font-display:'Newsreader', serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --font-hi:'Noto Sans Devanagari', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 80px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    border-bottom:1px solid var(--line);
+    padding:22px 28px 20px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .masthead-left{display:flex;flex-direction:column;gap:6px;}
+  .dateline{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--text-faint);
+  }
+  .dateline .dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--red);margin-right:7px;position:relative;top:-1px;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .dateline .dot{animation:pulse 2.2s ease-in-out infinite;}
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;} 50%{opacity:.35;}
+  }
+  .wordmark{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-weight:500;
+    font-size:38px;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  .masthead-right{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--text-dim);
+    text-align:right;
+    line-height:1.7;
+  }
+
+  /* ---------- Setup panels ---------- */
+  .panel{
+    margin-top:32px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    border-radius:3px;
+  }
+  .panel-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    padding:16px 20px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .back-to-discovery{margin-left:auto;font-size:11px;}
+  .briefing-banner{
+    background:rgba(217,164,65,.1);border-bottom:1px solid var(--line-soft);
+    border-left:3px solid var(--gold);padding:10px 17px;font-size:12.5px;color:var(--gold);
+  }
+  .panel-num{
+    font-family:var(--font-mono);
+    color:var(--gold);
+    font-size:13px;
+  }
+  .panel-title{
+    font-family:var(--font-display);
+    font-size:19px;
+    font-weight:500;
+  }
+  .panel-body{padding:20px;}
+  .panel-sub{color:var(--text-dim);font-size:13px;margin:0 0 16px;}
+
+  .sample-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .mode-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .mode-tab{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    padding:7px 16px;border-radius:2px;font-size:12.5px;font-family:var(--font-mono);
+  }
+  .mode-tab:hover{border-color:var(--teal);color:var(--text);}
+  .mode-tab.active{background:var(--bg-raised);border-color:var(--gold);color:var(--gold);}
+
+  .media-panel{
+    border:1px solid var(--line);background:var(--bg-sunken);border-radius:2px;
+    padding:16px;margin-bottom:18px;
+  }
+  .media-upload-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px;}
+  .file-btn{display:inline-flex;align-items:center;cursor:pointer;}
+  #micBtn.recording{border-color:var(--red);color:var(--red);}
+  #micBtn.recording::before{
+    content:'';display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--red);margin-right:6px;position:relative;top:-1px;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    #micBtn.recording::before{animation:pulse 1.1s ease-in-out infinite;}
+  }
+  .media-filename{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:8px;}
+  .media-note{font-size:12px;color:var(--text-faint);font-style:italic;margin:10px 0 0;max-width:560px;line-height:1.5;}
+  .mic-warning{font-family:var(--font-mono);font-size:11px;color:var(--gold);margin-top:8px;}
+  .sample-btn{
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    padding:8px 13px;
+    border-radius:2px;
+    font-size:12.5px;
+    font-family:var(--font-mono);
+    transition:border-color .15s, color .15s;
+  }
+  .sample-btn:hover{border-color:var(--teal);color:var(--text);}
+  .sample-btn.active{border-color:var(--gold);color:var(--gold);}
+
+  label.field-label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.04em;
+    color:var(--text-faint);
+    margin-bottom:6px;
+  }
+  input[type=text], textarea{
+    width:100%;
+    background:var(--bg-sunken);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:11px 13px;
+    border-radius:2px;
+    font-family:var(--font-body);
+    font-size:14.5px;
+    resize:vertical;
+  }
+  input[type=text]:focus, textarea:focus{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+    border-color:var(--teal);
+  }
+  textarea{min-height:150px;line-height:1.6;}
+  .field-gap{margin-bottom:16px;}
+  .wordcount{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    text-align:right;
+    margin-top:5px;
+  }
+
+  .chip-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    padding:9px 14px 9px 10px;
+    border-radius:2px;
+    font-size:13px;
+    color:var(--text-dim);
+    transition:border-color .15s, color .15s, background .15s;
+    user-select:none;
+  }
+  .chip .box{
+    width:14px;height:14px;
+    border:1px solid var(--text-faint);
+    border-radius:2px;
+    flex:none;
+    position:relative;
+  }
+  .chip.on{color:var(--text);border-color:var(--teal);background:rgba(79,168,160,.08);}
+  .chip.on .box{border-color:var(--teal);background:var(--teal);}
+  .chip.on .box::after{
+    content:'';
+    position:absolute;left:3px;top:0px;
+    width:4px;height:8px;
+    border:solid var(--bg-sunken);
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .chip-num{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);}
+  .chip.on .chip-num{color:var(--gold);}
+
+  .generate-row{
+    margin-top:24px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .btn-generate{
+    background:var(--red);
+    color:#fff;
+    border:none;
+    padding:13px 24px;
+    font-size:14px;
+    font-weight:600;
+    border-radius:2px;
+    letter-spacing:.01em;
+    transition:filter .15s, transform .1s;
+  }
+  .btn-generate:hover{filter:brightness(1.08);}
+  .btn-generate:active{transform:translateY(1px);}
+  .btn-generate:disabled{background:var(--text-faint);cursor:not-allowed;}
+  .gen-hint{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .loading-line{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--gold);
+  }
+  .ticker-track{
+    margin-top:10px;height:2px;background:var(--line-soft);
+    border-radius:2px;overflow:hidden;width:220px;
+  }
+  .ticker-bar{
+    height:100%;width:35%;background:var(--gold);
+    border-radius:2px;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .ticker-bar{animation:sweep 1.3s ease-in-out infinite;}
+  }
+  @keyframes sweep{
+    0%{transform:translateX(-100%);} 100%{transform:translateX(320%);}
+  }
+
+  .error-banner{
+    margin-top:18px;
+    border:1px solid var(--red);
+    background:rgba(225,75,54,.08);
+    padding:14px 16px;
+    border-radius:2px;
+    font-size:13.5px;
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .btn-ghost{
+    background:transparent;border:1px solid var(--line);color:var(--text);
+    padding:8px 14px;border-radius:2px;font-size:12.5px;font-family:var(--font-mono);
+  }
+  .btn-ghost:hover{border-color:var(--teal);}
+
+  /* Discovery desk */
+  .discovery-skip{margin-top:20px;padding-top:16px;border-top:1px solid var(--line-soft);}
+  .discovery-topic{
+    border:1px solid var(--line);border-radius:2px;padding:16px 18px;margin-top:14px;
+    background:var(--bg-raised);
+  }
+  .discovery-topic.filed{opacity:.6;}
+  .dt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .dt-headline{font-family:var(--font-display);font-size:16.5px;max-width:520px;line-height:1.35;}
+  .dt-summary{color:var(--text-dim);font-size:13px;margin:8px 0 12px;max-width:600px;line-height:1.6;}
+  .dt-sources{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+  .source-chip{
+    font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);
+    background:var(--bg-sunken);border:1px solid var(--line-soft);border-radius:10px;
+    padding:3px 9px 3px 7px;display:flex;align-items:center;gap:5px;
+    text-decoration:none;
+  }
+  a.source-chip:link, a.source-chip:visited{color:var(--text-dim);}
+  a.source-chip:hover{border-color:var(--teal);color:var(--text);}
+  .source-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);}
+  .source-chip.social::before{background:var(--teal);}
+  .filed-badge{
+    font-family:var(--font-mono);font-size:11px;color:var(--teal);
+    border:1px solid var(--teal);border-radius:10px;padding:3px 10px;white-space:nowrap;
+  }
+  .dt-scores{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .score-block{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+  .score-block .score-val{color:var(--text);font-size:14px;display:block;margin-top:2px;}
+  .priority-rank{font-family:var(--font-mono);font-size:12px;color:var(--gold);white-space:nowrap;}
+  .dt-rationale{font-size:12px;color:var(--text-faint);font-style:italic;margin-bottom:12px;max-width:560px;}
+  .btn-file{
+    background:var(--teal);color:var(--bg-sunken);border:none;
+    padding:8px 15px;border-radius:2px;font-size:12.5px;font-weight:600;font-family:var(--font-body);
+  }
+  .btn-file:hover{filter:brightness(1.1);}
+  .discovery-note{font-size:11.5px;color:var(--text-faint);font-style:italic;margin-top:4px;}
+  #sourceStatus{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);margin-top:10px;}
+  #sourceStatus .ok{color:var(--teal);}
+  #sourceStatus .fail{color:var(--red);}
+  .fallback-note{margin-top:6px;color:var(--gold);font-style:italic;font-size:11px;}
+
+  /* ---------- Output layout ---------- */
+  #output{display:none;margin-top:32px;}
+  .output-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:18px;flex-wrap:wrap;gap:10px;
+  }
+  .output-title{
+    font-family:var(--font-display);font-size:20px;font-style:italic;
+  }
+  .output-grid{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    gap:0;
+    border:1px solid var(--line);
+    border-radius:3px;
+    overflow:hidden;
+    min-height:480px;
+  }
+  @media (max-width:760px){
+    .output-grid{grid-template-columns:1fr;}
+  }
+  .rail{
+    background:var(--bg-panel);
+    border-right:1px solid var(--line);
+  }
+  .rail-item{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line-soft);
+    color:var(--text-dim);
+  }
+  .rail-item .row1{display:flex;gap:10px;align-items:baseline;}
+  .rail-item .rnum{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+  .rail-item .rlabel{font-size:13.5px;}
+  .rail-item .rmeta{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);padding-left:28px;}
+  .rail-item.active{background:var(--bg-raised);color:var(--text);border-left:3px solid var(--red);padding-left:13px;}
+  .rail-item.active .rnum{color:var(--gold);}
+  .rail-item:hover:not(.active){background:rgba(255,255,255,.02);}
+
+  .content-pane{
+    background:var(--bg-panel);
+    padding:26px 30px;
+  }
+  .pane-toolbar{
+    display:flex;flex-direction:column;gap:10px;
+    margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);
+  }
+  .toolbar-row1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .pane-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--text-faint);}
+  .toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .btn-copy{
+    background:var(--bg-raised);border:1px solid var(--line);color:var(--text-dim);
+    padding:6px 12px;border-radius:2px;font-family:var(--font-mono);font-size:11.5px;
+  }
+  .btn-copy:hover{border-color:var(--gold);color:var(--text);}
+  .btn-copy.copied{border-color:var(--teal);color:var(--teal);}
+
+  .regen-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .regen-input{
+    background:var(--bg-sunken);border:1px solid var(--line);color:var(--text);
+    padding:6px 10px;border-radius:2px;font-size:12px;font-family:var(--font-body);
+    width:210px;max-width:100%;
+  }
+  .regen-input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .preset-chip{
+    background:transparent;border:1px solid var(--line-soft);color:var(--text-faint);
+    padding:5px 10px;border-radius:12px;font-size:11px;font-family:var(--font-mono);
+  }
+  .preset-chip:hover{border-color:var(--teal);color:var(--text);}
+  .btn-regen{
+    background:var(--teal);color:var(--bg-sunken);border:none;
+    padding:7px 14px;border-radius:2px;font-size:12px;font-weight:600;font-family:var(--font-body);
+  }
+  .btn-regen:hover{filter:brightness(1.1);}
+  .btn-regen:disabled{background:var(--text-faint);cursor:not-allowed;}
+  .regen-error{font-family:var(--font-mono);font-size:11px;color:var(--red);margin-top:2px;}
+  .edit-hint{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);font-style:italic;}
+
+  [contenteditable="true"]{outline:none;border-radius:2px;transition:background .15s;}
+  [contenteditable="true"]:hover{background:rgba(79,168,160,.08);}
+  [contenteditable="true"]:focus{background:rgba(79,168,160,.14);box-shadow:0 0 0 1px var(--teal);}
+
+  /* Compare-with-source view */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:700px){ .compare-grid{grid-template-columns:1fr;} }
+  .compare-col{min-width:0;}
+  .compare-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);letter-spacing:.04em;margin-bottom:8px;}
+  .compare-text{font-size:13.5px;line-height:1.7;white-space:pre-wrap;color:var(--text-dim);max-height:420px;overflow-y:auto;padding-right:6px;}
+  .compare-text.hindi-text{font-family:var(--font-hi);color:var(--text);}
+  .fact-ok{color:var(--teal);border-bottom:1px dotted var(--teal);}
+  .fact-flag{color:var(--gold);border-bottom:1px dotted var(--gold);background:rgba(217,164,65,.1);}
+  .compare-legend{margin-top:14px;font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;position:relative;top:-1px;}
+  .legend-dot.ok{background:var(--teal);}
+  .legend-dot.flag{background:var(--gold);}
+  .compare-note{margin-top:10px;font-size:12px;color:var(--text-faint);font-style:italic;max-width:600px;}
+
+  /* Website / Hindi article */
+  .article .kicker{font-family:var(--font-mono);font-size:11px;color:var(--teal);letter-spacing:.04em;margin-bottom:8px;}
+  .article h2{font-family:var(--font-display);font-size:27px;font-weight:500;margin:0 0 10px;max-width:600px;line-height:1.25;}
+  .article .dek{color:var(--text-dim);font-size:15px;margin-bottom:18px;max-width:560px;}
+  .article .body p{max-width:600px;margin:0 0 14px;font-size:14.5px;line-height:1.75;}
+  .article .body-block{max-width:600px;font-size:14.5px;line-height:1.75;white-space:pre-wrap;}
+  .article.hindi h2,.article.hindi .body p,.article.hindi .body-block{font-family:var(--font-hi);}
+  .article.hindi .body p,.article.hindi .body-block{font-size:15.5px;line-height:1.9;}
+
+  /* Script table (reel/youtube/tv) */
+  .script-intro{color:var(--text-dim);font-size:13.5px;margin-bottom:16px;max-width:600px;}
+  table.script{width:100%;border-collapse:collapse;}
+  table.script th{
+    text-align:left;font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);
+    letter-spacing:.04em;padding:0 12px 8px 0;border-bottom:1px solid var(--line-soft);
+  }
+  table.script td{
+    padding:12px 12px 12px 0;border-bottom:1px solid var(--line-soft);
+    font-size:13.5px;vertical-align:top;
+  }
+  table.script td.time{font-family:var(--font-mono);color:var(--gold);white-space:nowrap;width:80px;}
+  table.script td.cue{font-family:var(--font-mono);color:var(--teal);white-space:nowrap;width:90px;}
+  .script-caption{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);}
+  .script-caption .lbl{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);margin-bottom:6px;}
+
+  /* Push notification (phone mockup) */
+  .phone{
+    width:280px;background:var(--bg-sunken);border:1px solid var(--line);
+    border-radius:22px;padding:18px 14px;
+  }
+  .phone-time{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-align:center;margin-bottom:14px;}
+  .notif{
+    background:var(--bg-raised);border:1px solid var(--line);border-radius:12px;padding:12px 13px;
+  }
+  .notif-app{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .notif-icon{
+    width:18px;height:18px;border-radius:5px;background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:9px;font-weight:600;color:#fff;flex:none;
+  }
+  .notif-app-name{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);letter-spacing:.03em;}
+  .notif-app-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-faint);}
+  .notif-title{font-weight:600;font-size:13.5px;margin-bottom:2px;}
+  .notif-body{font-size:13px;color:var(--text-dim);line-height:1.4;}
+  .charcount{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);margin-top:14px;}
+
+  /* X post card */
+  .tweet{max-width:460px;border:1px solid var(--line);border-radius:10px;padding:15px 16px;background:var(--bg-sunken);}
+  .tweet-head{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--teal);flex:none;
+    display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--bg-sunken);font-weight:700;}
+  .tweet-names{line-height:1.3;}
+  .tweet-name{font-size:13.5px;font-weight:600;}
+  .tweet-handle{font-size:12px;color:var(--text-faint);}
+  .tweet-text{font-size:14px;line-height:1.5;margin-bottom:12px;white-space:pre-wrap;}
+  .tweet-icons{display:flex;gap:26px;color:var(--text-faint);font-family:var(--font-mono);font-size:11.5px;}
+
+  /* Instagram carousel */
+  .ig-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+  .ig-slide{
+    width:260px;height:260px;background:var(--bg-sunken);border:1px solid var(--line);
+    border-radius:8px;display:flex;align-items:center;justify-content:center;
+    padding:26px;text-align:center;
+  }
+  .ig-slide p{font-family:var(--font-display);font-size:16.5px;line-height:1.4;margin:0;}
+  .ig-controls{display:flex;flex-direction:column;gap:14px;padding-top:8px;}
+  .ig-nav{display:flex;gap:8px;}
+  .ig-nav button{
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+    background:var(--bg-raised);color:var(--text);font-size:15px;
+  }
+  .ig-nav button:hover{border-color:var(--teal);}
+  .ig-dots{display:flex;gap:6px;}
+  .ig-dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .ig-dot.on{background:var(--gold);}
+  .ig-counter{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+
+  /* Infographic brief */
+  .brief-title{font-family:var(--font-display);font-size:20px;margin:0 0 16px;max-width:520px;}
+  .data-points{display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
+  .data-point{
+    display:flex;gap:10px;align-items:baseline;
+    padding:10px 13px;background:var(--bg-sunken);border:1px solid var(--line-soft);border-radius:2px;
+    font-size:13.5px;max-width:560px;
+  }
+  .data-point .dnum{font-family:var(--font-mono);color:var(--gold);font-size:12px;}
+  .visual-note{
+    border-left:2px solid var(--teal);padding-left:13px;color:var(--text-dim);
+    font-size:13px;font-style:italic;max-width:520px;
+  }
+
+  /* Newsletter */
+  .mail{max-width:520px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg-sunken);}
+  .mail-head{padding:13px 16px;border-bottom:1px solid var(--line-soft);}
+  .mail-subject{font-size:15px;font-weight:600;margin-bottom:3px;}
+  .mail-pre{font-size:12px;color:var(--text-faint);font-style:italic;}
+  .mail-body{padding:16px;font-size:14px;line-height:1.7;}
+  .mail-body-inner{white-space:pre-wrap;}
+  .mail-body p{margin:0 0 13px;}
+
+  .empty-note{color:var(--text-faint);font-size:13px;font-style:italic;}
+  ::selection{background:var(--gold);color:var(--bg-sunken);}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <div class="dateline"><span class="dot"></span>DESK COPY · ADAPTATION UNIT</div>
+    <h1 class="wordmark">Rundown</h1>
+  </div>
+  <div class="masthead-right">One story. Every platform.<br>Demo build — not for publication.</div>
+</header>
+
+<div class="wrap">
+
+  <section id="discovery">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-num">00</span><span class="panel-title">Discovery desk</span></div>
+      <div class="panel-body">
+        <p class="panel-sub">Attempts a live pull from NDTV, News18 Hindi, and TV9 Hindi RSS feeds, checked against our own AajTak feed — if this sandbox blocks the network call, it falls back to saved sample headlines so the clustering and scoring still run for real. Social platforms (X, Instagram) aren't wired up yet — those need paid API access.</p>
+        <div class="field-gap">
+          <label class="field-label">EDITORIAL FOCUS (used to score relevancy)</label>
+          <textarea id="beatProfileInput" style="min-height:64px;">Broad national audience across politics, business, sports, and human-interest stories, in Hindi and English. Prioritize stories with strong regional impact or high social reach.</textarea>
+        </div>
+        <div class="generate-row" style="margin-top:0;">
+          <button class="btn-generate" id="discoveryBtn">Run discovery pass →</button>
+          <span class="gen-hint" id="discoveryHint">Tries live RSS, falls back to samples if blocked — scoring is always live</span>
+        </div>
+        <div id="sourceStatus"></div>
+        <div id="discoveryLoading"></div>
+        <div id="discoveryError"></div>
+        <div id="discoveryList"></div>
+        <div class="discovery-skip">
+          <button class="btn-ghost" id="skipDiscoveryBtn">Skip — start from my own story →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup" style="display:none;">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-num">01</span><span class="panel-title">Source story</span>
+        <button class="btn-ghost back-to-discovery" id="backToDiscoveryBtn">← Back to discovery desk</button>
+      </div>
+      <div id="briefingBanner" class="briefing-banner" style="display:none;">This came from the discovery desk — it's a briefing, not verified copy. Check the facts and add your own reporting before generating formats.</div>
+      <div class="panel-body">
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mode-tab active" data-mode="text">Text</button>
+          <button class="mode-tab" data-mode="audio">Audio</button>
+          <button class="mode-tab" data-mode="video">Video</button>
+        </div>
+        <p class="panel-sub" id="panelSub">Paste a story, or load a sample to see the desk in action.</p>
+        <div class="sample-row" id="sampleRow"></div>
+
+        <div class="media-panel" id="mediaPanel" style="display:none;">
+          <div class="media-upload-row">
+            <label class="btn-ghost file-btn">
+              <input type="file" id="mediaFileInput" accept="audio/*" hidden>
+              <span id="fileBtnLabel">Upload audio file</span>
+            </label>
+            <button class="btn-ghost" id="micBtn">🎙 Record from mic</button>
+          </div>
+          <div id="mediaPreviewWrap"></div>
+          <p class="media-note">Speech-to-text isn't wired up in this sandbox — a real build would auto-transcribe on upload. For now, dictate live with the mic (Chrome) or edit the transcript directly below.</p>
+          <div id="micNote"></div>
+        </div>
+
+        <div class="field-gap">
+          <label class="field-label">HEADLINE</label>
+          <input type="text" id="headlineInput" placeholder="e.g. Heavy rain snaps Mumbai's suburban rail network for third day">
+        </div>
+        <div>
+          <label class="field-label" id="bodyFieldLabel">BODY</label>
+          <textarea id="bodyInput" placeholder="Paste the full story here..."></textarea>
+          <div class="wordcount" id="wordcount">0 words</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-num">02</span><span class="panel-title">Target formats</span></div>
+      <div class="panel-body">
+        <p class="panel-sub">All formats are selected by default. Click to drop any you don't need.</p>
+        <div class="chip-grid" id="chipGrid"></div>
+      </div>
+    </div>
+
+    <div class="generate-row">
+      <button class="btn-generate" id="genBtn">Generate rundown →</button>
+      <span class="gen-hint" id="genHint">Runs live against Claude</span>
+    </div>
+    <div id="loadingArea"></div>
+    <div id="errorArea"></div>
+  </section>
+
+  <section id="output">
+    <div class="output-head">
+      <div class="output-title" id="outputHeadline"></div>
+      <button class="btn-ghost" id="startOverBtn">← New story</button>
+    </div>
+    <div id="outputWarning"></div>
+    <div class="output-grid">
+      <div class="rail" id="rail"></div>
+      <div class="content-pane" id="contentPane"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+
+  const FORMATS = [
+    {id:'website',     label:'Website Article',     group:1},
+    {id:'reel',         label:'30-sec Reel Script',   group:4},
+    {id:'youtube',       label:'YouTube Script',       group:4},
+    {id:'tv',            label:'TV Script',            group:5},
+    {id:'hindi',         label:'Hindi Version',        group:2},
+    {id:'push',          label:'Push Notification',    group:6},
+    {id:'x',             label:'X Post',               group:6},
+    {id:'instagram',     label:'Instagram Carousel',   group:6},
+    {id:'infographic',   label:'Infographic Brief',    group:6},
+    {id:'newsletter',    label:'Newsletter',           group:3},
+  ];
+  // Groups are sized to stay well inside the per-call output budget — each
+  // group becomes one API call, run in parallel, so no single response has
+  // to carry more than a couple of formats' worth of copy.
+
+  const SCHEMAS = {
+    website: '{"headline": string (web headline, may sharpen the source headline), "dek": string (one-sentence summary), "body": string (120-160 words, paragraphs separated by \\n\\n)}',
+    youtube: '{"title": string (<=70 chars), "hook": string (first 5-second spoken line), "script": [{"time": string like "0:00-0:15", "visual": string (short b-roll direction), "voiceover": string (short narration line)}] (3-4 items covering roughly 60 seconds), "description": string (<=35 words)}',
+    tv: '{"anchorIntro": string (1-2 line studio lead-in), "script": [{"cue": one of "ANCHOR"/"VISUAL"/"SOT"/"GFX", "text": string (short)}] (4-5 rows)}',
+    hindi: '{"headline": string (in Hindi, Devanagari script), "body": string (100-140 words in natural conversational Hindi, Devanagari script, paragraphs separated by \\n\\n)}',
+    newsletter: '{"subjectLine": string (<=60 chars), "preheader": string (<=90 chars), "body": string (~90 words, paragraphs separated by \\n\\n)}',
+    reel: '{"hook": string (first on-screen line, 0-2s), "scenes": [{"time": string like "0-5s", "visual": string (short), "voiceover": string (short)}] (3 scenes covering ~30 seconds), "caption": string (short caption with 2-3 hashtags)}',
+    push: '{"title": string (<=50 chars), "body": string (<=120 chars)}',
+    x: '{"text": string (<=280 characters total, ready to post)}',
+    instagram: '{"slides": [string] (5-6 slides, ~12-20 words each; slide 1 is the hook/cover, last slide is a call to action)}',
+    infographic: '{"title": string, "dataPoints": [string] (4-5 short stat/fact phrases), "visualSuggestion": string (one short line on chart or layout type)}',
+  };
+
+  const SAMPLES = [
+    {
+      tag:'BIZ',
+      headline:"Digital Payments Platform Crosses ₹20,000 Crore in Monthly Transactions",
+      body:"India's largest instant payments network recorded more than ₹20,000 crore in transactions last month, its highest monthly figure to date, according to data released by the payments body on Tuesday. Officials pointed to growing adoption of QR-code payments among small merchants in tier-2 and tier-3 cities as a key driver, alongside a steady rise in person-to-person transfers during the festive shopping season.\n\nA senior official at the payments body said the network processed over 60 percent of its volume outside the top eight metro areas for the first time this year, a sign that digital payments are moving deeper into smaller towns. The official added that onboarding for small kirana stores has roughly doubled since the start of the year, helped by simplified sign-up through banking partners.\n\nAnalysts tracking the sector said the numbers suggest digital payments are becoming the default option even for very small transactions, a shift that has implications for how banks and fintech firms plan their next phase of expansion."
+    },
+    {
+      tag:'WEATHER',
+      headline:"Heavy Rain Snaps Mumbai's Suburban Rail Network for Third Day",
+      body:"Mumbai's suburban rail network faced disruptions for a third consecutive day on Tuesday as heavy monsoon rain flooded tracks at several low-lying stretches, forcing operators to suspend services on parts of the Harbour and Central lines during the evening rush hour.\n\nCivic pumping stations were running at full capacity through the afternoon, but waterlogging near key junctions slowed the drainage effort. A municipal spokesperson said water levels were expected to recede by early Wednesday if rainfall eased as forecast, and that additional pumps had been deployed overnight at the worst-affected stretches.\n\nCommuters were advised to use alternative routes where possible, and several private bus operators added services during peak hours to ease the load. The weather office has forecast continued heavy spells over the next 48 hours, with the possibility of a let-up by the weekend."
+    },
+    {
+      tag:'SPORT',
+      headline:"India's Hockey Team Beats Japan to Reach Asia Cup Final",
+      body:"India's men's hockey team booked a place in the Asia Cup final on Tuesday with a hard-fought 3-1 win over Japan, coming from behind after conceding an early goal to score three unanswered times in the second and third quarters.\n\nJapan took a surprise lead in the sixth minute through a well-worked penalty corner, but India settled quickly, controlling possession for long stretches and finding the equaliser just before half-time. Two further field goals in the third quarter put the result out of reach.\n\nThe head coach said after the match that the team's response after going behind was the most encouraging part of the performance, and that the squad would use the two days before the final to work on penalty-corner conversions, an area he felt still needed sharpening."
+    }
+  ];
+
+  // Sample transcripts read like spoken copy (filler words, present-tense
+  // narration) rather than edited prose — this is what a real audio/video
+  // upload would hand off to the transcript box.
+  const AUDIO_SAMPLES = [
+    {
+      tag:'PHONE-IN',
+      headline:"Reporter Phone-In: Water Released From Dam Amid Heavy Rain",
+      body:"Okay so, uh, I'm standing near the river right now and the water level has gone up by about two feet since this morning. Officials just opened three gates of the dam upstream because of the heavy rain over the last two days. They're telling people in the low-lying colonies nearby to move to higher ground, just as a precaution for now.\n\nI spoke to one of the irrigation department officials a few minutes ago, he said the discharge is being done gradually, so there isn't an immediate flooding risk, but they are keeping an eye on it through the night. Local administration has also set up two relief camps nearby, just in case. So yeah, that's the situation here, back to you in the studio."
+    },
+    {
+      tag:'MARKET',
+      headline:"Voice Note: Vegetable Prices Spike Ahead of Festival Week",
+      body:"Hey, quick update from the mandi. So tomato and onion prices have gone up almost thirty percent compared to last week, traders are saying it's because of lower supply from the neighboring states due to the rain last month.\n\nA few vendors I spoke to say this is fairly normal before the festival week, demand always goes up then, prices usually cool off in about ten days. One wholesaler mentioned that potato prices are actually stable, so it's mostly the tomato and onion side that's affected right now. That's the update from here."
+    }
+  ];
+  const VIDEO_SAMPLES = [
+    {
+      tag:'FIELD REPORT',
+      headline:"Ground Report: New Foot Overbridge Opens at Central Station",
+      body:"So behind me you can see the new foot overbridge at the central station, it opened for public use this morning after almost eight months of construction work. It connects all four platforms, and there are escalators on two sides along with a lift for elderly and differently abled passengers.\n\nCommuters here say this is a big relief, earlier they had to cross the tracks directly which was risky, especially during peak hours. The railway official who inspected the bridge this morning said the older footbridge will now be used only as a backup, and it'll eventually be shut down for repair work. Passengers I spoke to this morning were mostly happy about it, though a few mentioned the stairs get a bit crowded at rush hour already."
+    },
+    {
+      tag:'PRESSER',
+      headline:"Press Briefing: Civic Body Announces Pothole Repair Drive",
+      body:"The civic body held a press briefing this afternoon announcing a two-week pothole repair drive starting Monday, covering around forty arterial roads across the city. The commissioner said crews will work in double shifts, including at night on the busiest roads, to avoid disrupting daytime traffic.\n\nHe also mentioned a helpline number where residents can report potholes directly, and said the response team is expected to act within forty eight hours of a complaint. When asked about the delay in repairs after the monsoon, he said the priority was drainage clearance first, and road repair could only begin once the rain eased."
+    }
+  ];
+
+  const MODE_META = {
+    text:  { sub:"Paste a story, or load a sample to see the desk in action.", bodyLabel:'BODY', bodyPlaceholder:'Paste the full story here...', samples: SAMPLES, fileLabel:'Upload audio file' },
+    audio: { sub:"Upload a clip, dictate live, or load a sample transcript.", bodyLabel:'TRANSCRIPT', bodyPlaceholder:'Paste or dictate the transcript here...', samples: AUDIO_SAMPLES, fileLabel:'Upload audio file' },
+    video: { sub:"Upload a clip, dictate live, or load a sample transcript.", bodyLabel:'TRANSCRIPT', bodyPlaceholder:'Paste or dictate the transcript here...', samples: VIDEO_SAMPLES, fileLabel:'Upload video file' },
+  };
+
+  let selectedFormats = new Set(FORMATS.map(f=>f.id));
+  let activeFormat = null;
+  let results = {};
+  let currentHeadline = '';
+  let currentBody = '';
+  let compareMode = false;
+  let igIndex = {};
+  let inputMode = 'text';
+  let recognition = null;
+  let isRecording = false;
+
+  // ---------- Setup: samples ----------
+  const sampleRow = document.getElementById('sampleRow');
+  const headlineInput = document.getElementById('headlineInput');
+  const bodyInput = document.getElementById('bodyInput');
+  const wordcountEl = document.getElementById('wordcount');
+
+  function renderSamples(samples){
+    sampleRow.innerHTML = '';
+    samples.forEach((s)=>{
+      const btn = document.createElement('button');
+      btn.className = 'sample-btn';
+      btn.textContent = 'Sample: ' + s.tag;
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.sample-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        headlineInput.value = s.headline;
+        bodyInput.value = s.body;
+        updateWordcount();
+        document.getElementById('briefingBanner').style.display = 'none';
+      });
+      sampleRow.appendChild(btn);
+    });
+  }
+  renderSamples(MODE_META.text.samples);
+
+  function updateWordcount(){
+    const words = bodyInput.value.trim().split(/\s+/).filter(Boolean).length;
+    wordcountEl.textContent = words + ' words';
+  }
+  bodyInput.addEventListener('input', updateWordcount);
+
+  // ---------- Setup: input mode (text / audio / video) ----------
+  const mediaPanel = document.getElementById('mediaPanel');
+  const mediaFileInput = document.getElementById('mediaFileInput');
+  const mediaPreviewWrap = document.getElementById('mediaPreviewWrap');
+  const micBtn = document.getElementById('micBtn');
+
+  function stopRecording(){
+    isRecording = false;
+    if(recognition){ recognition.onend = null; try{ recognition.stop(); }catch(e){} }
+    micBtn.textContent = '🎙 Record from mic';
+    micBtn.classList.remove('recording');
+  }
+
+  function setMode(mode){
+    inputMode = mode;
+    stopRecording();
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+    const meta = MODE_META[mode];
+    document.getElementById('panelSub').textContent = meta.sub;
+    document.getElementById('bodyFieldLabel').textContent = meta.bodyLabel;
+    bodyInput.placeholder = meta.bodyPlaceholder;
+    document.getElementById('fileBtnLabel').textContent = meta.fileLabel;
+    mediaFileInput.accept = mode==='video' ? 'video/*' : 'audio/*';
+    mediaFileInput.value = '';
+    mediaPreviewWrap.innerHTML = '';
+    document.getElementById('micNote').innerHTML = '';
+    mediaPanel.style.display = mode==='text' ? 'none' : 'block';
+    renderSamples(meta.samples);
+  }
+  document.querySelectorAll('.mode-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=> setMode(tab.dataset.mode));
+  });
+
+  mediaFileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    const tag = inputMode === 'video' ? 'video' : 'audio';
+    mediaPreviewWrap.innerHTML = '<'+tag+' controls src="'+url+'" style="width:100%;max-width:420px;display:block;"></'+tag+'>'+
+      '<div class="media-filename">'+escapeHtml(file.name)+' · '+(file.size/1024/1024).toFixed(1)+' MB</div>';
+  });
+
+  // Live mic dictation via the browser's speech API — genuinely functional
+  // in Chromium browsers, and the honest way to fill a transcript in a
+  // sandbox with no server-side speech-to-text available.
+  micBtn.addEventListener('click', ()=>{
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const noteEl = document.getElementById('micNote');
+    if(!SR){
+      noteEl.innerHTML = '<div class="mic-warning">Live dictation isn\'t supported in this browser — try Chrome, or paste the transcript directly.</div>';
+      return;
+    }
+    if(isRecording){ stopRecording(); return; }
+    noteEl.innerHTML = '';
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+    let finalTranscript = bodyInput.value ? bodyInput.value.trim() + ' ' : '';
+    recognition.onresult = (e)=>{
+      let interim = '';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+        else interim += e.results[i][0].transcript;
+      }
+      bodyInput.value = (finalTranscript + interim).trim();
+      updateWordcount();
+    };
+    recognition.onerror = ()=>{ stopRecording(); };
+    recognition.onend = ()=>{ if(isRecording){ try{ recognition.start(); }catch(e){ stopRecording(); } } };
+    try{
+      recognition.start();
+      isRecording = true;
+      micBtn.textContent = '⏹ Stop recording';
+      micBtn.classList.add('recording');
+    }catch(e){
+      noteEl.innerHTML = '<div class="mic-warning">Couldn\'t start the microphone — check your browser\'s mic permission.</div>';
+    }
+  });
+
+  // ---------- Discovery desk ----------
+  // Live version: real RSS feeds, fetched client-side through rss2json.com
+  // (a free RSS-to-JSON proxy — most news RSS feeds don't send CORS headers,
+  // so a direct browser fetch would otherwise be blocked). Clustering,
+  // filed-matching, and scoring all run for real against Claude. Social
+  // platforms (X, Instagram) are left out deliberately — those need paid
+  // API access, so this stays inside what's actually free.
+  const OWN_FEED = { name:'AajTak (ours)', url:'https://www.aajtak.in/rssfeeds/?id=home' };
+  const RSS_SOURCES = [
+    { name:'NDTV', url:'https://feeds.feedburner.com/ndtvkhabar-latest' },
+    { name:'News18 Hindi', url:'https://hindi.news18.com/rss/khabar/nation/nation.xml' },
+    { name:'TV9 Hindi', url:'https://www.tv9hindi.com/feed' }
+  ];
+  // Used only when no specific article link is available (sample/fallback
+  // data has none) — links to the real outlet instead of a fabricated
+  // article URL, so a chip is never a dead end but also never overclaims.
+  const SOURCE_HOMEPAGES = {
+    'NDTV': 'https://ndtv.in',
+    'News18 Hindi': 'https://hindi.news18.com',
+    'TV9 Hindi': 'https://www.tv9hindi.com',
+    'AajTak (ours)': 'https://www.aajtak.in'
+  };
+
+  const discoveryBtn = document.getElementById('discoveryBtn');
+  const discoveryLoading = document.getElementById('discoveryLoading');
+  const discoveryError = document.getElementById('discoveryError');
+  const discoveryList = document.getElementById('discoveryList');
+  const sourceStatusEl = document.getElementById('sourceStatus');
+  let lastOwnItems = [];
+  let lastCompetitorFeeds = [];
+  let lastDiscoveryTopics = [];
+
+  discoveryList.innerHTML = '<p class="empty-note">Loading today\'s discovery pass...</p>';
+
+  function startDiscoveryLoading(){
+    discoveryBtn.disabled = true;
+    document.getElementById('discoveryHint').style.display = 'none';
+    discoveryLoading.innerHTML = '<div class="loading-line">Pulling live RSS feeds...</div><div class="ticker-track"><div class="ticker-bar"></div></div>';
+  }
+  function stopDiscoveryLoading(){
+    discoveryBtn.disabled = false;
+    document.getElementById('discoveryHint').style.display = '';
+    discoveryLoading.innerHTML = '';
+  }
+
+  async function fetchRss(feedUrl){
+    const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
+    const resp = await fetch(proxyUrl);
+    if(!resp.ok){ throw new Error('status '+resp.status); }
+    const data = await resp.json();
+    if(data.status !== 'ok'){ throw new Error(data.message || 'feed parse failed'); }
+    return (data.items||[]).map(it=>({ title: (it.title||'').trim(), link: it.link||'' }));
+  }
+
+  async function analyzeHeadlines(ownItems, competitorFeeds, beatProfile){
+    const ownList = ownItems.length ? ownItems.map((it,i)=>(i+1)+'. '+it.title).join('\n') : '(own feed unavailable this run — treat every topic as not yet filed)';
+    const compList = competitorFeeds.filter(f=>f.items.length).map(f=> f.source.name+':\n'+f.items.map((it,i)=>'  '+(i+1)+'. '+it.title).join('\n')).join('\n\n');
+    const system = "You are a news assignment desk assistant. Given our own recently published headlines and headlines currently live from competitor RSS feeds, do two things: (1) group the competitor headlines into distinct topics, merging near-duplicate coverage of the same real-world story across sources; (2) for each topic, decide whether it matches one of our own published headlines (the same underlying story) or is a gap we haven't covered — and if it's a gap, score relevancy (0-100, fit with our editorial focus) and impact (0-100, likely public interest), plus a one-sentence rationale and a 2-3 sentence neutral briefing summarizing what's being reported, based only on the headlines given. Never invent facts beyond what the headlines say. Respond with ONLY a JSON object, no commentary.";
+    const user = "OUR EDITORIAL FOCUS: "+beatProfile+"\n\nOUR RECENT HEADLINES:\n"+ownList+"\n\nCOMPETITOR HEADLINES:\n"+compList+"\n\nReturn JSON: {\"topics\": [{\"summary\": string (short topic headline), \"sources\": [{\"name\": string (source name exactly as given), \"headline\": string (the exact original headline text from that source, copied verbatim so it can be matched back to its link)}], \"filed\": boolean, \"matchedOwnHeadline\": string or null, \"relevancy\": number or null, \"impact\": number or null, \"rationale\": string or null, \"briefing\": string or null}]} — cap it at the 8 most significant topics, ordered however you find them.";
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1200,
+        system: system,
+        messages: [{ role: "user", content: user }]
+      })
+    });
+    if(!resp.ok){ throw new Error("API request failed ("+resp.status+")"); }
+    const data = await resp.json();
+    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const clean = textBlocks.replace(/```json/g,'').replace(/```/g,'').trim();
+    const parsed = tryParseJson(clean);
+    if(parsed === null || !parsed.topics){ throw new Error("Malformed response"); }
+    return parsed.topics;
+  }
+
+  // Saved snapshot used only when the live fetch is blocked — real headlines
+  // are preferred whenever the network allows them through; this exists so
+  // the clustering/matching/scoring step (the part that can run in any
+  // sandbox, since it only calls api.anthropic.com) still runs on something
+  // realistic rather than dead-ending on a network restriction.
+  const SAMPLE_OWN_HEADLINES = [
+    "Central bank holds interest rate steady for fourth straight meeting",
+    "Airline launches new direct international route",
+    "Monsoon session of parliament to begin next week",
+    "Bollywood star announces new film project",
+    "Gold prices ease slightly after last week's rally",
+    "Cricket board announces domestic season schedule",
+    "Stock market closes higher led by banking stocks"
+  ];
+  const SAMPLE_COMPETITOR_HEADLINES = {
+    'NDTV': [
+      "State expands free bus travel scheme for women statewide",
+      "Central bank holds interest rate steady for fourth consecutive review",
+      "New expressway stretch cuts travel time between two major cities",
+      "Farmers in northern state protest over crop prices",
+      "Tech company announces layoffs amid restructuring"
+    ],
+    'News18 Hindi': [
+      "Women's free bus travel scheme extended to all districts",
+      "Viral rescue video during flooding draws national attention",
+      "Airline launches new direct international route",
+      "State assembly passes new education bill",
+      "Local elections scheduled for next month"
+    ],
+    'TV9 Hindi': [
+      "New expressway between two cities cuts commute time in half",
+      "State to expand free bus travel for women beyond capital",
+      "Heavy rains cause waterlogging in several districts",
+      "Viral video of flood rescue effort gets millions of views",
+      "Cricket team announces squad for upcoming series"
+    ]
+  };
+
+  async function runDiscoveryPass(){
+    discoveryError.innerHTML = '';
+    const beatProfile = document.getElementById('beatProfileInput').value.trim();
+    if(!beatProfile){
+      discoveryError.innerHTML = '<div class="error-banner"><span>Add an editorial focus first — it\'s what the scoring is measured against.</span></div>';
+      return;
+    }
+    startDiscoveryLoading();
+    sourceStatusEl.innerHTML = '';
+    try{
+      const settled = await Promise.allSettled([
+        fetchRss(OWN_FEED.url),
+        ...RSS_SOURCES.map(s=>fetchRss(s.url))
+      ]);
+      const ownResult = settled[0];
+      const ownLive = ownResult.status==='fulfilled' && ownResult.value.length>0;
+      const ownItems = ownLive ? ownResult.value.slice(0,15) : SAMPLE_OWN_HEADLINES.map(t=>({title:t, link:''}));
+      lastOwnItems = ownItems;
+
+      const competitorFeeds = RSS_SOURCES.map((s,i)=>{
+        const r = settled[i+1];
+        const live = r.status==='fulfilled' && r.value.length>0;
+        return {
+          source: s,
+          items: live ? r.value.slice(0,8) : (SAMPLE_COMPETITOR_HEADLINES[s.name]||[]).map(t=>({title:t, link:''})),
+          failed: !live
+        };
+      });
+
+      const statusParts = ['<span class="'+(ownLive?'ok':'fail')+'">'+(ownLive?'✓':'✗')+' '+OWN_FEED.name+'</span>']
+        .concat(competitorFeeds.map(f=>'<span class="'+(f.failed?'fail':'ok')+'">'+(f.failed?'✗':'✓')+' '+f.source.name+'</span>'));
+      const anyFallback = !ownLive || competitorFeeds.some(f=>f.failed);
+      sourceStatusEl.innerHTML = statusParts.join(' &nbsp; ') +
+        (anyFallback ? '<div class="fallback-note">✗ = live fetch blocked here — using saved sample headlines for those, so the clustering and scoring below still run on something real.</div>' : '');
+
+      const topics = await analyzeHeadlines(ownItems, competitorFeeds, beatProfile);
+      lastCompetitorFeeds = competitorFeeds;
+      lastDiscoveryTopics = topics;
+      stopDiscoveryLoading();
+      renderDiscoveryList();
+    }catch(err){
+      stopDiscoveryLoading();
+      discoveryError.innerHTML = '<div class="error-banner"><span>'+escapeHtml(err.message || 'Discovery pass failed — try again.')+'</span><button class="btn-ghost" id="discoveryRetryBtn">Try again</button></div>';
+      const retryBtn = document.getElementById('discoveryRetryBtn');
+      if(retryBtn) retryBtn.addEventListener('click', runDiscoveryPass);
+    }
+  }
+  discoveryBtn.addEventListener('click', runDiscoveryPass);
+
+  function findSourceLink(sourceName, headlineText){
+    const feed = lastCompetitorFeeds.find(f=>f.source.name===sourceName);
+    if(!feed) return null;
+    const item = feed.items.find(it=>it.title===headlineText);
+    return item && item.link ? item.link : null;
+  }
+  function renderSourceChip(s){
+    const articleLink = findSourceLink(s.name, s.headline);
+    const link = articleLink || SOURCE_HOMEPAGES[s.name];
+    if(link){
+      const title = articleLink ? 'Opens the article' : 'No specific article link available — opens the outlet\'s site';
+      return '<a class="source-chip" href="'+link+'" target="_blank" rel="noopener" title="'+title+'">'+escapeHtml(s.name)+'</a>';
+    }
+    return '<span class="source-chip">'+escapeHtml(s.name)+'</span>';
+  }
+
+  function renderDiscoveryList(){
+    const gaps = lastDiscoveryTopics.filter(t=>!t.filed).slice().sort((a,b)=>{
+      const pa = (a.relevancy!=null) ? (a.relevancy+a.impact)/2 : -1;
+      const pb = (b.relevancy!=null) ? (b.relevancy+b.impact)/2 : -1;
+      return pb - pa;
+    });
+    const filed = lastDiscoveryTopics.filter(t=>t.filed);
+
+    if(lastDiscoveryTopics.length === 0){
+      discoveryList.innerHTML = '<p class="empty-note">No distinct topics came back from this pass.</p>';
+      return;
+    }
+
+    let html = '';
+    gaps.forEach((t)=>{
+      const scored = t.relevancy != null;
+      const priority = scored ? Math.round((t.relevancy+t.impact)/2) : null;
+      const idx = lastDiscoveryTopics.indexOf(t);
+      html += '<div class="discovery-topic">'+
+        '<div class="dt-top"><div class="dt-headline">'+escapeHtml(t.summary||'')+'</div>'+
+        (scored ? '<span class="priority-rank">PRIORITY '+priority+'/100</span>' : '<span class="priority-rank">Not scored</span>')+
+        '</div>'+
+        '<div class="dt-sources">'+(t.sources||[]).map(s=>renderSourceChip(s)).join('')+'</div>'+
+        (scored ? '<div class="dt-scores">'+
+          '<div class="score-block">RELEVANCY<span class="score-val">'+t.relevancy+'/100</span></div>'+
+          '<div class="score-block">IMPACT<span class="score-val">'+t.impact+'/100</span></div>'+
+          '</div><div class="dt-rationale">'+escapeHtml(t.rationale||'')+'</div>' : '')+
+        '<button class="btn-file" data-file-idx="'+idx+'">File this story</button>'+
+        '</div>';
+    });
+    filed.forEach((t)=>{
+      const ownMatch = lastOwnItems.find(it=>it.title===t.matchedOwnHeadline);
+      html += '<div class="discovery-topic filed">'+
+        '<div class="dt-top"><div class="dt-headline">'+escapeHtml(t.summary||'')+'</div>'+
+        '<span class="filed-badge">Already filed</span></div>'+
+        '<div class="dt-sources">'+(t.sources||[]).map(s=>renderSourceChip(s)).join('')+'</div>'+
+        '<div class="discovery-note">Matches: '+escapeHtml(t.matchedOwnHeadline||'our coverage')+
+        (ownMatch && ownMatch.link ? ' — <a href="'+ownMatch.link+'" target="_blank" rel="noopener">view story</a>' : ' — <a href="'+SOURCE_HOMEPAGES['AajTak (ours)']+'" target="_blank" rel="noopener" title="No specific article link available — opens our site">visit aajtak.in</a>')+
+        '</div></div>';
+    });
+    discoveryList.innerHTML = html;
+
+    document.querySelectorAll('[data-file-idx]').forEach(btn=>{
+      btn.addEventListener('click', ()=> fileStoryFromTopic(parseInt(btn.dataset.fileIdx,10)));
+    });
+  }
+
+  function fileStoryFromTopic(idx){
+    const t = lastDiscoveryTopics[idx];
+    if(!t) return;
+    document.getElementById('discovery').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+    setMode('text');
+    document.querySelectorAll('.sample-btn').forEach(b=>b.classList.remove('active'));
+    headlineInput.value = t.summary || '';
+    bodyInput.value = 'BRIEFING NOTE — verify before filing\n\nCovered by: '+(t.sources||[]).map(s=>s.name).join(', ')+'\n\nWhat is being reported: '+(t.briefing||t.summary||'')+'\n\nThis is a discovery brief pulled from other coverage, not confirmed original reporting — verify the facts and add your own reporting before generating publish-ready formats.';
+    updateWordcount();
+    document.getElementById('briefingBanner').style.display = 'block';
+  }
+
+  document.getElementById('skipDiscoveryBtn').addEventListener('click', ()=>{
+    document.getElementById('discovery').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+  });
+  document.getElementById('backToDiscoveryBtn').addEventListener('click', ()=>{
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('discovery').style.display = 'block';
+  });
+
+  // Runs automatically on load so the desk opens with a populated list —
+  // the button stays for a manual refresh whenever the editor wants one.
+  runDiscoveryPass();
+
+  // ---------- Setup: format chips ----------
+  const chipGrid = document.getElementById('chipGrid');
+  FORMATS.forEach((f, i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip on';
+    chip.innerHTML = '<span class="box"></span><span>'+f.label+'</span><span class="chip-num">'+String(i+1).padStart(2,'0')+'</span>';
+    chip.addEventListener('click', ()=>{
+      if(selectedFormats.has(f.id)){
+        selectedFormats.delete(f.id);
+        chip.classList.remove('on');
+      } else {
+        selectedFormats.add(f.id);
+        chip.classList.add('on');
+      }
+    });
+    chipGrid.appendChild(chip);
+  });
+
+  // ---------- Generate ----------
+  const genBtn = document.getElementById('genBtn');
+  const genHint = document.getElementById('genHint');
+  const loadingArea = document.getElementById('loadingArea');
+  const errorArea = document.getElementById('errorArea');
+
+  const LOADING_PHRASES = [
+    'Filing to the desk...',
+    'Cutting for the reel edit...',
+    'Running the Hindi desk...',
+    'Formatting for broadcast...',
+    'Sizing for the feed...',
+    'Trimming to platform length...'
+  ];
+  let loadingTimer = null;
+
+  function startLoading(){
+    genBtn.disabled = true;
+    genHint.style.display = 'none';
+    let idx = 0;
+    loadingArea.innerHTML = '<div class="loading-line" id="loadingLine">'+LOADING_PHRASES[0]+'</div><div class="ticker-track"><div class="ticker-bar"></div></div>';
+    const line = document.getElementById('loadingLine');
+    loadingTimer = setInterval(()=>{
+      idx = (idx+1) % LOADING_PHRASES.length;
+      line.textContent = LOADING_PHRASES[idx];
+    }, 1200);
+  }
+  function stopLoading(){
+    clearInterval(loadingTimer);
+    loadingArea.innerHTML = '';
+    genBtn.disabled = false;
+    genHint.style.display = '';
+  }
+  function showError(msg){
+    errorArea.innerHTML = '<div class="error-banner"><span>'+escapeHtml(msg)+'</span><button class="btn-ghost" id="retryBtn">Try again</button></div>';
+    document.getElementById('retryBtn').addEventListener('click', runGenerate);
+  }
+  function clearError(){ errorArea.innerHTML = ''; }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // Best-effort recovery for a response that got cut off mid-string (e.g. hit
+  // the output cap). Walks backward from the point JSON.parse choked, drops
+  // whatever trailing key was mid-write, and closes the remaining braces —
+  // so a truncated group still returns whatever formats it finished cleanly.
+  function tryParseJson(raw){
+    try{ return JSON.parse(raw); }
+    catch(e){
+      const m = /position (\d+)/.exec(e.message);
+      let start = m ? parseInt(m[1],10) : raw.length;
+      for(let cut = start; cut > 0; cut--){
+        let candidate = raw.slice(0, cut).replace(/[,\s]+$/, '');
+        if(!candidate) continue;
+        let inStr=false, esc=false, opens=[];
+        for(let i=0;i<candidate.length;i++){
+          const ch = candidate[i];
+          if(inStr){
+            if(esc) esc=false;
+            else if(ch==='\\') esc=true;
+            else if(ch==='"') inStr=false;
+          } else {
+            if(ch==='"') inStr=true;
+            else if(ch==='{'||ch==='[') opens.push(ch);
+            else if(ch==='}'){ if(opens[opens.length-1]==='{') opens.pop(); }
+            else if(ch===']'){ if(opens[opens.length-1]==='[') opens.pop(); }
+          }
+        }
+        if(inStr) continue;
+        const closer = opens.map(c=>c==='{'?'}':']').reverse().join('');
+        try{ return JSON.parse(candidate+closer); }catch(e2){ /* keep backing up */ }
+      }
+      return null;
+    }
+  }
+
+  async function callGroup(formatIds, headline, body){
+    if(formatIds.length===0) return {};
+    const schemaBlock = formatIds.map(id=>'"'+id+'": '+SCHEMAS[id]).join(',\n');
+    const system = "You are the adaptation desk for an Indian news organization, turning one source story into platform-ready copy for other formats. Rules: never invent facts, numbers, names, or quotes beyond what is in the source; preserve the core facts and editorial intent; adapt tone and length to each platform's real conventions; Hindi output must be natural, conversational Hindi in Devanagari script, not a literal word-for-word translation; keep every field as short as the schema allows, no padding or filler sentences; respond with ONLY a single valid JSON object matching the schema given, no markdown fences, no commentary before or after.";
+    const user = "SOURCE HEADLINE: "+headline+"\nSOURCE BODY:\n"+body+"\n\nReturn a JSON object with exactly these keys and value shapes:\n{\n"+schemaBlock+"\n}";
+
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: system,
+        messages: [{ role: "user", content: user }]
+      })
+    });
+    if(!resp.ok){ throw new Error("API request failed ("+resp.status+")"); }
+    const data = await resp.json();
+    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const clean = textBlocks.replace(/```json/g,'').replace(/```/g,'').trim();
+    const parsed = tryParseJson(clean);
+    if(parsed === null){ throw new Error("Malformed response for: " + formatIds.join(', ')); }
+    return parsed;
+  }
+
+  // One retry, after a short pause, before a format is counted as failed —
+  // covers transient network/rate-limit blips rather than real errors.
+  async function callWithRetry(formatIds, headline, body){
+    try{
+      return await callGroup(formatIds, headline, body);
+    }catch(err){
+      await new Promise(res=>setTimeout(res, 900));
+      return callGroup(formatIds, headline, body);
+    }
+  }
+
+  // Runs the given thunks with limited concurrency instead of firing all of
+  // them at once — a handful of formats waiting a beat is a better trade than
+  // a burst of simultaneous requests tripping a rate limit.
+  async function runThrottled(thunks, limit){
+    const settled = new Array(thunks.length);
+    let next = 0;
+    async function worker(){
+      while(next < thunks.length){
+        const i = next++;
+        try{ settled[i] = { status:'fulfilled', value: await thunks[i]() }; }
+        catch(err){ settled[i] = { status:'rejected', reason: err }; }
+      }
+    }
+    const workers = Array.from({length: Math.min(limit, thunks.length)}, worker);
+    await Promise.all(workers);
+    return settled;
+  }
+
+  async function runGenerate(){
+    clearError();
+    const headline = document.getElementById('headlineInput').value.trim();
+    const body = bodyInput.value.trim();
+    if(!headline || !body){
+      const missingLabel = inputMode==='text' ? 'story body' : 'transcript';
+      showError('Add a headline and '+missingLabel+' first — or load a sample.');
+      return;
+    }
+    const chosen = FORMATS.filter(f=>selectedFormats.has(f.id));
+    if(chosen.length===0){
+      showError('Select at least one target format.');
+      return;
+    }
+    currentHeadline = headline;
+    currentBody = body;
+    startLoading();
+    try{
+      const thunks = chosen.map(f => () => callWithRetry([f.id], headline, body));
+      const settled = await runThrottled(thunks, 3);
+      const merged = {};
+      let failedCount = 0;
+      settled.forEach(r=>{
+        if(r.status==='fulfilled') Object.assign(merged, r.value);
+        else failedCount++;
+      });
+      results = merged;
+      stopLoading();
+      if(Object.keys(results).length === 0){
+        showError('The desk came back empty — try again.');
+        return;
+      }
+      renderOutput(chosen, failedCount);
+    }catch(err){
+      stopLoading();
+      showError('Something broke at the desk: ' + err.message);
+    }
+  }
+  genBtn.addEventListener('click', runGenerate);
+
+  document.getElementById('startOverBtn').addEventListener('click', ()=>{
+    document.getElementById('output').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+  });
+
+  // ---------- Render output ----------
+  function renderOutput(chosen, failedCount){
+    compareMode = false;
+    document.getElementById('setup').style.display = 'none';
+    const output = document.getElementById('output');
+    output.style.display = 'block';
+    document.getElementById('outputHeadline').textContent = currentHeadline;
+
+    const warn = document.getElementById('outputWarning');
+    const available = chosen.filter(f=>results[f.id]);
+    if(failedCount>0){
+      warn.innerHTML = '<div class="error-banner" style="margin-bottom:18px;"><span>'+failedCount+' format(s) didn\'t come back cleanly — showing the '+available.length+' that generated OK. Try again to retry everything.</span><button class="btn-ghost" id="retryAllBtn">Retry all</button></div>';
+      document.getElementById('retryAllBtn').addEventListener('click', ()=>{
+        document.getElementById('output').style.display = 'none';
+        document.getElementById('setup').style.display = 'block';
+        runGenerate();
+      });
+    } else {
+      warn.innerHTML = '';
+    }
+
+    const rail = document.getElementById('rail');
+    rail.innerHTML = '';
+    available.forEach((f, i)=>{
+      const item = document.createElement('div');
+      item.className = 'rail-item' + (i===0 ? ' active' : '');
+      item.dataset.id = f.id;
+      item.innerHTML = '<div class="row1"><span class="rnum">'+String(i+1).padStart(2,'0')+'</span><span class="rlabel">'+f.label+'</span></div><div class="rmeta">'+metaFor(f.id)+'</div>';
+      item.addEventListener('click', ()=>{
+        document.querySelectorAll('.rail-item').forEach(el=>el.classList.remove('active'));
+        item.classList.add('active');
+        activeFormat = f.id;
+        renderPane(f.id);
+      });
+      rail.appendChild(item);
+    });
+    activeFormat = available[0].id;
+    renderPane(activeFormat);
+  }
+
+  function metaFor(id){
+    const d = results[id];
+    if(!d) return '';
+    if(id==='website') return wordsOf(d.body)+' words';
+    if(id==='hindi') return wordsOf(d.body)+' words';
+    if(id==='newsletter') return wordsOf(d.body)+' words';
+    if(id==='x') return (d.text||'').length+' chars';
+    if(id==='push') return (d.body||'').length+' chars';
+    if(id==='instagram') return (d.slides||[]).length+' slides';
+    if(id==='reel') return (d.scenes||[]).length+' scenes';
+    if(id==='youtube') return (d.script||[]).length+' segments';
+    if(id==='tv') return (d.script||[]).length+' cues';
+    if(id==='infographic') return (d.dataPoints||[]).length+' data points';
+    return '';
+  }
+  function wordsOf(s){ return (s||'').trim().split(/\s+/).filter(Boolean).length; }
+
+  // Writes an edited value back into results[format] by dotted path, e.g.
+  // "script.2.voiceover" -> results[format].script[2].voiceover = value.
+  function setPath(obj, path, value){
+    const parts = path.split('.');
+    let cur = obj;
+    for(let i=0;i<parts.length-1;i++){
+      const key = /^\d+$/.test(parts[i]) ? parseInt(parts[i],10) : parts[i];
+      if(cur[key]===undefined) return;
+      cur = cur[key];
+    }
+    const lastKey = /^\d+$/.test(parts[parts.length-1]) ? parseInt(parts[parts.length-1],10) : parts[parts.length-1];
+    cur[lastKey] = value;
+  }
+  function updateRailMeta(id){
+    const el = document.querySelector('.rail-item[data-id="'+id+'"] .rmeta');
+    if(el) el.textContent = metaFor(id);
+  }
+  function updateLiveCounters(id, d){
+    const el = document.getElementById('liveCount');
+    if(!el) return;
+    if(id==='x') el.textContent = (d.text||'').length+' / 280 chars';
+    if(id==='push') el.textContent = (d.title||'').length+' / 50 chars (title) · '+(d.body||'').length+' / 120 chars (body)';
+  }
+
+  // Every editable element in the styled view carries data-field; one
+  // delegated listener keeps results[] in sync regardless of which format
+  // is on screen, so edits persist when you switch tabs or regenerate.
+  document.getElementById('contentPane').addEventListener('input', (e)=>{
+    const el = e.target.closest('[data-field]');
+    if(!el || !activeFormat) return;
+    const d = results[activeFormat];
+    if(!d) return;
+    setPath(d, el.dataset.field, el.innerText);
+    updateRailMeta(activeFormat);
+    updateLiveCounters(activeFormat, d);
+  });
+
+  const STOPWORDS = new Set(['The','This','That','These','Those','It','In','On','At','With','For','And','But','His','Her','Their','A','An','He','She','They','We','You','Is','Are','Was','Were','Has','Have','Had','Will','Would','Could','Should','After','Before']);
+
+  // Approximate fidelity check: pulls numbers and capitalised phrases out of
+  // the generated text and flags any that don't appear anywhere in the
+  // source story. Not a real fact-checker — a fast visual pointer for an
+  // editor deciding what's worth a second look.
+  function annotateAgainstSource(text, sourceText){
+    if(!text) return '';
+    const sourceLower = (sourceText||'').toLowerCase();
+    const re = /[₹$]?\d[\d,]*\.?\d*%?|\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]{2,}){0,3}\b/g;
+    let lastIndex = 0, out = '', m;
+    while((m = re.exec(text)) !== null){
+      const fact = m[0];
+      out += escapeHtml(text.slice(lastIndex, m.index));
+      if(!/\d/.test(fact) && STOPWORDS.has(fact.trim())){
+        out += escapeHtml(fact);
+      } else {
+        const found = sourceLower.includes(fact.toLowerCase());
+        const cls = found ? 'fact-ok' : 'fact-flag';
+        const title = found ? 'Found in source' : 'Not found in source — worth a second look';
+        out += '<span class="'+cls+'" title="'+title+'">'+escapeHtml(fact)+'</span>';
+      }
+      lastIndex = m.index + fact.length;
+    }
+    out += escapeHtml(text.slice(lastIndex));
+    return out;
+  }
+
+  function renderCompareBlock(id, plain){
+    const source = currentHeadline + '\n\n' + currentBody;
+    if(id === 'hindi'){
+      return '<div class="compare-grid">'+
+        '<div class="compare-col"><div class="compare-label">SOURCE (ENGLISH)</div><div class="compare-text">'+escapeHtml(source)+'</div></div>'+
+        '<div class="compare-col"><div class="compare-label">HINDI OUTPUT</div><div class="compare-text hindi-text">'+escapeHtml(plain)+'</div></div>'+
+        '</div><p class="compare-note">Hindi copy isn\'t token-matched against the source automatically — check names, numbers and figures by eye.</p>';
+    }
+    const annotated = annotateAgainstSource(plain, source);
+    return '<div class="compare-grid">'+
+      '<div class="compare-col"><div class="compare-label">SOURCE STORY</div><div class="compare-text">'+escapeHtml(source)+'</div></div>'+
+      '<div class="compare-col"><div class="compare-label">GENERATED OUTPUT</div><div class="compare-text">'+annotated+'</div></div>'+
+      '</div>'+
+      '<div class="compare-legend"><span class="legend-dot ok"></span>found in source &nbsp; <span class="legend-dot flag"></span>not found — worth a second look</div>'+
+      '<p class="compare-note">Approximate check on names, numbers and proper nouns only — not a substitute for an editor\'s read.</p>';
+  }
+
+  function paneToolbar(label){
+    const compareLabel = compareMode ? '← Back to preview' : 'Compare with source';
+    let html = '<div class="pane-toolbar"><div class="toolbar-row1"><span class="pane-label">'+label+'</span>'+
+      '<div class="toolbar-actions"><button class="btn-ghost" id="compareBtn">'+compareLabel+'</button>'+
+      '<button class="btn-copy" id="copyBtn">Copy text</button></div></div>';
+    if(!compareMode){
+      html += '<div class="regen-row">'+
+        '<input type="text" class="regen-input" id="regenInstruction" placeholder="e.g. punchier, shorter, more formal">'+
+        '<button class="preset-chip" data-preset="Make it punchier">Punchier</button>'+
+        '<button class="preset-chip" data-preset="Make it shorter">Shorter</button>'+
+        '<button class="preset-chip" data-preset="Make the tone more formal">More formal</button>'+
+        '<button class="btn-regen" id="regenBtn">Regenerate</button>'+
+        '</div><div id="regenErr"></div>'+
+        '<div class="edit-hint">Click any text below to edit it directly.</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function wireToolbar(id, plain){
+    wireCopy(plain);
+    const compareBtn = document.getElementById('compareBtn');
+    if(compareBtn) compareBtn.addEventListener('click', ()=>{
+      compareMode = !compareMode;
+      renderPane(id);
+    });
+    document.querySelectorAll('.preset-chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        const input = document.getElementById('regenInstruction');
+        if(input) input.value = chip.dataset.preset;
+      });
+    });
+    const regenBtn = document.getElementById('regenBtn');
+    if(regenBtn) regenBtn.addEventListener('click', async ()=>{
+      const input = document.getElementById('regenInstruction');
+      const instruction = input ? input.value.trim() : '';
+      const errBox = document.getElementById('regenErr');
+      regenBtn.disabled = true;
+      regenBtn.textContent = 'Revising...';
+      errBox.innerHTML = '';
+      try{
+        const revised = await regenerateFormat(id, instruction);
+        results[id] = revised;
+        updateRailMeta(id);
+        renderPane(id);
+      }catch(err){
+        regenBtn.disabled = false;
+        regenBtn.textContent = 'Regenerate';
+        errBox.innerHTML = '<div class="regen-error">Couldn\'t revise that — try again.</div>';
+      }
+    });
+  }
+
+  function wireCopy(text){
+    const btn = document.getElementById('copyBtn');
+    if(!btn) return;
+    btn.addEventListener('click', ()=>{
+      const finish = ()=>{
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(()=>{ btn.textContent='Copy text'; btn.classList.remove('copied'); }, 1500);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(finish).catch(finish);
+      } else { finish(); }
+    });
+  }
+
+  // Sends the current version of one format back to Claude with an
+  // editor's instruction and asks only for that one field set revised —
+  // the rest of the rundown is untouched.
+  async function regenerateFormat(id, instruction){
+    const schema = SCHEMAS[id];
+    const current = JSON.stringify(results[id]);
+    const system = "You are the adaptation desk for an Indian news organization, revising one existing platform adaptation based on editor feedback. Rules: never invent facts, numbers, names, or quotes beyond the source; preserve the core facts and editorial intent; stay within the format's real conventions; keep fields as short as the schema allows; respond with ONLY a single valid JSON object matching the schema given, no markdown fences, no commentary.";
+    const user = "SOURCE HEADLINE: "+currentHeadline+"\nSOURCE BODY:\n"+currentBody+"\n\nCURRENT VERSION for this format:\n"+current+"\n\nEDITOR INSTRUCTION: "+(instruction || "Tighten and improve the copy.")+"\n\nReturn a JSON object with exactly this key and shape:\n{\n\""+id+"\": "+schema+"\n}";
+
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: system,
+        messages: [{ role: "user", content: user }]
+      })
+    });
+    if(!resp.ok){ throw new Error("API request failed ("+resp.status+")"); }
+    const data = await resp.json();
+    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const clean = textBlocks.replace(/```json/g,'').replace(/```/g,'').trim();
+    const parsed = tryParseJson(clean);
+    if(parsed === null || !parsed[id]){ throw new Error("Malformed response"); }
+    return parsed[id];
+  }
+
+  function computePlain(id, d){
+    if(id==='website' || id==='hindi') return (d.headline||'')+'\n\n'+(d.dek?d.dek+'\n\n':'')+(d.body||'');
+    if(id==='youtube') return (d.title||'')+'\nHook: '+(d.hook||'')+'\n\n'+(d.script||[]).map(r=>r.time+' — '+r.visual+' / '+r.voiceover).join('\n')+'\n\n'+(d.description||'');
+    if(id==='tv') return (d.anchorIntro||'')+'\n\n'+(d.script||[]).map(r=>'['+r.cue+'] '+r.text).join('\n');
+    if(id==='newsletter') return (d.subjectLine||'')+'\n'+(d.preheader||'')+'\n\n'+(d.body||'');
+    if(id==='reel') return 'Hook: '+(d.hook||'')+'\n\n'+(d.scenes||[]).map(r=>r.time+' — '+r.visual+' / '+r.voiceover).join('\n')+'\n\nCaption: '+(d.caption||'');
+    if(id==='push') return (d.title||'')+'\n'+(d.body||'');
+    if(id==='x') return d.text||'';
+    if(id==='instagram') return (d.slides||[]).map((s,i)=>'Slide '+(i+1)+': '+s).join('\n');
+    if(id==='infographic') return (d.title||'')+'\n\n'+(d.dataPoints||[]).map((p,i)=>(i+1)+'. '+p).join('\n')+'\n\nVisual: '+(d.visualSuggestion||'');
+    return '';
+  }
+
+  function renderStyledHtml(id, d){
+    if(id==='website' || id==='hindi'){
+      const cls = id==='hindi' ? 'article hindi' : 'article';
+      const kicker = id==='hindi' ? 'हिन्दी वेब संस्करण' : 'WEBSITE ARTICLE';
+      return '<div class="'+cls+'"><div class="kicker">'+kicker+'</div>'+
+        '<h2 contenteditable="true" data-field="headline">'+escapeHtml(d.headline||'')+'</h2>'+
+        '<div class="dek" contenteditable="true" data-field="dek">'+escapeHtml(d.dek||'')+'</div>'+
+        '<div class="body-block" contenteditable="true" data-field="body">'+escapeHtml(d.body||'')+'</div></div>';
+    }
+    if(id==='youtube'){
+      return '<div class="script-intro"><strong contenteditable="true" data-field="title">'+escapeHtml(d.title||'')+'</strong><br>Hook: <span contenteditable="true" data-field="hook">'+escapeHtml(d.hook||'')+'</span></div>'+
+        '<table class="script"><tr><th>TIME</th><th>VISUAL</th><th>VOICEOVER</th></tr>'+
+        (d.script||[]).map((r,i)=>'<tr><td class="time" contenteditable="true" data-field="script.'+i+'.time">'+escapeHtml(r.time||'')+'</td><td contenteditable="true" data-field="script.'+i+'.visual">'+escapeHtml(r.visual||'')+'</td><td contenteditable="true" data-field="script.'+i+'.voiceover">'+escapeHtml(r.voiceover||'')+'</td></tr>').join('')+
+        '</table><div class="script-caption"><div class="lbl">DESCRIPTION</div><div contenteditable="true" data-field="description">'+escapeHtml(d.description||'')+'</div></div>';
+    }
+    if(id==='tv'){
+      return '<div class="script-intro" contenteditable="true" data-field="anchorIntro">'+escapeHtml(d.anchorIntro||'')+'</div>'+
+        '<table class="script"><tr><th>CUE</th><th>COPY</th></tr>'+
+        (d.script||[]).map((r,i)=>'<tr><td class="cue">'+escapeHtml(r.cue||'')+'</td><td contenteditable="true" data-field="script.'+i+'.text">'+escapeHtml(r.text||'')+'</td></tr>').join('')+
+        '</table>';
+    }
+    if(id==='newsletter'){
+      return '<div class="mail"><div class="mail-head">'+
+        '<div class="mail-subject" contenteditable="true" data-field="subjectLine">'+escapeHtml(d.subjectLine||'')+'</div>'+
+        '<div class="mail-pre" contenteditable="true" data-field="preheader">'+escapeHtml(d.preheader||'')+'</div></div>'+
+        '<div class="mail-body"><div class="mail-body-inner" contenteditable="true" data-field="body">'+escapeHtml(d.body||'')+'</div></div></div>';
+    }
+    if(id==='reel'){
+      return '<div class="script-intro">Hook (0-2s): <span contenteditable="true" data-field="hook">'+escapeHtml(d.hook||'')+'</span></div>'+
+        '<table class="script"><tr><th>TIME</th><th>VISUAL</th><th>VOICEOVER / ON-SCREEN</th></tr>'+
+        (d.scenes||[]).map((r,i)=>'<tr><td class="time" contenteditable="true" data-field="scenes.'+i+'.time">'+escapeHtml(r.time||'')+'</td><td contenteditable="true" data-field="scenes.'+i+'.visual">'+escapeHtml(r.visual||'')+'</td><td contenteditable="true" data-field="scenes.'+i+'.voiceover">'+escapeHtml(r.voiceover||'')+'</td></tr>').join('')+
+        '</table><div class="script-caption"><div class="lbl">CAPTION</div><div contenteditable="true" data-field="caption">'+escapeHtml(d.caption||'')+'</div></div>';
+    }
+    if(id==='push'){
+      return '<div class="phone"><div class="phone-time">9:41</div><div class="notif">'+
+        '<div class="notif-app"><span class="notif-icon">AT</span><span class="notif-app-name">INDIA TODAY</span><span class="notif-app-time">now</span></div>'+
+        '<div class="notif-title" contenteditable="true" data-field="title">'+escapeHtml(d.title||'')+'</div>'+
+        '<div class="notif-body" contenteditable="true" data-field="body">'+escapeHtml(d.body||'')+'</div></div></div>'+
+        '<div class="charcount" id="liveCount">'+(d.title||'').length+' / 50 chars (title) · '+(d.body||'').length+' / 120 chars (body)</div>';
+    }
+    if(id==='x'){
+      return '<div class="tweet"><div class="tweet-head"><span class="avatar">IT</span><div class="tweet-names"><div class="tweet-name">India Today</div><div class="tweet-handle">@IndiaToday</div></div></div>'+
+        '<div class="tweet-text" contenteditable="true" data-field="text">'+escapeHtml(d.text||'')+'</div>'+
+        '<div class="tweet-icons"><span>↩ Reply</span><span>⟲ Repost</span><span>♡ Like</span><span>⇧ Share</span></div></div>'+
+        '<div class="charcount" id="liveCount">'+(d.text||'').length+' / 280 chars</div>';
+    }
+    if(id==='instagram'){
+      igIndex[id] = igIndex[id] || 0;
+      return '<div class="ig-wrap"><div id="igSlideBox"></div>'+
+        '<div class="ig-controls"><div class="ig-nav"><button id="igPrev">‹</button><button id="igNext">›</button></div>'+
+        '<div class="ig-dots" id="igDots"></div><div class="ig-counter" id="igCounter"></div></div></div>';
+    }
+    if(id==='infographic'){
+      return '<div class="brief-title" contenteditable="true" data-field="title">'+escapeHtml(d.title||'')+'</div>'+
+        '<div class="data-points">'+(d.dataPoints||[]).map((p,i)=>'<div class="data-point"><span class="dnum">'+String(i+1).padStart(2,'0')+'</span><span contenteditable="true" data-field="dataPoints.'+i+'">'+escapeHtml(p)+'</span></div>').join('')+'</div>'+
+        '<div class="visual-note">Suggested treatment: <span contenteditable="true" data-field="visualSuggestion">'+escapeHtml(d.visualSuggestion||'')+'</span></div>';
+    }
+    return '<p class="empty-note">No renderer for this format.</p>';
+  }
+
+  function renderPane(id){
+    const pane = document.getElementById('contentPane');
+    const d = results[id];
+    if(!d){ pane.innerHTML = '<p class="empty-note">No content generated for this format.</p>'; return; }
+    const fmt = FORMATS.find(f=>f.id===id);
+    const label = (fmt ? fmt.label : id).toUpperCase();
+    const plain = computePlain(id, d);
+
+    if(compareMode){
+      pane.innerHTML = paneToolbar(label) + renderCompareBlock(id, plain);
+      wireToolbar(id, plain);
+      return;
+    }
+
+    pane.innerHTML = paneToolbar(label) + renderStyledHtml(id, d);
+    wireToolbar(id, plain);
+
+    if(id==='instagram'){
+      renderIgSlide(d);
+      document.getElementById('igPrev').addEventListener('click', ()=>{
+        const n = (d.slides||[]).length;
+        igIndex[id] = (igIndex[id]-1+n)%n;
+        renderIgSlide(d);
+      });
+      document.getElementById('igNext').addEventListener('click', ()=>{
+        const n = (d.slides||[]).length;
+        igIndex[id] = (igIndex[id]+1)%n;
+        renderIgSlide(d);
+      });
+    }
+  }
+
+  function renderIgSlide(d){
+    const slides = d.slides||[];
+    const i = igIndex['instagram']||0;
+    document.getElementById('igSlideBox').innerHTML = '<div class="ig-slide"><p contenteditable="true" data-field="slides.'+i+'">'+escapeHtml(slides[i]||'')+'</p></div>';
+    document.getElementById('igDots').innerHTML = slides.map((_,idx)=>'<span class="ig-dot'+(idx===i?' on':'')+'"></span>').join('');
+    document.getElementById('igCounter').textContent = (i+1)+' / '+slides.length;
+  }
+
+
+})();
+</script>
+</body>
+</html>
