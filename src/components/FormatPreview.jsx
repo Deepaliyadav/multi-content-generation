@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import PublishToInstagram from './PublishToInstagram.jsx';
+import AnchorRead from './AnchorRead.jsx';
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
 
@@ -214,7 +216,7 @@ function NewsletterPreview({ output, flag, edit }) {
 
 /* ── instagram carousel / story ───────────────────────────────────────── */
 
-function CarouselPreview({ output, flag, edit, tall = false }) {
+function CarouselPreview({ output, flag, edit, tall = false, publish }) {
   const blocks = output.blocks || [];
   const [i, setI] = useState(0);
   useEffect(() => setI(0), [output]);
@@ -223,8 +225,9 @@ function CarouselPreview({ output, flag, edit, tall = false }) {
   if (!n) return null;
   const idx = Math.min(i, n - 1);
   const slide = blocks[idx];
-  // One generated backdrop is shared by every slide, so the set reads as a set.
-  const bg = output.background;
+  // Each slide has its own art-directed picture; `background` is the fallback
+  // for a run where only some images came back.
+  const bg = output.backgrounds?.[idx] || output.background;
 
   return (
     <div className="ig-wrap">
@@ -259,9 +262,22 @@ function CarouselPreview({ output, flag, edit, tall = false }) {
         </div>
         {bg && (
           <p className="ig-note">
-            Backdrop is generated atmosphere, not documentary imagery — every word on
-            top of it comes from the fact ledger.
+            Generated illustration for this slide, not documentary photography — every
+            word on top of it comes from the fact ledger.
           </p>
+        )}
+        {publish && (
+          <PublishToInstagram
+            publish={publish}
+            contentType={tall ? 'story' : 'post'}
+            shape={tall ? 'story' : 'square'}
+            cards={blocks.slice(0, 10).map((b, bi) => ({
+              background: output.backgrounds?.[bi] || output.background,
+              headline: b.lines?.[0],
+              caption: b.lines?.[1],
+            }))}
+            caption={blocks.map((b) => (b.lines || []).join(' ')).join('\n\n')}
+          />
         )}
       </div>
     </div>
@@ -270,7 +286,7 @@ function CarouselPreview({ output, flag, edit, tall = false }) {
 
 /* ── instagram post ───────────────────────────────────────────────────── */
 
-function InstaPostPreview({ output, flag, edit }) {
+function InstaPostPreview({ output, flag, edit, publish }) {
   const blocks = output.blocks || [];
   const hook = byLabel(blocks, 'Hook');
   const caption = byLabel(blocks, 'Caption');
@@ -311,10 +327,16 @@ function InstaPostPreview({ output, flag, edit }) {
         )}
         {bg && (
           <p className="ig-note" style={{ maxWidth: 'none', marginTop: 14 }}>
-            Backdrop is generated atmosphere, not documentary imagery — every word on
-            top of it comes from the fact ledger.
+            Generated illustration, not documentary photography — every word on top of
+            it comes from the fact ledger.
           </p>
         )}
+        <PublishToInstagram
+          publish={publish}
+          cards={[{ background: bg, headline: hook?.lines[0] }]}
+          caption={(caption?.lines || []).join('\n\n')}
+          hashtags={tags?.lines || []}
+        />
       </div>
     </div>
   );
@@ -322,9 +344,21 @@ function InstaPostPreview({ output, flag, edit }) {
 
 /* ── scripts (video / tv / reel) ──────────────────────────────────────── */
 
-function ScriptPreview({ output, flag, edit, cueHeader = 'Cue' }) {
+/**
+ * `spoken` picks the blocks an anchor actually reads. A TV script's ticker and
+ * on-screen highlights are graphics, not speech — voicing them would give a
+ * runtime estimate for words nobody says.
+ */
+function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, readLabel }) {
   const blocks = output.blocks || [];
+  const spokenText = (
+    spoken ? blocks.filter((b) => spoken.some((k) => String(b.label).toLowerCase().includes(k))) : blocks
+  )
+    .flatMap((b) => b.lines || [])
+    .join(' ');
+
   return (
+    <>
     <table className="script-table">
       <thead>
         <tr>
@@ -345,6 +379,8 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue' }) {
         )}
       </tbody>
     </table>
+    {voice && <AnchorRead voice={voice} text={spokenText} label={readLabel || 'read'} />}
+    </>
   );
 }
 
@@ -406,7 +442,7 @@ function BlocksPreview({ output, flag, edit }) {
 
 /* ── router ───────────────────────────────────────────────────────────── */
 
-export default function FormatPreview({ format, output, flag, edit, language }) {
+export default function FormatPreview({ format, output, flag, edit, language, publish, voice }) {
   const p = { output, flag, edit };
   switch (format.id) {
     case 'translation':
@@ -420,17 +456,25 @@ export default function FormatPreview({ format, output, flag, edit, language }) 
     case 'newsletter':
       return <NewsletterPreview {...p} />;
     case 'insta_carousel':
-      return <CarouselPreview {...p} />;
+      return <CarouselPreview {...p} publish={publish} />;
     case 'insta_story':
-      return <CarouselPreview {...p} tall />;
+      return <CarouselPreview {...p} tall publish={publish} />;
     case 'insta_post':
-      return <InstaPostPreview {...p} />;
+      return <InstaPostPreview {...p} publish={publish} />;
     case 'video_script':
-      return <ScriptPreview {...p} cueHeader="Segment" />;
+      return <ScriptPreview {...p} cueHeader="Segment" voice={voice} readLabel="voiceover" />;
     case 'tv_script':
-      return <ScriptPreview {...p} cueHeader="Cue" />;
+      return (
+        <ScriptPreview
+          {...p}
+          cueHeader="Cue"
+          voice={voice}
+          spoken={['anchor']}
+          readLabel="anchor script"
+        />
+      );
     case 'reel':
-      return <ScriptPreview {...p} cueHeader="Beat" />;
+      return <ScriptPreview {...p} cueHeader="Beat" voice={voice} readLabel="voiceover" />;
     case 'photostory':
       return <PhotostoryPreview {...p} />;
     default:

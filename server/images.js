@@ -147,41 +147,6 @@ export function coverPrompt(visual, story) {
   ].join(' ');
 }
 
-/**
- * Background for the Instagram formats — carousel, post and story.
- *
- * One image serves every slide of a carousel. A carousel is read as a set, so a
- * single backdrop is what makes it look designed rather than assembled; it is
- * also one image call instead of six. Same rule as the cover: mood only, no
- * text — the copy is laid over it by the browser, so it stays exact.
- */
-export function socialPrompt(story, aspect = '1:1') {
-  const common = [
-    aspect === '9:16' ? 'Vertical 9:16 composition.' : 'Square 1:1 composition.',
-    'Keep the centre calm, dark and low-contrast — the copy is laid over it.',
-    'ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions.',
-  ];
-
-  if (imageStyle === 'photographic') {
-    return [
-      'Abstract editorial background image for a social media post.',
-      `Subject matter, for atmosphere only: ${story?.headline || ''}.`,
-      ...common,
-      'Cinematic, desaturated, shallow depth of field.',
-      'No recognisable faces, no identifiable individuals, no depiction of casualties.',
-    ].join(' ');
-  }
-
-  return [
-    'Abstract, non-photographic graphic background for a social media post.',
-    'Style: editorial illustration — flat geometric shapes, coarse halftone and paper grain, torn-paper edges, limited palette.',
-    'It must be obviously an illustration and must NOT resemble a photograph.',
-    `Loose thematic reference only, no literal scene: ${story?.headline || 'news'}.`,
-    ...common,
-    'No people, no faces, no vehicles, no buildings, no rubble, no depiction of any real event or its aftermath.',
-  ].join(' ');
-}
-
 /** Returns a data: URI, or null if imaging is off or the call failed. */
 export async function generateBackground({ prompt, aspect = '9:16' }) {
   if (!imageProviderId) return null;

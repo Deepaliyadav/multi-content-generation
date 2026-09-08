@@ -993,3 +993,160 @@ label.field-label {
 .tab .n { font-size: 10.5px; color: var(--text-faint); }
 .tab.active .n { color: var(--gold); }
 .stale-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+
+/* ── publishing ───────────────────────────────────────────────────────── */
+
+.publish-box {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.publish-box.done {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  border-top-color: var(--teal);
+  font-size: 13.5px;
+}
+.publish-mark { color: var(--teal); }
+.publish-box.done a { color: var(--teal); }
+
+/* An irreversible, outward-facing action gets the one loud colour in the set. */
+.publish-warn {
+  border-left: 3px solid var(--red);
+  background: rgba(225, 75, 54, .08);
+  padding: 10px 13px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.publish-preview {
+  margin: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  padding: 11px 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+}
+.publish-error {
+  border-left: 3px solid var(--red);
+  background: rgba(225, 75, 54, .08);
+  padding: 9px 13px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--red);
+  line-height: 1.55;
+}
+
+/* ── story intake / discovery ─────────────────────────────────────────── */
+/* Accent discipline per the legend above: teal for affirmative state and
+   selection, dim rules for settled state. Red stays reserved for the primary
+   action and stale flags; gold stays on counters and changed values — spending
+   either here would blunt the ledger signal, which is the thing that matters. */
+
+.intake-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.intake-mode {
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid transparent;
+  border-radius: 2px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  transition: border-color .12s, background .12s, color .12s;
+}
+.intake-mode:hover { border-left-color: var(--teal); color: var(--text); }
+.intake-mode.active {
+  border-left-color: var(--teal);
+  background: rgba(79, 168, 160, .08);
+  border-color: var(--teal);
+  color: var(--text);
+}
+.intake-mode b { display: block; font-family: var(--font-body); font-size: 14px; margin-bottom: 3px; }
+.intake-mode small { display: block; font-size: 11.5px; color: var(--text-faint); line-height: 1.4; }
+
+.intake-body { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+
+.tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.tick:hover { border-color: var(--teal); color: var(--text); }
+.tick input { accent-color: var(--teal); }
+.tick .meter { color: var(--text-faint); font-size: 11px; }
+
+.sweep-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.sweep-stats b { font-size: 15px; font-variant-numeric: tabular-nums; margin-right: 4px; color: var(--gold); }
+.sweep-stats .good b { color: var(--teal); }
+.sweep-stats .dim, .sweep-stats .dim b { color: var(--text-faint); }
+
+.sweep-list { display: grid; gap: 10px; max-height: 620px; overflow-y: auto; padding-right: 4px; }
+
+.sweep-row {
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--teal);
+  border-radius: 2px;
+  padding: 12px 14px;
+  background: var(--bg-sunken);
+}
+.sweep-row.is-filed { border-left-color: var(--line); background: transparent; }
+.sweep-row.is-filed h4 { color: var(--text-dim); }
+.sweep-row-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.sweep-row h4 {
+  margin: 0 0 5px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--text);
+}
+.sweep-sum { margin: 0 0 7px; font-size: 13px; line-height: 1.5; color: var(--text-dim); }
+.sweep-reason { margin: 0 0 5px; font-size: 12px; color: var(--text-faint); }
+.sweep-src { margin: 0 0 9px; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+.sweep-src a { color: var(--text-dim); }
+.sweep-src a:hover { color: var(--teal); }
+
+/* Two states that must never look alike at a glance. */
+.chip.recommend { color: var(--teal); border-color: rgba(79, 168, 160, .45); background: rgba(79, 168, 160, .1); }
+.chip.done { color: var(--text-faint); }
+
+@media (max-width: 860px) {
+  .intake-modes { grid-template-columns: 1fr; }
+  .sweep-stats { gap: 10px; }
+  .sweep-list { max-height: none; }
+}
+
+/* ── anchor read-through ──────────────────────────────────────────────── */
+
+.anchor-read {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}

@@ -11,7 +11,8 @@ import {
 } from './prompts.js';
 import { iterLines, setLine, verifyFactUsage, textCarriesValue } from './facts.js';
 import { renderVisual } from './visuals.js';
-import { generateBackground, coverPrompt, socialPrompt, imageProviderId } from './images.js';
+import { generateBackground, coverPrompt, imageProviderId } from './images.js';
+import { directSlides } from './artdirector.js';
 
 /* ── fact ledger ──────────────────────────────────────────────────────── */
 
@@ -121,6 +122,23 @@ function shape(raw) {
   };
 }
 
+/**
+ * The text each slide's picture should be about. A carousel slide is
+ * headline + caption; a story card is one line; a post is its hook, with the
+ * caption as extra colour for the director.
+ */
+function slideCopy(formatId, output) {
+  const blocks = output.blocks || [];
+  if (formatId === 'insta_post') {
+    const hook = blocks.find((b) => /hook/i.test(b.label));
+    const caption = blocks.find((b) => /caption/i.test(b.label));
+    const text = [hook?.lines?.[0], caption?.lines?.[0]].filter(Boolean).join(' — ');
+    return text ? [text] : [];
+  }
+  // Carousel and story are one block per slide.
+  return blocks.map((b) => (b.lines || []).join(' — ')).filter(Boolean);
+}
+
 const SOCIAL_BACKDROP_ASPECT = {
   insta_carousel: '1:1',
   insta_post: '1:1',
@@ -176,15 +194,24 @@ export async function generateOne({ formatId, story, facts, language, steer }) {
     finished.backgroundSource = finished.background ? imageProviderId : null;
   }
   // The Instagram formats have no code-rendered visual — their slides are DOM,
-  // so the backdrop is handed to the browser and the copy is laid over it there.
-  // One image per format, shared by every slide, in that format's own aspect.
+  // so backdrops are handed to the browser and the copy is laid over them there.
+  // One image PER SLIDE, art-directed from that slide's own copy: a single
+  // shared backdrop had nothing to do with the words on top of it, which is what
+  // made the cards read as stock wallpaper.
   const socialAspect = SOCIAL_BACKDROP_ASPECT[formatId];
   if (socialAspect && imageProviderId) {
-    finished.background = await generateBackground({
-      prompt: socialPrompt(story, socialAspect),
-      aspect: socialAspect,
-    });
-    finished.backgroundSource = finished.background ? imageProviderId : null;
+    const slideTexts = slideCopy(formatId, finished);
+    if (slideTexts.length) {
+      const prompts = await directSlides({ story, slideTexts, aspect: socialAspect });
+      finished.backgrounds = await Promise.all(
+        prompts.map((prompt) => generateBackground({ prompt, aspect: socialAspect }))
+      );
+      // The first successful image also serves as the single-image fallback for
+      // any renderer that wants one.
+      finished.background = finished.backgrounds.find(Boolean) || null;
+      finished.backgroundSource = finished.background ? imageProviderId : null;
+      finished.imagePrompts = prompts;
+    }
   }
 
   finished.svg = renderVisual(finished.visual, { background: finished.background });

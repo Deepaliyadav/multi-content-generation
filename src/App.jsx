@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as api from './lib/api.js';
 import Masthead from './components/Masthead.jsx';
 import Composer from './components/Composer.jsx';
+import StoryDiscovery from './components/StoryDiscovery.jsx';
 import FactLedger from './components/FactLedger.jsx';
 import ProgressPanel from './components/ProgressPanel.jsx';
 import FormatRail from './components/FormatRail.jsx';
@@ -10,6 +11,7 @@ import ContentPane from './components/ContentPane.jsx';
 export default function App() {
   const [meta, setMeta] = useState(null);
   const [stage, setStage] = useState('compose'); // compose | working | review
+  const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
 
   const [story, setStory] = useState({ headline: '', body: '' });
   const [language, setLanguage] = useState('Hindi');
@@ -305,6 +307,33 @@ export default function App() {
           )}
 
           {stage === 'compose' && (
+            <StoryDiscovery
+              meta={meta}
+              busy={busy}
+              onUseStory={(b, cluster) => {
+                setStory({ headline: b.headline, body: b.body });
+                setSample(null);
+                setBrief({ ...b, from: cluster.headline, origin: cluster.origin });
+              }}
+            />
+          )}
+
+          {stage === 'compose' && brief && (
+            <div className="banner" style={{ marginBottom: 14 }}>
+              <span className="banner-mark">⚑</span>
+              <div>
+                <h3>Unverified starter brief — rewrite before you file</h3>
+                <p>
+                  Drafted from {brief.sourcedFrom?.length ? brief.sourcedFrom.join(', ') : 'a trending-topic search'} and
+                  attributed to them throughout. Nothing here has been confirmed by this desk, and the
+                  last paragraph lists what still needs checking. Edit it into your own copy below —
+                  the thirteen formats are only ever as good as this source.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {stage === 'compose' && (
             <Composer
               meta={meta}
               story={story}
@@ -320,6 +349,7 @@ export default function App() {
               onLoadSample={(s) => {
                 setStory({ headline: s.headline, body: s.body });
                 setSample(s);
+                setBrief(null);
               }}
               onGenerate={runGenerate}
             />
@@ -482,6 +512,8 @@ export default function App() {
                   visualBefore={activeFormat ? visualBefore[activeFormat.id] : null}
                   language={language}
                   story={story}
+                  publish={meta?.publish?.instagram}
+                  voice={meta?.voice}
                   busy={busy === activeFormat?.id}
                   onSave={(blocks) =>
                     setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }))

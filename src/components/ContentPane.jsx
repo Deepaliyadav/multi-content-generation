@@ -39,7 +39,7 @@ function downloadPng(svg, name) {
  */
 export default function ContentPane({
   format, output, stale, patches, visualBefore,
-  onSave, onRegenerate, busy, error, language, story, status,
+  onSave, onRegenerate, busy, error, language, story, status, publish, voice,
 }) {
   const [steer, setSteer] = useState('');
   const [copied, setCopied] = useState(false);
@@ -249,6 +249,8 @@ export default function ContentPane({
               flag={flag}
               edit={edit}
               language={language}
+              publish={publish}
+              voice={voice}
             />
           )}
 

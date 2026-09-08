@@ -12,7 +12,8 @@
     "audit:grounding": "node scripts/grounding-audit.mjs",
     "test:unit": "node scripts/unit.mjs",
     "test:providers": "node scripts/check-providers.mjs",
-    "test:e2e": "node scripts/e2e-api.mjs"
+    "test:e2e": "node scripts/e2e-api.mjs",
+    "seed:cms": "node scripts/seed-cms.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.0",

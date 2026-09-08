@@ -15,6 +15,7 @@ export const rediff = (story, oldFacts) => json('/api/rediff', { story, oldFacts
 export const scan = (outputs, changes) => json('/api/scan', { outputs, changes });
 export const patch = (body) => json('/api/patch', body);
 export const patchVisual = (body) => json('/api/patch-visual', body);
+export const publishInstagram = (body) => json('/api/publish/instagram', body);
 
 /** Streams newline-delimited JSON events from /api/generate. */
 export async function generate(body, onEvent) {
