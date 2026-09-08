@@ -49,7 +49,7 @@ export default function ContentPane(props) {
 
 function Pane({
   format, output, stale, patches, visualBefore,
-  onSave, onRegenerate, busy, error, language, story, status, publish, voice,
+  onSave, onRegenerate, busy, error, language, story, status, publish, voice, rewriteNote,
 }) {
   const preview = usePreview();
   const [steer, setSteer] = useState('');
@@ -199,6 +199,13 @@ function Pane({
           <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
             {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
           </button>
+          {!busy && rewriteNote && (
+            <span className={`regen-note ${rewriteNote.changed ? 'moved' : ''}`}>
+              {rewriteNote.changed
+                ? `Rewritten — ${rewriteNote.changed} of ${rewriteNote.total} lines changed in ${(rewriteNote.ms / 1000).toFixed(1)}s`
+                : `Rewritten in ${(rewriteNote.ms / 1000).toFixed(1)}s — came back the same. The ledger has not changed, so there is little room to move. Try a steer.`}
+            </span>
+          )}
           {showsCopy && (
             <span className="edit-hint spacer">Click any text below to edit it directly.</span>
           )}

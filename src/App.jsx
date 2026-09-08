@@ -12,6 +12,10 @@ export default function App() {
   const [meta, setMeta] = useState(null);
   const [stage, setStage] = useState('compose'); // compose | working | review
   const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
+  // What the last plain rewrite actually did. A rewrite against an unchanged
+  // ledger legitimately returns near-identical copy, which reads as a dead
+  // button unless the desk is told how much moved.
+  const [rewriteNote, setRewriteNote] = useState({});
 
   const [story, setStory] = useState({ headline: '', body: '' });
   const [language, setLanguage] = useState('Hindi');
@@ -228,6 +232,7 @@ export default function App() {
 
       setOutputs((o) => ({ ...o, [formatId]: { ...next, formatId } }));
       setPatches((p) => ({ ...p, [formatId]: patchList }));
+      setRewriteNote((r) => ({ ...r, [formatId]: null }));
       setVisualBefore((v) => ({ ...v, [formatId]: vBefore }));
       setStaleReport((s) => ({ ...s, [formatId]: { ...s[formatId], stale: false, staleLines: [], staleVisual: false } }));
     } catch (e) {
@@ -237,15 +242,31 @@ export default function App() {
     }
   }
 
+  /** How many lines actually moved between two versions of one output. */
+  function lineDelta(before, after) {
+    const flat = (o) => (o?.blocks || []).flatMap((b) => b.lines || []);
+    const a = flat(before);
+    const b = flat(after);
+    const total = Math.max(a.length, b.length);
+    let changed = 0;
+    for (let i = 0; i < total; i++) if ((a[i] ?? '') !== (b[i] ?? '')) changed++;
+    return { changed, total };
+  }
+
   /** A plain rewrite of one format against the current ledger. */
   async function rewrite(formatId, steer = '') {
     if (!facts.length) return;
     setBusy(formatId);
     setError(null);
     setErrors((e) => ({ ...e, [formatId]: undefined }));
+    const before = outputs[formatId];
     try {
       await api.generate({ story, facts, language, only: [formatId], steer }, (ev) => {
         if (ev.type === 'format:done') {
+          setRewriteNote((r) => ({
+            ...r,
+            [ev.formatId]: { ...lineDelta(before, ev.output), ms: ev.output.ms, steer: steer.trim() },
+          }));
           setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
           setTimes((t) => ({ ...t, [ev.formatId]: ev.output.ms }));
           setStatus((s) => ({ ...s, [ev.formatId]: 'done' }));
@@ -519,6 +540,7 @@ export default function App() {
                     setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }))
                   }
                   onRegenerate={(steer) => regenerate(activeFormat.id, steer)}
+                  rewriteNote={rewriteNote[activeFormat.id]}
                 />
               </div>
             </>

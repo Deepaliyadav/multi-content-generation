@@ -1455,3 +1455,94 @@ button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
   border-top: 1px solid var(--line-soft);
 }
 .preview-foot .ig-dot { border: none; padding: 0; cursor: pointer; }
+
+/* Receipt for a plain rewrite. Teal when lines moved, dim when the model
+   returned the same copy — which is correct behaviour against an unchanged
+   ledger, but has to be said out loud or the button reads as broken. */
+.regen-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-faint);
+  max-width: 46ch;
+}
+.regen-note.moved { color: var(--teal); }
+
+/* ── mobile ───────────────────────────────────────────────────────────── */
+
+/* The desk chrome is built for a wide screen; on a phone the priority is that
+   nothing overflows sideways and the copy keeps its measure. Layout grids
+   already collapse further up — this pass handles padding, the rail, and the
+   tables, which are the three things that actually break at 390px. */
+
+@media (max-width: 760px) {
+  /* The rail becomes a scrolling strip: thirteen stacked rows would push the
+     content a full screen down before you saw any of it. */
+  .format-rail {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail-item {
+    flex: 0 0 auto;
+    min-width: 150px;
+    scroll-snap-align: start;
+    border-bottom: none;
+    border-right: 1px solid var(--line-soft);
+    border-left: none;
+    border-top: 3px solid transparent;
+    padding: 10px 14px;
+  }
+  .rail-item.active { border-left: none; border-top-color: var(--red); }
+  .rail-item .rmeta { padding-left: 0; }
+}
+
+@media (max-width: 640px) {
+  .frame { padding: 0 14px 56px; }
+  .masthead-inner { padding: 10px 14px 11px; gap: 12px; }
+  .wordmark { font-size: 21px; }
+  .tagline { display: none; }          /* the strapline is the first thing to go */
+  .metrics { margin-left: 0; gap: 12px; }
+  .metric { text-align: left; }
+
+  .content-pane { padding: 18px 14px 24px; }
+  .panel-body, .panel-head, .card-foot { padding-left: 14px; padding-right: 14px; }
+  .fact { padding-left: 14px; padding-right: 14px; }
+  .prow { padding-left: 14px; padding-right: 14px; }
+
+  .output-head { margin: 18px 0 12px; }
+  .output-title { font-size: 17px; }
+
+  /* Cards are fixed-width by design; on a phone they take the column instead. */
+  .ig-slide, .ig-slide.tall { width: 100%; max-width: 320px; }
+  .ig-slide.tall { min-height: 0; aspect-ratio: 9 / 16; }
+  .phone, .tweet, .mail, .visual-wrap, .visual-wrap.tall { width: 100%; max-width: 100%; }
+  .ig-caption, .essay-copy, .line, .article h2, .article .body p, .points { max-width: 100%; }
+
+  /* A two-column script squeezes the copy to a few words a line. Stack the cue
+     above its lines instead, which is how a running order reads on paper. */
+  .script-table, .script-table tbody, .script-table tr, .script-table td { display: block; width: 100%; }
+  .script-table thead { display: none; }
+  .script-table tr { padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+  .script-table td { border: none; padding: 0; }
+  .script-table td.cue, .script-table td.time { width: auto; margin-bottom: 5px; }
+  .script-table td.cue:empty, .script-table td.time:empty { display: none; }
+
+  .visual-split, .essay-frame, .compare-grid { gap: 16px; }
+  .essay-frame.stale-frame { margin-left: 0; padding-left: 10px; }
+
+  .preview-backdrop { padding: 10px; }
+  .preview-nav { width: 34px; height: 34px; font-size: 17px; }
+  .preview-nav.prev { left: 6px; }
+  .preview-nav.next { right: 6px; }
+  .preview-body { padding: 10px; }
+
+  .anchor-row, .toolbar-actions, .preset-row { gap: 7px; }
+  .edit-hint { display: none; }        /* the affordance is discoverable by touch */
+}
+
+/* Nothing may scroll the page sideways — a stray fixed width is a bug, not a
+   reason for a horizontal scrollbar. */
+html, body { max-width: 100%; overflow-x: hidden; }
