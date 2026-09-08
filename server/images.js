@@ -18,7 +18,7 @@
  */
 import './env.js';
 
-const OPENAI_SIZES = { '9:16': '1024x1536', '1:1': '1024x1024', '16:9': '1536x1024' };
+const OPENAI_SIZES = { '9:16': '1024x1536', '1:1': '1024x1024', '16:9': '1536x1024', '4:3': '1536x1024' };
 
 async function openaiImage({ prompt, aspect }) {
   const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -99,53 +99,6 @@ export const imageProviderId = provider?.ready() ? chosen : null;
 export const imageProviderLabel = imageProviderId
   ? provider.label
   : 'none — covers use the designed gradient';
-
-/**
- * Build a background prompt from the cover spec.
- *
- * Default style is deliberately NON-photographic.
- *
- * A photoreal backdrop of a real casualty event is synthetic documentary
- * imagery of something nobody photographed — a picture that looks like evidence
- * and is not. Newsrooms get burned by exactly that. So the default asks for an
- * abstract, obviously-illustrative treatment, and the photoreal mode is an
- * explicit opt-in via LSS_IMAGE_STYLE=photographic. Either way the rendered
- * cover carries a visible AI-GENERATED IMAGE mark.
- */
-export const imageStyle = (process.env.LSS_IMAGE_STYLE || 'abstract').toLowerCase();
-
-export function coverPrompt(visual, story) {
-  const mood =
-    visual?.tone === 'urgent' ? 'tense, high-contrast, deep shadows'
-    : visual?.tone === 'somber' ? 'muted, restrained, overcast'
-    : 'clean, neutral, calm';
-
-  const common = [
-    `Mood: ${mood}.`,
-    'Vertical 9:16. Keep the lower two thirds visually quiet and dark for text overlay.',
-    'ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions.',
-  ];
-
-  if (imageStyle === 'photographic') {
-    return [
-      'Abstract editorial background image for a news video cover.',
-      `Subject matter, for atmosphere only: ${story?.headline || ''}.`,
-      ...common,
-      'Cinematic, desaturated, slightly out of focus.',
-      'No recognisable faces, no identifiable individuals, no depiction of casualties.',
-    ].join(' ');
-  }
-
-  // Abstract default: evokes the subject without pretending to document it.
-  return [
-    'Abstract, non-photographic graphic background for a news video cover.',
-    'Style: editorial illustration — flat geometric shapes, coarse halftone and paper grain, torn-paper edges, limited palette.',
-    'It must be obviously an illustration and must NOT resemble a photograph.',
-    `Loose thematic reference only, no literal scene: ${visual?.kicker || 'news'}.`,
-    ...common,
-    'No people, no faces, no vehicles, no buildings, no rubble, no depiction of any real event or its aftermath.',
-  ].join(' ');
-}
 
 /** Returns a data: URI, or null if imaging is off or the call failed. */
 export async function generateBackground({ prompt, aspect = '9:16' }) {

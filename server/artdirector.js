@@ -25,6 +25,7 @@ import { completeJson } from './llm.js';
 const RATIO = {
   '1:1': 'Square 1:1 composition, framed for an Instagram feed post.',
   '9:16': 'Vertical 9:16 composition, framed for an Instagram story.',
+  '4:3': 'Landscape 4:3 composition, framed as a press photograph in a photo essay.',
 };
 
 const SYSTEM = `You are a creative director specializing in Instagram visuals for news and trending topics.

@@ -1151,15 +1151,14 @@ label.field-label {
 
 .voice-picker { position: relative; }
 
-/* Opens upward: this control always sits at the foot of the content pane, and
-   the output grid clips overflow, so a downward panel would fall out of view. */
+/* Positioned in viewport coordinates by the component: the output grid clips
+   its overflow, so an absolutely-positioned panel is cut off at every edge. */
 .voice-panel {
-  position: absolute;
-  z-index: 30;
-  bottom: calc(100% + 6px);
-  left: 0;
+  position: fixed;
+  z-index: 90;
   width: 340px;
   max-width: 88vw;
+  overflow: hidden;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -1177,7 +1176,7 @@ label.field-label {
   padding: 2px;
 }
 
-.voice-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; }
+.voice-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 
 .voice-row {
   display: grid;
@@ -1297,3 +1296,123 @@ label.field-label {
 }
 .btn-download:hover { filter: brightness(1.1); }
 .btn-download:active { transform: translateY(1px); }
+
+/* ── full-size preview ────────────────────────────────────────────────── */
+
+.previewable { cursor: zoom-in; }
+button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
+
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(8, 10, 12, .82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+
+.preview-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  max-width: min(96vw, 1100px);
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.preview-head a.btn { text-decoration: none; }
+
+.preview-body {
+  padding: 18px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  background: var(--bg-sunken);
+}
+.preview-body img, .preview-svg svg {
+  display: block;
+  max-width: 100%;
+  max-height: calc(94vh - 90px);
+  height: auto;
+  width: auto;
+}
+
+/* The card's middle is editable copy, so zooming gets its own corner control. */
+.preview-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  background: rgba(0, 0, 0, .5);
+  color: rgba(255, 255, 255, .85);
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0, 0, 0, .72); }
+
+/* ── photo essay ──────────────────────────────────────────────────────── */
+
+.essay { display: flex; flex-direction: column; gap: 26px; }
+
+.essay-frame {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 22px;
+  margin: 0;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .essay-frame { grid-template-columns: 1fr; }
+}
+.essay-frame.stale-frame { border-left: 2px solid var(--gold); padding-left: 14px; margin-left: -16px; }
+
+.essay-plate {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.essay-plate img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* The frame number sits on the plate, the way a contact sheet marks a strip. */
+.essay-num {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: rgba(255, 255, 255, .9);
+  background: rgba(0, 0, 0, .55);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+.essay-plate .ai-mark { left: auto; right: 10px; bottom: 10px; }
+.essay-empty { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); font-style: italic; }
+
+.essay-copy { min-width: 0; padding-top: 2px; }

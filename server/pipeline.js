@@ -11,7 +11,7 @@ import {
 } from './prompts.js';
 import { iterLines, setLine, verifyFactUsage, textCarriesValue } from './facts.js';
 import { renderVisual } from './visuals.js';
-import { generateBackground, coverPrompt, imageProviderId } from './images.js';
+import { generateBackground, imageProviderId } from './images.js';
 import { directSlides } from './artdirector.js';
 
 /* ── fact ledger ──────────────────────────────────────────────────────── */
@@ -129,6 +129,21 @@ function shape(raw) {
  */
 function slideCopy(formatId, output) {
   const blocks = output.blocks || [];
+
+  // A photostory already ships its own shot list: line 1 of every frame is a
+  // photo direction the model wrote ("[Wide: the locality]", "[Detail: broken
+  // masonry]"). That is a better brief for the picture than the caption is, so
+  // it leads, with the caption behind it for context.
+  if (formatId === 'photostory') {
+    return blocks
+      .map((b) => {
+        const direction = String(b.lines?.[0] ?? '').replace(/^\[|\]$/g, '').trim();
+        const caption = String(b.lines?.[1] ?? '').trim();
+        return [direction, caption].filter(Boolean).join(' — ');
+      })
+      .filter(Boolean);
+  }
+
   if (formatId === 'insta_post') {
     const hook = blocks.find((b) => /hook/i.test(b.label));
     const caption = blocks.find((b) => /caption/i.test(b.label));
@@ -143,10 +158,14 @@ function slideCopy(formatId, output) {
     .filter(Boolean);
 }
 
-const SOCIAL_BACKDROP_ASPECT = {
+/** Formats whose pictures are DOM, not code-rendered SVG, and their aspect. */
+const IMAGE_FORMATS = {
   insta_carousel: '1:1',
   insta_post: '1:1',
   insta_story: '9:16',
+  // 4:3 is the reportage frame — a photo essay wants a landscape plate beside
+  // its caption, not a square social card.
+  photostory: '4:3',
 };
 
 export async function generateOne({ formatId, story, facts, language, steer }) {
@@ -188,21 +207,27 @@ export async function generateOne({ formatId, story, facts, language, steer }) {
   const finished = { ...output };
   if (f.meta) finished.meta = { ...finished.meta, ...f.meta(finished) };
 
-  // Only the cover takes a generated backdrop, and only as atmosphere — the
-  // headline and figures on top of it are still drawn by us, so they stay exact.
+  // The reel cover goes through the same art director as the Instagram cards —
+  // a real, story-specific scene rather than generic abstract wallpaper. The
+  // headline and figures are still drawn over it in code, so they stay exact.
   if (finished.visual?.kind === 'cover' && imageProviderId) {
-    finished.background = await generateBackground({
-      prompt: coverPrompt(finished.visual, story),
+    const v = finished.visual;
+    const coverText = [v.kicker, v.headline, v.standfirst].filter(Boolean).join(' — ');
+    const [prompt] = await directSlides({
+      story,
+      slideTexts: [coverText || story.headline],
       aspect: '9:16',
     });
+    finished.background = await generateBackground({ prompt, aspect: '9:16' });
     finished.backgroundSource = finished.background ? imageProviderId : null;
+    finished.imagePrompts = [prompt];
   }
   // The Instagram formats have no code-rendered visual — their slides are DOM,
   // so backdrops are handed to the browser and the copy is laid over them there.
   // One image PER SLIDE, art-directed from that slide's own copy: a single
   // shared backdrop had nothing to do with the words on top of it, which is what
   // made the cards read as stock wallpaper.
-  const socialAspect = SOCIAL_BACKDROP_ASPECT[formatId];
+  const socialAspect = IMAGE_FORMATS[formatId];
   if (socialAspect && imageProviderId) {
     const slideTexts = slideCopy(formatId, finished);
     if (slideTexts.length) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DiffView from './DiffView.jsx';
 import FormatPreview from './FormatPreview.jsx';
+import { PreviewProvider, usePreview } from './ImagePreview.jsx';
 
 /* Blocks -> plain text, for the clipboard and the compare view. */
 const toText = (blocks) =>
@@ -37,10 +38,20 @@ function downloadPng(svg, name) {
  * way it will actually be seen, edited in place, and rewritten with a note to
  * the desk rather than a form.
  */
-export default function ContentPane({
+export default function ContentPane(props) {
+  // The provider has to sit above everything that can open a preview.
+  return (
+    <PreviewProvider>
+      <Pane {...props} />
+    </PreviewProvider>
+  );
+}
+
+function Pane({
   format, output, stale, patches, visualBefore,
   onSave, onRegenerate, busy, error, language, story, status, publish, voice,
 }) {
+  const preview = usePreview();
   const [steer, setSteer] = useState('');
   const [copied, setCopied] = useState(false);
   const [comparing, setComparing] = useState(false);
@@ -129,8 +140,10 @@ export default function ContentPane({
   // the infographic, or beside the script for the reel cover.
   const visualNode = output.svg ? (
     <div className="visual-col">
-      <div
+      <button
         className={`visual-wrap ${format.id === 'reel' ? 'tall' : ''}`}
+        title="Click to preview full size"
+        onClick={() => preview({ svg: output.svg, label: format.label })}
         dangerouslySetInnerHTML={{ __html: output.svg }}
       />
       <button className="btn-download" onClick={() => downloadPng(output.svg, format.id)}>

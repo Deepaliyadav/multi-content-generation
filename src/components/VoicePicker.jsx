@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * Pick the anchor's voice.
@@ -39,6 +39,9 @@ export default function VoicePicker({ selectedId, onSelect }) {
   const [q, setQ] = useState('');
   const previewRef = useRef(null);
   const searchRef = useRef(null);
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
+  const [pos, setPos] = useState(null);
 
   // Fetched on first open, not on mount: most sessions never change the voice,
   // and this is a few hundred records.
@@ -56,6 +59,61 @@ export default function VoicePicker({ selectedId, onSelect }) {
   useEffect(() => {
     if (open) searchRef.current?.focus();
     else stopPreview();
+  }, [open]);
+
+  /**
+   * The panel is positioned in viewport coordinates rather than relative to the
+   * button. It lives inside the output grid, which clips its overflow, so an
+   * absolutely-positioned dropdown gets cut off the moment it reaches an edge —
+   * and this control has moved between the top and bottom of the pane before
+   * now. Measuring at open time also lets it flip up or down on its own instead
+   * of relying on a fixed direction that only suits one placement.
+   */
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const WANT_H = 380;
+    const W = 340;
+    const GAP = 6;
+    const EDGE = 10;
+
+    const place = () => {
+      const r = btnRef.current?.getBoundingClientRect();
+      if (!r) return;
+      const below = window.innerHeight - r.bottom - GAP - EDGE;
+      const above = r.top - GAP - EDGE;
+      const up = below < Math.min(WANT_H, above);
+      const maxHeight = Math.max(160, Math.min(WANT_H, up ? above : below));
+      setPos({
+        top: up ? r.top - GAP - maxHeight : r.bottom + GAP,
+        left: Math.min(Math.max(EDGE, r.left), window.innerWidth - W - EDGE),
+        maxHeight,
+      });
+    };
+
+    place();
+    // `true` catches scrolling in the pane itself, not just the window.
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [open]);
+
+  // Clicking anywhere else closes it — a panel this large should not need its
+  // own button pressed again to get out of the way.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (!panelRef.current?.contains(e.target) && !btnRef.current?.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
   }, [open]);
 
   useEffect(() => () => stopPreview(), []);
@@ -97,12 +155,16 @@ export default function VoicePicker({ selectedId, onSelect }) {
 
   return (
     <div className="voice-picker">
-      <button className="btn btn-sm" onClick={() => setOpen((v) => !v)}>
+      <button ref={btnRef} className="btn btn-sm" onClick={() => setOpen((v) => !v)}>
         ♪ Voice{selected ? `: ${selected.name.split(' - ')[0]}` : ''} {open ? '▴' : '▾'}
       </button>
 
       {open && (
-        <div className="voice-panel">
+        <div
+          ref={panelRef}
+          className="voice-panel"
+          style={pos ? { top: pos.top, left: pos.left, maxHeight: pos.maxHeight } : { visibility: 'hidden' }}
+        >
           <input
             ref={searchRef}
             className="regen-input"

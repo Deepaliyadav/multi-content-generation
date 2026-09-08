@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import PublishToInstagram from './PublishToInstagram.jsx';
 import AnchorRead from './AnchorRead.jsx';
+import { usePreview } from './ImagePreview.jsx';
+import { renderInstaCard } from '../lib/igcard.js';
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
 
@@ -245,6 +247,7 @@ function NewsletterPreview({ output, flag, edit }) {
 /* ── instagram carousel / story ───────────────────────────────────────── */
 
 function CarouselPreview({ output, flag, edit, tall = false, publish }) {
+  const preview = usePreview();
   const blocks = output.blocks || [];
   const [i, setI] = useState(0);
   useEffect(() => setI(0), [output]);
@@ -273,6 +276,21 @@ function CarouselPreview({ output, flag, edit, tall = false, publish }) {
         className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(bi, 0) || flag(bi, 1) ? 'stale-slide' : ''}`}
         style={bg ? { backgroundImage: `url(${bg})` } : undefined}
       >
+        <button
+          className="preview-btn"
+          title="Preview this card at full size"
+          onClick={async () => {
+            const src = await renderInstaCard({
+              background: bg,
+              headline: slide.lines?.[0],
+              caption: slide.lines?.[1],
+              shape: tall ? 'story' : 'square',
+            });
+            preview({ src, label: `${slide.label} · ${tall ? '1080 × 1920' : '1080 × 1080'}`, file: `slide_${k}` });
+          }}
+        >
+          ⤢
+        </button>
         <div className="ig-copy">
           <Ed bi={bi} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
           {slide.lines?.[1] && (
@@ -351,6 +369,7 @@ function CarouselPreview({ output, flag, edit, tall = false, publish }) {
 /* ── instagram post ───────────────────────────────────────────────────── */
 
 function InstaPostPreview({ output, flag, edit, publish }) {
+  const preview = usePreview();
   const blocks = output.blocks || [];
   const hook = byLabel(blocks, 'Hook');
   const caption = byLabel(blocks, 'Caption');
@@ -363,6 +382,16 @@ function InstaPostPreview({ output, flag, edit, publish }) {
         className={`ig-slide ${bg ? 'has-bg' : ''} ${flag(indexOfBlock(blocks, hook), 0) ? 'stale-slide' : ''}`}
         style={bg ? { backgroundImage: `url(${bg})` } : undefined}
       >
+        <button
+          className="preview-btn"
+          title="Preview this card at full size"
+          onClick={async () => {
+            const src = await renderInstaCard({ background: bg, headline: hook?.lines[0], shape: 'square' });
+            preview({ src, label: 'Insta post · 1080 × 1080', file: 'insta_post' });
+          }}
+        >
+          ⤢
+        </button>
         <div className="ig-copy">
           <Ed
             bi={indexOfBlock(blocks, hook)}
@@ -485,45 +514,56 @@ function ScriptPreview({ output, flag, edit, cueHeader = 'Cue', voice, spoken, r
 /* ── photostory ───────────────────────────────────────────────────────── */
 
 function PhotostoryPreview({ output, flag, edit }) {
+  const preview = usePreview();
   const blocks = output.blocks || [];
+
   return (
-    <table className="script-table">
-      <thead>
-        <tr>
-          <th style={{ width: 74 }}>Frame</th>
-          <th>Photo direction / caption</th>
-        </tr>
-      </thead>
-      <tbody>
-        {blocks.map((b, bi) => (
-          <tr key={bi} className={flag(bi, 0) || flag(bi, 1) ? 'stale-row' : ''}>
-            <td className="time">{String(bi + 1).padStart(2, '0')}</td>
-            <td>
+    <div className="essay">
+      {blocks.map((b, bi) => {
+        const shot = output.backgrounds?.[bi];
+        const direction = b.lines?.[0];
+        const caption = b.lines?.[1];
+        return (
+          <figure key={bi} className={`essay-frame ${flag(bi, 0) || flag(bi, 1) ? 'stale-frame' : ''}`}>
+            <div className="essay-plate">
+              {shot ? (
+                <>
+                  <img src={shot} alt="" />
+                  <span className="ai-mark">AI-generated image</span>
+                  <button
+                    className="preview-btn"
+                    title="Preview this frame at full size"
+                    onClick={() => preview({ src: shot, label: `Frame ${bi + 1}`, file: `frame_${bi + 1}` })}
+                  >
+                    ⤢
+                  </button>
+                </>
+              ) : (
+                // No provider, or this one frame came back empty — the direction
+                // is still the useful thing to hand a photographer.
+                <span className="essay-empty">no photo</span>
+              )}
+              <span className="essay-num">{String(bi + 1).padStart(2, '0')}</span>
+            </div>
+
+            <figcaption className="essay-copy">
               <Ed
                 bi={bi}
                 li={0}
-                text={b.lines?.[0]}
+                text={direction}
                 flag={flag}
                 edit={edit}
                 className="line direction"
-                style={{ marginBottom: 6 }}
+                style={{ marginBottom: 8 }}
               />
-              {b.lines?.[1] && (
-                <Ed
-                  bi={bi}
-                  li={1}
-                  text={b.lines[1]}
-                  flag={flag}
-                  edit={edit}
-                  className="line"
-                  style={{ margin: 0 }}
-                />
+              {caption && (
+                <Ed bi={bi} li={1} text={caption} flag={flag} edit={edit} className="line" style={{ margin: 0 }} />
               )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            </figcaption>
+          </figure>
+        );
+      })}
+    </div>
   );
 }
 
