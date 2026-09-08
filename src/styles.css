@@ -856,15 +856,57 @@ label.field-label {
 /* instagram carousel / story */
 .ig-wrap { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
 .ig-slide {
-  width: 264px; min-height: 264px;
+  position: relative;
+  overflow: hidden;
+  width: 300px; min-height: 300px;
   background: var(--bg-sunken);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 26px; text-align: center; gap: 10px;
 }
-.ig-slide .ig-head { font-family: var(--font-display); font-size: 17px; line-height: 1.35; margin: 0; }
+.ig-copy { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 10px; }
+.ig-slide .ig-head { font-family: var(--font-display); font-size: 18px; line-height: 1.35; margin: 0; }
 .ig-slide .ig-sub { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin: 0; }
+
+/* With a backdrop the slide becomes an image: the copy needs its own ground to
+   stay readable whatever the model returned, so a wash sits between the two. */
+.ig-slide.tall { width: 270px; min-height: 480px; }
+.ig-slide.has-bg { background-size: cover; background-position: center; border-color: var(--line); }
+.ig-slide.has-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(15, 18, 21, .62) 0%, rgba(15, 18, 21, .78) 55%, rgba(15, 18, 21, .9) 100%);
+}
+.ig-slide.has-bg .ig-head { color: #fff; text-shadow: 0 1px 14px rgba(0, 0, 0, .55); }
+.ig-slide.has-bg .ig-sub { color: #d8d5cd; text-shadow: 0 1px 12px rgba(0, 0, 0, .55); }
+
+/* The mark rides on the slide itself, not the chrome around it. */
+.ai-mark {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .82);
+  background: rgba(0, 0, 0, .5);
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 3px;
+  padding: 3px 7px;
+}
+.ig-note {
+  max-width: 230px;
+  margin: 0;
+  font-size: 11.5px;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
 .ig-slide.stale-slide { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgba(217, 164, 65, .35); }
 .ig-controls { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
 .ig-nav { display: flex; gap: 8px; }

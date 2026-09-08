@@ -214,7 +214,7 @@ function NewsletterPreview({ output, flag, edit }) {
 
 /* ── instagram carousel / story ───────────────────────────────────────── */
 
-function CarouselPreview({ output, flag, edit }) {
+function CarouselPreview({ output, flag, edit, tall = false }) {
   const blocks = output.blocks || [];
   const [i, setI] = useState(0);
   useEffect(() => setI(0), [output]);
@@ -223,14 +223,22 @@ function CarouselPreview({ output, flag, edit }) {
   if (!n) return null;
   const idx = Math.min(i, n - 1);
   const slide = blocks[idx];
+  // One generated backdrop is shared by every slide, so the set reads as a set.
+  const bg = output.background;
 
   return (
     <div className="ig-wrap">
-      <div className={`ig-slide ${flag(idx, 0) || flag(idx, 1) ? 'stale-slide' : ''}`}>
-        <Ed bi={idx} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
-        {slide.lines?.[1] && (
-          <Ed bi={idx} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
-        )}
+      <div
+        className={`ig-slide ${tall ? 'tall' : ''} ${bg ? 'has-bg' : ''} ${flag(idx, 0) || flag(idx, 1) ? 'stale-slide' : ''}`}
+        style={bg ? { backgroundImage: `url(${bg})` } : undefined}
+      >
+        <div className="ig-copy">
+          <Ed bi={idx} li={0} text={slide.lines?.[0]} flag={flag} edit={edit} className="ig-head" />
+          {slide.lines?.[1] && (
+            <Ed bi={idx} li={1} text={slide.lines[1]} flag={flag} edit={edit} className="ig-sub" />
+          )}
+        </div>
+        {bg && <span className="ai-mark">AI-generated image</span>}
       </div>
       <div className="ig-controls">
         <div className="ig-counter">
@@ -249,6 +257,12 @@ function CarouselPreview({ output, flag, edit }) {
             <span key={bi} className={`ig-dot ${bi === idx ? 'on' : ''}`} />
           ))}
         </div>
+        {bg && (
+          <p className="ig-note">
+            Backdrop is generated atmosphere, not documentary imagery — every word on
+            top of it comes from the fact ledger.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -261,18 +275,25 @@ function InstaPostPreview({ output, flag, edit }) {
   const hook = byLabel(blocks, 'Hook');
   const caption = byLabel(blocks, 'Caption');
   const tags = byLabel(blocks, 'Hashtags');
+  const bg = output.background;
 
   return (
     <div className="ig-wrap">
-      <div className={`ig-slide ${flag(indexOfBlock(blocks, hook), 0) ? 'stale-slide' : ''}`}>
-        <Ed
-          bi={indexOfBlock(blocks, hook)}
-          li={0}
-          text={hook?.lines[0]}
-          flag={flag}
-          edit={edit}
-          className="ig-head"
-        />
+      <div
+        className={`ig-slide ${bg ? 'has-bg' : ''} ${flag(indexOfBlock(blocks, hook), 0) ? 'stale-slide' : ''}`}
+        style={bg ? { backgroundImage: `url(${bg})` } : undefined}
+      >
+        <div className="ig-copy">
+          <Ed
+            bi={indexOfBlock(blocks, hook)}
+            li={0}
+            text={hook?.lines[0]}
+            flag={flag}
+            edit={edit}
+            className="ig-head"
+          />
+        </div>
+        {bg && <span className="ai-mark">AI-generated image</span>}
       </div>
       <div style={{ maxWidth: 380, minWidth: 240, flex: 1 }}>
         <div className="block-label">Caption</div>
@@ -287,6 +308,12 @@ function InstaPostPreview({ output, flag, edit }) {
             className="line mono"
             style={{ marginTop: 12 }}
           />
+        )}
+        {bg && (
+          <p className="ig-note" style={{ maxWidth: 'none', marginTop: 14 }}>
+            Backdrop is generated atmosphere, not documentary imagery — every word on
+            top of it comes from the fact ledger.
+          </p>
         )}
       </div>
     </div>
@@ -393,8 +420,9 @@ export default function FormatPreview({ format, output, flag, edit, language }) 
     case 'newsletter':
       return <NewsletterPreview {...p} />;
     case 'insta_carousel':
-    case 'insta_story':
       return <CarouselPreview {...p} />;
+    case 'insta_story':
+      return <CarouselPreview {...p} tall />;
     case 'insta_post':
       return <InstaPostPreview {...p} />;
     case 'video_script':

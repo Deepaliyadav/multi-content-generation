@@ -11,7 +11,7 @@ import {
 } from './prompts.js';
 import { iterLines, setLine, verifyFactUsage, textCarriesValue } from './facts.js';
 import { renderVisual } from './visuals.js';
-import { generateBackground, coverPrompt, imageProviderId } from './images.js';
+import { generateBackground, coverPrompt, socialPrompt, imageProviderId } from './images.js';
 
 /* ── fact ledger ──────────────────────────────────────────────────────── */
 
@@ -121,6 +121,12 @@ function shape(raw) {
   };
 }
 
+const SOCIAL_BACKDROP_ASPECT = {
+  insta_carousel: '1:1',
+  insta_post: '1:1',
+  insta_story: '9:16',
+};
+
 export async function generateOne({ formatId, story, facts, language, steer }) {
   const f = FORMAT_BY_ID[formatId];
   const started = Date.now();
@@ -169,6 +175,18 @@ export async function generateOne({ formatId, story, facts, language, steer }) {
     });
     finished.backgroundSource = finished.background ? imageProviderId : null;
   }
+  // The Instagram formats have no code-rendered visual — their slides are DOM,
+  // so the backdrop is handed to the browser and the copy is laid over it there.
+  // One image per format, shared by every slide, in that format's own aspect.
+  const socialAspect = SOCIAL_BACKDROP_ASPECT[formatId];
+  if (socialAspect && imageProviderId) {
+    finished.background = await generateBackground({
+      prompt: socialPrompt(story, socialAspect),
+      aspect: socialAspect,
+    });
+    finished.backgroundSource = finished.background ? imageProviderId : null;
+  }
+
   finished.svg = renderVisual(finished.visual, { background: finished.background });
   return {
     formatId,
