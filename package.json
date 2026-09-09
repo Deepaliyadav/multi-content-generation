@@ -13,7 +13,6 @@
     "test:unit": "node scripts/unit.mjs",
     "test:providers": "node scripts/check-providers.mjs",
     "test:e2e": "node scripts/e2e-api.mjs",
-    "seed:cms": "node scripts/seed-cms.mjs",
     "prompts:dump": "node scripts/dump-prompts.mjs",
     "prompts:formats": "node scripts/build-format-prompts-page.mjs"
   },

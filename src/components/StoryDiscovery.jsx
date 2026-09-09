@@ -417,7 +417,7 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                               'Use this story'
                             )}
                           </button>
-                          {!isFiled && d?.cmsSimulated && (
+                          {!isFiled && d?.cmsCanFile && (
                             <button className="btn btn-sm" onClick={() => markFiled(c, idx)}>
                               Mark as filed
                             </button>

@@ -8,7 +8,7 @@ import { backend, backendLabel, backendReady, backendHint, cliPath, backendConcu
 import { envFileLoaded, envFilePath, envFileKeys } from './env.js';
 import { imageProviderId, imageProviderLabel } from './images.js';
 import { discover, draftBrief, trendsReady } from './discover.js';
-import { cms, cmsLabel, cmsSimulated } from './cms.js';
+import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
 import crypto from 'node:crypto';
@@ -86,6 +86,8 @@ app.get('/api/meta', (_req, res) => {
       trendsReady,
       cmsLabel,
       cmsSimulated,
+      cmsCanFile,
+      cmsPartial,
     },
     languages: LANGUAGES,
     voice: {
@@ -212,7 +214,7 @@ app.post('/api/discover/brief', async (req, res) => {
  */
 app.post('/api/cms/file', async (req, res) => {
   try {
-    if (!cmsSimulated)
+    if (!cmsCanFile)
       return res.status(400).json({ error: 'Filing is disabled against a live CMS. This tool recommends only.' });
     res.json({ filed: await cms.file(req.body || {}), count: await cms.count() });
   } catch (e) { fail(res, e); }

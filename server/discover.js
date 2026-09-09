@@ -19,7 +19,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { completeJson } from './llm.js';
 import { fetchAll } from './rss.js';
 import { configuredFeeds } from './feeds.js';
-import { cms, cmsLabel, cmsSimulated, overlapScore } from './cms.js';
+import { cms, cmsLabel, cmsSimulated, overlapScore, isCandidate } from './cms.js';
 
 const SWEEP_LIMIT = Number(process.env.LSS_SWEEP_LIMIT || 45);
 
@@ -241,9 +241,8 @@ export async function checkFiled(clusters) {
         c.cmsError = String(e.message || e);
       }
       // Keep the retrieval honest: drop weak lexical noise before the model sees it.
-      c.candidates = (hits || []).filter(
-        (h) => Math.max(overlapScore(c.headline, h.headline), overlapScore(c.summary || '', h.headline)) > 0.12
-      );
+      // Same test the index used: headline against headline.
+      c.candidates = (hits || []).filter((h) => isCandidate(c.headline, h.headline));
     })
   );
   const withCandidates = clusters.filter((c) => c.candidates?.length);
