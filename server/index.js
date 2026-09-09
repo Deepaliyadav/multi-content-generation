@@ -12,7 +12,7 @@ import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
 import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot } from './autopilot.js';
-import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS } from './store.js';
+import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS, MEDIA_DIR, recoverOrphans, rebuildIndex } from './store.js';
 import crypto from 'node:crypto';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
 import { SAMPLES } from './samples.js';
@@ -126,6 +126,9 @@ app.get('/api/meta', (_req, res) => {
 });
 
 /* ── autopilot & rundowns ─────────────────────────────────────────────── */
+
+// Generated imagery, served from disk rather than inlined in every payload.
+app.use('/api/media', express.static(MEDIA_DIR, { maxAge: '1h', immutable: true }));
 
 app.get('/api/autopilot', (_req, res) => res.json(autopilotStatus()));
 
@@ -551,6 +554,15 @@ if (fs.existsSync(dist)) {
   app.use(express.static(dist));
   app.get('*', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
 }
+
+// Files are the record; reconcile the index to them before serving.
+rebuildIndex()
+  .then((n) => recoverOrphans().then((k) => ({ n, k })))
+  .then(({ n, k }) => {
+    if (k) console.log(`  recovered ${k} rundown(s) interrupted by a restart`);
+    if (n) console.log(`  rundown index rebuilt from ${n} file(s)`);
+  })
+  .catch(() => {});
 
 app.listen(PORT, () => {
   console.log(`\n  Living Story Sync — API on http://localhost:${PORT}`);

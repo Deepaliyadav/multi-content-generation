@@ -432,7 +432,7 @@ SOURCE ITEMS SEEN ON THE WIRE
 ${sources || '- (no wire items — this came from a trending-topic search)'}
 
 Produce:
-- "headline": a straight news headline in English, max 14 words, no hype.
+- "headline": a straight news headline in English, max 14 words, no hype. Write it as a headline a desk would actually run — do NOT open with the outlet's name ("News18 Hindi reports...") or any other attribution. Attribution belongs in the body, where it goes on every claim.
 - "body": 4-6 short paragraphs, separated by blank lines. Attribute throughout. The final paragraph must state explicitly what still needs to be confirmed by the desk before publication.
 
 Return JSON: {"headline":"...","body":"..."}`,

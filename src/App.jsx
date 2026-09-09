@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as api from './lib/api.js';
 import Masthead from './components/Masthead.jsx';
 import WireTicker from './components/WireTicker.jsx';
+import Dashboard from './components/Dashboard.jsx';
 import Composer from './components/Composer.jsx';
 import StoryDiscovery from './components/StoryDiscovery.jsx';
 import FactLedger from './components/FactLedger.jsx';
@@ -27,6 +28,11 @@ const sourceAsOutput = (story) => ({
 export default function App() {
   const [meta, setMeta] = useState(null);
   const [stage, setStage] = useState('compose'); // compose | working | review
+  const [view, setView] = useState('board'); // board | desk
+  // Set when the desk is reviewing a stored rundown rather than an ad-hoc one.
+  const [rundownId, setRundownId] = useState(null);
+  const [approvals, setApprovals] = useState({});
+  const [rundownStatus, setRundownStatus] = useState(null);
   const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
   // What the last plain rewrite actually did. A rewrite against an unchanged
   // ledger legitimately returns near-identical copy, which reads as a dead
@@ -236,6 +242,58 @@ export default function App() {
 
   /* ── targeted regeneration ──────────────────────────────────────────── */
 
+  /** Load a produced rundown into the review pane. */
+  async function openRundown(id) {
+    setError(null);
+    try {
+      const r = await (await fetch(`/api/rundowns/${id}`)).json();
+      if (r.error) throw new Error(r.error);
+      setRundownId(r.id);
+      setStory(r.story || { headline: '', body: '' });
+      setSourceDraft(r.story || { headline: '', body: '' });
+      setFacts(r.facts || []);
+      setOutputs(r.outputs || {});
+      setApprovals(r.approvals || {});
+      setRundownStatus(r.status);
+      setStatus(Object.fromEntries(Object.keys(r.outputs || {}).map((k) => [k, 'done'])));
+      setSelected(new Set(Object.keys(r.outputs || {})));
+      setActive(Object.keys(r.outputs || {})[0] || null);
+      setDiff(null);
+      setStaleReport({});
+      setPatches({});
+      setStage('review');
+      setView('desk');
+    } catch (e) {
+      setError(`Could not open that rundown: ${String(e.message || e)}`);
+    }
+  }
+
+  /** Editor signs off one format. An edit later un-approves it again. */
+  async function approveFormat(formatId, approved = true) {
+    if (!rundownId) return;
+    try {
+      const r = await (await fetch(`/api/rundowns/${rundownId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formatId, approved }),
+      })).json();
+      setApprovals(r.approvals || {});
+      setRundownStatus(r.status);
+    } catch (e) {
+      setError(String(e.message || e));
+    }
+  }
+
+  async function setRundownState(status) {
+    if (!rundownId) return;
+    const r = await (await fetch(`/api/rundowns/${rundownId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })).json();
+    setRundownStatus(r.status);
+  }
+
   async function regenerate(formatId, steer = '') {
     const st = staleReport[formatId];
     // A desk note is a request to rewrite, not to patch — so it wins over the
@@ -371,9 +429,45 @@ export default function App() {
 
   return (
     <>
-      <Masthead metrics={metrics} />
+      <Masthead metrics={metrics} stage={stage} />
       <WireTicker />
 
+      <nav className="view-nav">
+        <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
+          Desk board
+        </button>
+        <button
+          className={view === 'desk' ? 'on' : ''}
+          onClick={() => {
+            setView('desk');
+            if (stage === 'review' && !rundownId) return;
+          }}
+        >
+          {rundownId ? 'Reviewing' : 'New story'}
+        </button>
+        {rundownId && (
+          <button
+            className="ghost"
+            onClick={() => {
+              setRundownId(null);
+              setApprovals({});
+              setRundownStatus(null);
+              setStage('compose');
+              setView('desk');
+            }}
+          >
+            ← leave this rundown
+          </button>
+        )}
+      </nav>
+
+      {view === 'board' ? (
+        <div className="frame">
+          <div className="col">
+            <Dashboard onOpen={openRundown} />
+          </div>
+        </div>
+      ) : (
       <div className={`frame ${showRail ? 'split' : ''}`}>
         {showRail && (
           <aside className="rail">
@@ -629,12 +723,15 @@ export default function App() {
                   }}
                   onRegenerate={(steer) => regenerate(activeFormat.id, steer)}
                   rewriteNote={rewriteNote[activeFormat.id]}
+                  approvedAt={approvals[activeFormat.id] || null}
+                  onApprove={rundownId ? (v) => approveFormat(activeFormat.id, v) : null}
                 />
               </div>
             </>
           )}
         </main>
       </div>
+      )}
     </>
   );
 }

@@ -1,7 +1,10 @@
 import { useState } from 'react';
 
 /**
- * Setup: panel 01 is the source story, panel 02 is the format slate.
+ * Setup: the story on the left, the controls that act on it in a rail to the
+ * right. The format slate and the Generate button are decisions *about* the
+ * copy, so they sit beside it rather than below — you can pick formats without
+ * scrolling past the body you just pasted.
  * Everything is on by default — the desk drops what it doesn't need rather
  * than picking from nothing.
  */
@@ -32,7 +35,7 @@ export default function Composer({
     story.headline.trim().length > 5 && story.body.trim().length > 120 && selected.size > 0;
 
   return (
-    <>
+    <div className="setup-grid">
       <section className="panel">
         <div className="panel-head">
           <span className="panel-num">01</span>
@@ -104,6 +107,7 @@ export default function Composer({
         </div>
       </section>
 
+      <aside className="control-rail">
       <section className="panel">
         <div className="panel-head">
           <span className="panel-num">02</span>
@@ -148,9 +152,10 @@ export default function Composer({
         </div>
       </section>
 
-      <div className="generate-row">
-        <button className="btn btn-primary" disabled={!ready || busy} onClick={onGenerate}>
-          {busy ? 'Working…' : 'Generate rundown →'}
+      <section className="panel">
+        <div className="panel-body">
+        <button className="btn btn-primary btn-generate" disabled={!ready || busy} onClick={onGenerate}>
+          {busy ? 'Working…' : 'Generate rundown'}
         </button>
         <span className="gen-hint">
           {!story.headline.trim() || !story.body.trim()
@@ -161,7 +166,9 @@ export default function Composer({
             ? 'The body needs to be a little longer before the ledger is worth extracting.'
             : `Facts are extracted first, then ${selected.size} formats are written against them.`}
         </span>
-      </div>
-    </>
+        </div>
+      </section>
+      </aside>
+    </div>
   );
 }
