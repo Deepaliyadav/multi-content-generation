@@ -13,7 +13,7 @@ import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
 import { dispatch, firePending, destinationFor, DESTINATIONS, cmsDraftReady, mailTo } from './destinations.js';
 import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery, recordSweep } from './sweeper.js';
-import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress, produce } from './autopilot.js';
+import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress, produce, beginProduce } from './autopilot.js';
 import { scoops, topicById, asCluster } from './scoops.js';
 import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS, MEDIA_DIR, recoverOrphans, rebuildIndex } from './store.js';
 import crypto from 'node:crypto';
@@ -147,9 +147,11 @@ app.post('/api/scoops/:id/produce', async (req, res) => {
   try {
     const topic = topicById(req.params.id);
     if (!topic) return res.status(404).json({ error: 'No such topic.' });
-    const rec = await produce(asCluster(topic));
-    if (!rec) return res.status(500).json({ error: 'Could not produce that rundown.' });
-    res.json({ id: rec.id, status: rec.status });
+    // Return as soon as the record exists; the desk follows the progress
+    // screen rather than holding this request open for the whole job.
+    const { id, done } = await beginProduce(asCluster(topic));
+    done.catch(() => {});
+    res.json({ id, status: 'generating' });
   } catch (e) { fail(res, e); }
 });
 

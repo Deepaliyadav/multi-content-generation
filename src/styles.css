@@ -2221,75 +2221,73 @@ html, body { max-width: 100%; overflow-x: hidden; }
 }
 .sweep-line b { color: var(--text-dim); font-weight: 500; }
 
-/* ── unclaimed board ──────────────────────────────────────────────────── */
-/* Sits above the desk board. Gold, not red: this is opportunity, not alarm —
-   red stays with stale facts and the review queue. */
+/* ── unclaimed, in the desk board list ────────────────────────────────── */
+/* Same card shape as a rundown so one scan covers both, but unmistakably a
+   different kind of thing: gold rail, gold wash, and the platform count as the
+   first number the eye lands on. Gold because this is opportunity — red stays
+   with stale facts and the review queue. */
 
-.scoops { border-left: 3px solid var(--gold); }
-.scoops .panel-num { color: var(--gold); }
-
-.scoop-list { display: grid; gap: 9px; }
-
-.scoop {
-  display: grid;
-  grid-template-columns: 64px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  padding: 13px 15px;
-  border: 1px solid var(--line-soft);
-  border-radius: 2px;
-  background: var(--bg-sunken);
+.day-label.is-unclaimed {
+  color: var(--gold);
+  border-bottom-color: rgba(217, 164, 65, .35);
 }
-.scoop.pr-high { border-color: rgba(217, 164, 65, .45); }
 
-.scoop-rank { text-align: center; }
-.scoop-rank b {
+.rd-scoop {
+  /* Order matters: the border-color shorthand resets all four sides, so the
+     gold rail has to be set after it or it comes out at 28% and vanishes. */
+  border-color: rgba(217, 164, 65, .28);
+  border-left-color: var(--gold);
+  background: linear-gradient(180deg, rgba(217, 164, 65, .06), transparent 70%), var(--bg-panel);
+  cursor: default;
+}
+.rd-scoop:hover { border-color: rgba(217, 164, 65, .45); border-left-color: var(--gold); background: var(--bg-panel); }
+.rd-scoop.pr-high { border-left-width: 4px; }
+
+.chip.st-unclaimed {
+  color: var(--gold);
+  border-color: rgba(217, 164, 65, .45);
+  background: rgba(217, 164, 65, .1);
+}
+
+.scoop-head { display: flex; align-items: flex-start; gap: 12px; }
+.scoop-head h3 { margin: 0 0 6px; }
+
+.scoop-count {
+  flex: none;
+  text-align: center;
+  min-width: 40px;
+  padding-top: 1px;
+}
+.scoop-count b {
   display: block;
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: 25px;
   line-height: 1;
-  color: var(--text-faint);
+  color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
-.scoop.pr-high .scoop-rank b { color: var(--gold); }
-.scoop-rank span {
+.scoop-count span {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: .1em;
+  font-size: 8.5px;
+  letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 
-.scoop-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
-.scoop-seen { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
-.chip.pr-high { color: var(--gold); border-color: rgba(217,164,65,.45); background: rgba(217,164,65,.1); }
-.chip.pr-medium { color: var(--text-dim); }
-.chip.pr-low { color: var(--text-faint); }
-
-.scoop-body h3 {
-  margin: 0 0 5px;
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.35;
-  color: var(--text);
-}
-.scoop-sum { margin: 0 0 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
-
-.scoop-plats { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.plat-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px; }
 .plat {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 9px;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--teal);
-  border: 1px solid rgba(79, 168, 160, .35);
+  border: 1px solid rgba(79, 168, 160, .3);
   border-radius: 2px;
-  padding: 2px 6px;
+  padding: 2px 5px;
 }
-.scoop-signal { font-size: 11px; color: var(--text-faint); margin-left: 4px; }
-.scoop-note { color: var(--text-faint); }
 
-@media (max-width: 760px) {
-  .scoop { grid-template-columns: 52px 1fr; }
-  .scoop-act { grid-column: 1 / -1; }
-}
+.rd-scoop .rd-foot { align-items: center; gap: 10px; }
+.scoop-signal { flex: 1; min-width: 0; }
+.rd-foot .take { margin-left: auto; }
+
+.btn.is-unclaimed:not(.btn-ink) { color: var(--gold); border-color: rgba(217, 164, 65, .4); }

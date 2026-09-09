@@ -1,0 +1,126 @@
+{
+  "id": "rd_mttpb2wi_ax6w5",
+  "status": "generating",
+  "cluster": {
+    "headline": "Video appears to show railway gate left unmanned at busy Ghaziabad crossing",
+    "summary": "A clip shot from a stopped car appears to show a level crossing operating without a gateman during peak traffic. Location and date are unverified.",
+    "beat": "India",
+    "topics": [
+      "ghaziabad",
+      "railway",
+      "crossing",
+      "gateman"
+    ],
+    "origin": "social",
+    "evidence": "Trending on X, Instagram, YouTube, Reddit, WhatsApp — Clip reposted across regional pages; no outlet has geolocated it",
+    "sources": [],
+    "status": "recommend",
+    "pickReason": "Unclaimed on 5 platforms — no publisher has filed it"
+  },
+  "pickReason": "Unclaimed on 5 platforms — no publisher has filed it",
+  "score": null,
+  "story": {
+    "headline": "Unverified video circulating online appears to show unmanned railway crossing in Ghaziabad",
+    "body": "A short video circulating on social media appears to show a railway level crossing operating without a gateman present, with the clip apparently filmed from inside a stopped car while traffic waited. The footage is being shared with claims that it was recorded at a busy crossing in Ghaziabad.\n\nThe clip has been reposted widely across X, Instagram, YouTube, Reddit and WhatsApp groups, including regional pages that circulate local news content. As of now, no news outlet has independently geolocated the footage or established when it was shot.\n\nThis brief is based on a trending-topic search rather than any wire copy. No news agency or outlet report on the video has been picked up on the wire, so there is no published account by another outlet to attribute at this stage.\n\nNeither Indian Railways nor Ghaziabad district or police authorities have been reported as commenting on the video. Whether the crossing shown is manned or is an unmanned crossing by design is not established, and nothing in the available material confirms that any incident occurred there.\n\nBefore this can be published, the desk needs to confirm: the actual location and date of the recording, ideally through independent geolocation; whether the crossing is a manned gate and, if so, which railway division operates it; a response from Indian Railways and from local police or district officials; the identity of the person who shot the video and their account of what they saw; and whether any complaint or inquiry exists. Until the footage is verified, it should be treated as an unconfirmed social media claim."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Claimed location",
+      "value": "Ghaziabad",
+      "type": "location",
+      "evidence": "claims that it was recorded at a busy crossing in Ghaziabad",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Content shown",
+      "value": "railway level crossing without gateman",
+      "type": "other",
+      "evidence": "appears to show a railway level crossing operating without a gateman present",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Filming vantage",
+      "value": "inside stopped car",
+      "type": "other",
+      "evidence": "the clip apparently filmed from inside a stopped car while traffic waited",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Platforms shared",
+      "value": "X, Instagram, YouTube, Reddit, WhatsApp",
+      "type": "name",
+      "evidence": "reposted widely across X, Instagram, YouTube, Reddit and WhatsApp groups",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Geolocation status",
+      "value": "not independently geolocated",
+      "type": "status",
+      "evidence": "no news outlet has independently geolocated the footage or established when it was shot",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Sourcing basis",
+      "value": "trending-topic search",
+      "type": "other",
+      "evidence": "This brief is based on a trending-topic search rather than any wire copy.",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Wire pickup",
+      "value": "none",
+      "type": "status",
+      "evidence": "No news agency or outlet report on the video has been picked up on the wire",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Railways response",
+      "value": "none reported",
+      "type": "attribution",
+      "evidence": "Neither Indian Railways nor Ghaziabad district or police authorities have been reported as commenting on the video.",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Crossing status",
+      "value": "not established",
+      "type": "status",
+      "evidence": "Whether the crossing shown is manned or is an unmanned crossing by design is not established",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Incident confirmation",
+      "value": "unconfirmed",
+      "type": "status",
+      "evidence": "nothing in the available material confirms that any incident occurred there",
+      "grounded": true
+    },
+    {
+      "id": "f11",
+      "label": "Editorial treatment",
+      "value": "unconfirmed social media claim",
+      "type": "status",
+      "evidence": "it should be treated as an unconfirmed social media claim",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T06:12:04.338Z",
+  "updatedAt": "2026-09-09T06:12:22.300Z",
+  "brief": {
+    "headline": "Unverified video circulating online appears to show unmanned railway crossing in Ghaziabad",
+    "body": "A short video circulating on social media appears to show a railway level crossing operating without a gateman present, with the clip apparently filmed from inside a stopped car while traffic waited. The footage is being shared with claims that it was recorded at a busy crossing in Ghaziabad.\n\nThe clip has been reposted widely across X, Instagram, YouTube, Reddit and WhatsApp groups, including regional pages that circulate local news content. As of now, no news outlet has independently geolocated the footage or established when it was shot.\n\nThis brief is based on a trending-topic search rather than any wire copy. No news agency or outlet report on the video has been picked up on the wire, so there is no published account by another outlet to attribute at this stage.\n\nNeither Indian Railways nor Ghaziabad district or police authorities have been reported as commenting on the video. Whether the crossing shown is manned or is an unmanned crossing by design is not established, and nothing in the available material confirms that any incident occurred there.\n\nBefore this can be published, the desk needs to confirm: the actual location and date of the recording, ideally through independent geolocation; whether the crossing is a manned gate and, if so, which railway division operates it; a response from Indian Railways and from local police or district officials; the identity of the person who shot the video and their account of what they saw; and whether any complaint or inquiry exists. Until the footage is verified, it should be treated as an unconfirmed social media claim.",
+    "unverified": true,
+    "sourcedFrom": []
+  }
+}

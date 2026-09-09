@@ -98,8 +98,16 @@ async function pooled(items, limit, fn) {
   await Promise.all(workers);
 }
 
-/** Produce one full rundown from a selected story. Never publishes. */
-export async function produce(cluster) {
+/**
+ * Start a rundown and hand back its id straight away.
+ *
+ * Production takes a minute or more. Holding the HTTP response open for all of
+ * it left the caller staring at a spinning button with no way to watch the work
+ * that was already visibly happening. The record exists before this returns, so
+ * the desk can open it and follow the progress screen; `done` resolves when the
+ * writing finishes, for callers that need to wait.
+ */
+export async function beginProduce(cluster) {
   const id = newId();
   const started = Date.now();
   await saveRundown({
@@ -116,6 +124,7 @@ export async function produce(cluster) {
   });
   emit({ type: 'rundown:start', id, headline: cluster.headline });
 
+  const done = (async () => {
   try {
     const brief = await draftBrief(cluster);
     const story = { headline: brief.headline, body: brief.body };
@@ -161,6 +170,15 @@ export async function produce(cluster) {
     emit({ type: 'rundown:error', id, error: String(e?.message || e) });
     return null;
   }
+  })();
+
+  return { id, done };
+}
+
+/** Produce and wait for it — what the autopilot's own cycle uses. */
+export async function produce(cluster) {
+  const { done } = await beginProduce(cluster);
+  return done;
 }
 
 /** One full cycle. Safe to call directly — the UI's "Run now" uses it too. */

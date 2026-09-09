@@ -226,7 +226,11 @@ function Pane({
           <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
             {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
           </button>
-          {onDispatch && destination && (
+          {/* Instagram cards carry their own branded publish control, which
+              actually posts. A second "Approve for Instagram" beside it read as
+              a competing way to publish the same thing, so it is not shown for
+              those formats. */}
+          {onDispatch && destination && destination.kind !== 'instagram' && (
             <button
               className={`btn btn-sm ${dispatched ? 'btn-ink' : 'btn-primary'}`}
               disabled={busy}

@@ -269,6 +269,16 @@ export default function App() {
         if (ev.ms) setTimes((t) => ({ ...t, [ev.formatId]: ev.ms }));
       } else if (ev.type === 'rundown:facts') {
         setPhase('Writing the formats');
+        // Opening a rundown the instant it starts means the ledger is empty —
+        // the facts do not exist yet. Pull them in as soon as they do, so the
+        // editor watches the formats being written against a visible ledger.
+        fetch(`/api/rundowns/${rundownId}`)
+          .then((r) => r.json())
+          .then((full) => {
+            if (full?.facts?.length) setFacts(full.facts);
+            if (full?.story?.headline) setStory(full.story);
+          })
+          .catch(() => {});
       } else if (ev.type === 'rundown:done' || ev.type === 'rundown:error') {
         openRundown(rundownId);
       }
@@ -822,7 +832,11 @@ export default function App() {
                 </div>
               </div>
 
-              {rundownId && (
+              {/* Approve / Reject / Publish — parked for now at the desk's
+                  request. The state behind it (approvals, rundownStatus,
+                  setRundownState) is untouched, so restoring this is just
+                  deleting the comment markers. */}
+              {false && (
                 <div className={`verdict ${rundownStatus === 'published' ? 'is-published' : ''}`}>
                   <div className="verdict-state">
                     <b>
