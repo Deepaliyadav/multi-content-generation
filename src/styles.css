@@ -2066,6 +2066,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 .chip.st-awaiting_review { color: var(--red); border-color: rgba(225,75,54,.4); background: rgba(225,75,54,.08); }
 .chip.st-approved, .chip.st-published { color: var(--teal); border-color: rgba(79,168,160,.4); }
+/* The longest status label on the board — let it hold the row rather than
+   squeezing the beat chip and the timestamp against it. */
+.chip.st-generating { flex: 0 1 auto; min-width: 0; }
+.rd-top:has(.st-generating) .rd-time { margin-left: auto; }
+
 .chip.st-generating {
   color: var(--gold);
   border-color: rgba(217, 164, 65, .4);

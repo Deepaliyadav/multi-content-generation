@@ -1,0 +1,163 @@
+{
+  "id": "rd_mttrw6up_khnqz",
+  "status": "awaiting_review",
+  "cluster": {
+    "headline": "Government notifies new rules for domestic LPG cylinder booking",
+    "summary": "The government has brought in new rules covering the booking of domestic LPG cylinders. Consumers are advised to check the requirements to avoid problems in receiving a cylinder.",
+    "beat": "Business",
+    "topics": [
+      "LPG",
+      "consumer rules",
+      "subsidy"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "LPG Booking New Rules: एलपीजी गैस बुकिंग पर नए नियम लागू, तुरंत कर लें चेक वरना नहीं मिलेगा सिलेंडर",
+        "link": "https://hindi.news18.com/news/business/latest-lpg-cylinder-booking-new-rules-e-kyc-deadline-refill-gap-and-more-10818803.html",
+        "published": "2026-09-09T07:18:46.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.1,
+      "corroboration": 0.33,
+      "recency": 0.99,
+      "trending": 0,
+      "beatWeight": 0.8,
+      "demand": 0.565
+    },
+    "pickReason": "New LPG booking rules touch nearly every household; direct consequence for money and daily access",
+    "priority": 1
+  },
+  "pickReason": "New LPG booking rules touch nearly every household; direct consequence for money and daily access",
+  "score": 0.565,
+  "story": {
+    "headline": "New rules reported for domestic LPG cylinder booking; details unconfirmed",
+    "body": "News18 Hindi reported on September 9 that new rules have come into force covering the booking of domestic LPG cylinders, and advised consumers to check the requirements or risk not receiving a cylinder.\n\nThe intake note received on this desk carries the same broad claim — that the government has notified new booking rules and that consumers should verify what is now required to avoid problems getting a refill.\n\nBeyond that, the specifics are not established. The wire item seen so far does not spell out, in anything this desk can verify, which ministry or oil marketing company issued the change, what the new requirement actually consists of, or from what date it applies.\n\nIt is also not confirmed whether the rules apply to all domestic LPG consumers nationwide or only to a subset — for example subsidised connections, particular distributors or particular states. No consumer numbers, penalty provisions or official quotes are available from the material at hand.\n\nBefore this runs, the desk needs to confirm the following from primary sources: the text or press release of the notification itself and the issuing authority; the exact new requirement placed on consumers; the effective date; the scope of who is covered; and on-record comment from the Ministry of Petroleum and Natural Gas or the relevant oil marketing companies. Nothing above should be published as fact on the strength of the single wire item alone."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Reporting outlet",
+      "value": "News18 Hindi",
+      "type": "attribution",
+      "evidence": "News18 Hindi reported",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Report date",
+      "value": "September 9",
+      "type": "date",
+      "evidence": "reported on September 9",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Subject",
+      "value": "Booking of domestic LPG cylinders",
+      "type": "other",
+      "evidence": "the booking of domestic LPG cylinders",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Reported change",
+      "value": "New rules in force",
+      "type": "status",
+      "evidence": "new rules have come into force",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Consumer advice",
+      "value": "Check requirements",
+      "type": "other",
+      "evidence": "advised consumers to check the requirements",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Issuing authority",
+      "value": "Unconfirmed",
+      "type": "status",
+      "evidence": "which ministry or oil marketing company issued the change",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Effective date",
+      "value": "Unconfirmed",
+      "type": "status",
+      "evidence": "from what date it applies",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Scope",
+      "value": "Unconfirmed",
+      "type": "status",
+      "evidence": "It is also not confirmed whether the rules apply to all domestic LPG consumers nationwide or only to a subset",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Official quotes",
+      "value": "None available",
+      "type": "status",
+      "evidence": "No consumer numbers, penalty provisions or official quotes are available",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Ministry sought",
+      "value": "Ministry of Petroleum and Natural Gas",
+      "type": "name",
+      "evidence": "the Ministry of Petroleum and Natural Gas",
+      "grounded": true
+    },
+    {
+      "id": "f11",
+      "label": "Publication status",
+      "value": "Not for publication as fact",
+      "type": "status",
+      "evidence": "Nothing above should be published as fact on the strength of the single wire item alone.",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T07:24:28.465Z",
+  "updatedAt": "2026-09-09T07:41:03.335Z",
+  "brief": {
+    "headline": "New rules reported for domestic LPG cylinder booking; details unconfirmed",
+    "body": "News18 Hindi reported on September 9 that new rules have come into force covering the booking of domestic LPG cylinders, and advised consumers to check the requirements or risk not receiving a cylinder.\n\nThe intake note received on this desk carries the same broad claim — that the government has notified new booking rules and that consumers should verify what is now required to avoid problems getting a refill.\n\nBeyond that, the specifics are not established. The wire item seen so far does not spell out, in anything this desk can verify, which ministry or oil marketing company issued the change, what the new requirement actually consists of, or from what date it applies.\n\nIt is also not confirmed whether the rules apply to all domestic LPG consumers nationwide or only to a subset — for example subsidised connections, particular distributors or particular states. No consumer numbers, penalty provisions or official quotes are available from the material at hand.\n\nBefore this runs, the desk needs to confirm the following from primary sources: the text or press release of the notification itself and the issuing authority; the exact new requirement placed on consumers; the effective date; the scope of who is covered; and on-record comment from the Ministry of Petroleum and Natural Gas or the relevant oil marketing companies. Nothing above should be published as fact on the strength of the single wire item alone.",
+    "unverified": true,
+    "sourcedFrom": [
+      "News18 Hindi"
+    ]
+  },
+  "errors": {
+    "insta_carousel": "Connection error.",
+    "insta_post": "Connection error.",
+    "tv_script": "Connection error.",
+    "highlights": "Connection error.",
+    "twitter": "Connection error.",
+    "photostory": "Connection error.",
+    "insta_story": "Connection error.",
+    "translation": "Connection error.",
+    "video_script": "Connection error.",
+    "push": "Connection error.",
+    "infographic": "Connection error.",
+    "newsletter": "Connection error.",
+    "reel": "Connection error."
+  },
+  "genMs": 994869
+}

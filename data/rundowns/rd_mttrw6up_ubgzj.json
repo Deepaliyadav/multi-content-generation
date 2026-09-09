@@ -1,0 +1,492 @@
+{
+  "id": "rd_mttrw6up_ubgzj",
+  "status": "awaiting_review",
+  "cluster": {
+    "headline": "Himachal Pradesh implements hemp cultivation policy with per-bigha fee for farmers",
+    "summary": "Himachal Pradesh has implemented a policy allowing hemp cultivation, with farmers paying Rs 1,000 per bigha. MLA Sundar Singh Thakur said it would support medicines, cosmetics and employment.",
+    "beat": "India",
+    "topics": [
+      "Himachal Pradesh",
+      "hemp",
+      "agriculture policy"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "हिमाचल प्रदेश में भांग की खेती की पॉलिसी लागू, किसानों को प्रति बीघा चुकाने होंगे 1 हजार रुपये",
+        "link": "https://hindi.news18.com/news/himachal-pradesh/kullu-hemp-cultivation-approved-employment-opportunities-says-mla-sunder-singh-thakur-ws-l-10818930.html",
+        "published": "2026-09-09T07:19:32.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.1,
+      "corroboration": 0.33,
+      "recency": 0.99,
+      "trending": 0,
+      "beatWeight": 1,
+      "demand": 0.615
+    },
+    "pickReason": "Fresh, concrete policy with named fee and official quote; livelihood impact for Himachal farmers",
+    "priority": 2
+  },
+  "pickReason": "Fresh, concrete policy with named fee and official quote; livelihood impact for Himachal farmers",
+  "score": 0.615,
+  "story": {
+    "headline": "Himachal Pradesh brings in hemp cultivation policy, Rs 1,000 per bigha fee",
+    "body": "Himachal Pradesh has put a hemp cultivation policy into effect, under which farmers will pay a fee of Rs 1,000 per bigha, according to a report by News18 Hindi published on September 9.\n\nThe same report quoted MLA Sundar Singh Thakur as saying the move would feed into the production of medicines and cosmetics and generate employment. The intake note does not carry his exact words, and no verbatim quote should be used until the desk has one on the record.\n\nThe per-bigha figure of Rs 1,000 is, on the material available, the only financial detail reported. Whether this is an annual licence fee, a one-time registration charge or something else is not specified in what we have seen.\n\nSeveral basic elements are absent from the wire item. It is not confirmed which department or authority will issue permissions, from which date or crop season cultivation may begin, which districts or areas are covered, or what limits apply to THC content, acreage or end use. Thakur's constituency and any official role he holds in relation to the policy are also not stated in the intake note.\n\nBefore this runs, the desk needs to obtain the policy document or the government notification directly, confirm the fee structure and its basis, verify Thakur's designation and secure his remarks first-hand or from an official release, and get a response from the state government or the relevant department on implementation timelines and safeguards. Until then this is a single-source item attributed to News18 Hindi and should not be presented as independently established."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Location",
+      "value": "Himachal Pradesh",
+      "type": "location",
+      "evidence": "Himachal Pradesh has put a hemp cultivation policy into effect",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Policy status",
+      "value": "in effect",
+      "type": "status",
+      "evidence": "has put a hemp cultivation policy into effect",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Cultivation fee",
+      "value": "Rs 1,000 per bigha",
+      "type": "amount",
+      "evidence": "farmers will pay a fee of Rs 1,000 per bigha",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Source outlet",
+      "value": "News18 Hindi",
+      "type": "attribution",
+      "evidence": "according to a report by News18 Hindi",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Report date",
+      "value": "September 9",
+      "type": "date",
+      "evidence": "published on September 9",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "MLA cited",
+      "value": "Sundar Singh Thakur",
+      "type": "name",
+      "evidence": "quoted MLA Sundar Singh Thakur as saying",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Claimed benefits",
+      "value": "medicines and cosmetics production, employment",
+      "type": "attribution",
+      "evidence": "the move would feed into the production of medicines and cosmetics and generate employment",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Fee basis",
+      "value": "not specified",
+      "type": "status",
+      "evidence": "is not specified in what we have seen",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Verbatim quote",
+      "value": "not on record",
+      "type": "status",
+      "evidence": "The intake note does not carry his exact words",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Sourcing status",
+      "value": "single-source",
+      "type": "status",
+      "evidence": "this is a single-source item attributed to News18 Hindi",
+      "grounded": true
+    }
+  ],
+  "outputs": {
+    "highlights": {
+      "formatId": "highlights",
+      "blocks": [
+        {
+          "label": "Key points",
+          "lines": [
+            "Himachal Pradesh has put a hemp cultivation policy into effect, per the report.",
+            "Rs 1,000 per bigha is the fee farmers will pay under the policy.",
+            "News18 Hindi reported the policy in an item published on September 9.",
+            "MLA Sundar Singh Thakur was quoted saying it would aid medicines and cosmetics production.",
+            "Thakur also said the move would generate employment, according to the same report.",
+            "Fee basis — annual, one-time or otherwise — is not specified in the material available.",
+            "Single-source item attributed to News18 Hindi; no verbatim quote is on record."
+          ]
+        }
+      ],
+      "meta": {},
+      "visual": null,
+      "factsUsed": [
+        "f1",
+        "f2",
+        "f3",
+        "f4",
+        "f5",
+        "f6",
+        "f7",
+        "f8",
+        "f9",
+        "f10"
+      ],
+      "svg": null,
+      "factUsage": [
+        {
+          "id": "f1",
+          "label": "Location",
+          "verified": true
+        },
+        {
+          "id": "f2",
+          "label": "Policy status",
+          "verified": false
+        },
+        {
+          "id": "f3",
+          "label": "Cultivation fee",
+          "verified": true
+        },
+        {
+          "id": "f4",
+          "label": "Source outlet",
+          "verified": true
+        },
+        {
+          "id": "f5",
+          "label": "Report date",
+          "verified": true
+        },
+        {
+          "id": "f6",
+          "label": "MLA cited",
+          "verified": true
+        },
+        {
+          "id": "f7",
+          "label": "Claimed benefits",
+          "verified": false
+        },
+        {
+          "id": "f8",
+          "label": "Fee basis",
+          "verified": true
+        },
+        {
+          "id": "f9",
+          "label": "Verbatim quote",
+          "verified": false
+        },
+        {
+          "id": "f10",
+          "label": "Sourcing status",
+          "verified": true
+        }
+      ],
+      "warnings": [],
+      "ms": 4104
+    },
+    "video_script": {
+      "formatId": "video_script",
+      "blocks": [
+        {
+          "label": "Intro",
+          "lines": [
+            "Himachal Pradesh has a hemp cultivation policy in effect.",
+            "And farmers will have to pay for it."
+          ]
+        },
+        {
+          "label": "Body",
+          "lines": [
+            "The fee is one thousand rupees per bigha.",
+            "That comes from a report by News18 Hindi, published on September 9.",
+            "The same report quoted MLA Sundar Singh Thakur.",
+            "He said the move would feed into the production of medicines and cosmetics, and generate employment.",
+            "What the report does not say is whether that fee is annual, one-time, or something else."
+          ]
+        },
+        {
+          "label": "Outro",
+          "lines": [
+            "We do not have his exact words on the record.",
+            "For now, this rests on a single source. More when we have it."
+          ]
+        }
+      ],
+      "meta": {
+        "runtimeSeconds": 45
+      },
+      "visual": null,
+      "factsUsed": [
+        "f1",
+        "f2",
+        "f3",
+        "f4",
+        "f5",
+        "f6",
+        "f7",
+        "f8",
+        "f9",
+        "f10"
+      ],
+      "svg": null,
+      "factUsage": [
+        {
+          "id": "f1",
+          "label": "Location",
+          "verified": true
+        },
+        {
+          "id": "f2",
+          "label": "Policy status",
+          "verified": true
+        },
+        {
+          "id": "f3",
+          "label": "Cultivation fee",
+          "verified": false
+        },
+        {
+          "id": "f4",
+          "label": "Source outlet",
+          "verified": true
+        },
+        {
+          "id": "f5",
+          "label": "Report date",
+          "verified": true
+        },
+        {
+          "id": "f6",
+          "label": "MLA cited",
+          "verified": true
+        },
+        {
+          "id": "f7",
+          "label": "Claimed benefits",
+          "verified": true
+        },
+        {
+          "id": "f8",
+          "label": "Fee basis",
+          "verified": false
+        },
+        {
+          "id": "f9",
+          "label": "Verbatim quote",
+          "verified": false
+        },
+        {
+          "id": "f10",
+          "label": "Sourcing status",
+          "verified": false
+        }
+      ],
+      "warnings": [],
+      "ms": 5230
+    },
+    "twitter": {
+      "formatId": "twitter",
+      "blocks": [
+        {
+          "label": "Post",
+          "lines": [
+            "Himachal Pradesh has put a hemp cultivation policy into effect, with farmers to pay Rs 1,000 per bigha, News18 Hindi reported on Sept 9. MLA Sundar Singh Thakur said it would aid medicine and cosmetics production and create jobs. Single-source…"
+          ]
+        }
+      ],
+      "meta": {
+        "chars": 244,
+        "limit": 257,
+        "total": 267
+      },
+      "visual": null,
+      "factsUsed": [
+        "f1",
+        "f2",
+        "f3",
+        "f4",
+        "f5",
+        "f6",
+        "f7",
+        "f10"
+      ],
+      "svg": null,
+      "factUsage": [
+        {
+          "id": "f1",
+          "label": "Location",
+          "verified": true
+        },
+        {
+          "id": "f2",
+          "label": "Policy status",
+          "verified": false
+        },
+        {
+          "id": "f3",
+          "label": "Cultivation fee",
+          "verified": true
+        },
+        {
+          "id": "f4",
+          "label": "Source outlet",
+          "verified": true
+        },
+        {
+          "id": "f5",
+          "label": "Report date",
+          "verified": true
+        },
+        {
+          "id": "f6",
+          "label": "MLA cited",
+          "verified": true
+        },
+        {
+          "id": "f7",
+          "label": "Claimed benefits",
+          "verified": false
+        },
+        {
+          "id": "f10",
+          "label": "Sourcing status",
+          "verified": true
+        }
+      ],
+      "warnings": [
+        "Post trimmed to the 257-character ceiling."
+      ],
+      "ms": 978715
+    },
+    "insta_story": {
+      "formatId": "insta_story",
+      "blocks": [
+        {
+          "label": "Card 1",
+          "lines": [
+            "HIMACHAL HEMP POLICY NOW IN EFFECT"
+          ]
+        },
+        {
+          "label": "Card 2",
+          "lines": [
+            "Rs 1,000 per bigha cultivation fee"
+          ]
+        },
+        {
+          "label": "Card 3",
+          "lines": [
+            "Single-source, per News18 Hindi, September 9"
+          ]
+        }
+      ],
+      "meta": {},
+      "visual": null,
+      "factsUsed": [
+        "f1",
+        "f2",
+        "f3",
+        "f4",
+        "f5",
+        "f10"
+      ],
+      "backgrounds": [
+        "/api/media/rd_mttrw6up_ubgzj/4dd555d7d4094c45.jpg",
+        "/api/media/rd_mttrw6up_ubgzj/9c72dd206534568c.jpg",
+        "/api/media/rd_mttrw6up_ubgzj/00df0665f1388a55.jpg"
+      ],
+      "background": "/api/media/rd_mttrw6up_ubgzj/4dd555d7d4094c45.jpg",
+      "backgroundSource": "gemini",
+      "imagePrompts": [
+        "Editorial photojournalism, real photograph, natural light, documentary style. Scene in India relating to: HIMACHAL HEMP POLICY NOW IN EFFECT. Everyday Indian people and setting, authentic Indian street detail. Vertical 9:16 composition, framed for an Instagram story. ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions anywhere in the image. No depiction of casualties, injuries, bodies or blood. Keep the lower third of the frame calm and uncluttered for a text overlay.",
+        "Editorial photojournalism, real photograph, natural light, documentary style. Scene in India relating to: Rs 1,000 per bigha cultivation fee. Everyday Indian people and setting, authentic Indian street detail. Vertical 9:16 composition, framed for an Instagram story. ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions anywhere in the image. No depiction of casualties, injuries, bodies or blood. Keep the lower third of the frame calm and uncluttered for a text overlay.",
+        "Editorial photojournalism, real photograph, natural light, documentary style. Scene in India relating to: Single-source, per News18 Hindi, September 9. Everyday Indian people and setting, authentic Indian street detail. Vertical 9:16 composition, framed for an Instagram story. ABSOLUTELY NO text, letters, numbers, logos, watermarks or captions anywhere in the image. No depiction of casualties, injuries, bodies or blood. Keep the lower third of the frame calm and uncluttered for a text overlay."
+      ],
+      "svg": null,
+      "factUsage": [
+        {
+          "id": "f1",
+          "label": "Location",
+          "verified": false
+        },
+        {
+          "id": "f2",
+          "label": "Policy status",
+          "verified": true
+        },
+        {
+          "id": "f3",
+          "label": "Cultivation fee",
+          "verified": true
+        },
+        {
+          "id": "f4",
+          "label": "Source outlet",
+          "verified": true
+        },
+        {
+          "id": "f5",
+          "label": "Report date",
+          "verified": true
+        },
+        {
+          "id": "f10",
+          "label": "Sourcing status",
+          "verified": true
+        }
+      ],
+      "warnings": [],
+      "ms": 1052252
+    }
+  },
+  "approvals": {},
+  "createdAt": "2026-09-09T07:24:28.465Z",
+  "updatedAt": "2026-09-09T07:42:16.737Z",
+  "brief": {
+    "headline": "Himachal Pradesh brings in hemp cultivation policy, Rs 1,000 per bigha fee",
+    "body": "Himachal Pradesh has put a hemp cultivation policy into effect, under which farmers will pay a fee of Rs 1,000 per bigha, according to a report by News18 Hindi published on September 9.\n\nThe same report quoted MLA Sundar Singh Thakur as saying the move would feed into the production of medicines and cosmetics and generate employment. The intake note does not carry his exact words, and no verbatim quote should be used until the desk has one on the record.\n\nThe per-bigha figure of Rs 1,000 is, on the material available, the only financial detail reported. Whether this is an annual licence fee, a one-time registration charge or something else is not specified in what we have seen.\n\nSeveral basic elements are absent from the wire item. It is not confirmed which department or authority will issue permissions, from which date or crop season cultivation may begin, which districts or areas are covered, or what limits apply to THC content, acreage or end use. Thakur's constituency and any official role he holds in relation to the policy are also not stated in the intake note.\n\nBefore this runs, the desk needs to obtain the policy document or the government notification directly, confirm the fee structure and its basis, verify Thakur's designation and secure his remarks first-hand or from an official release, and get a response from the state government or the relevant department on implementation timelines and safeguards. Until then this is a single-source item attributed to News18 Hindi and should not be presented as independently established.",
+    "unverified": true,
+    "sourcedFrom": [
+      "News18 Hindi"
+    ]
+  },
+  "errors": {
+    "photostory": "terminated",
+    "infographic": "terminated",
+    "push": "terminated",
+    "insta_carousel": "terminated",
+    "newsletter": "terminated",
+    "insta_post": "terminated",
+    "translation": "terminated",
+    "reel": "terminated",
+    "tv_script": "terminated"
+  },
+  "genMs": 1068271
+}

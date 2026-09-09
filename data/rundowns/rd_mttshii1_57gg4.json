@@ -1,0 +1,51 @@
+{
+  "id": "rd_mttshii1_57gg4",
+  "status": "failed",
+  "cluster": {
+    "headline": "Cyber expert briefs 300 Chhattisgarh police officers on 'golden hour' fraud response",
+    "summary": "At a state-level workshop in Raipur, cyber expert Dr Rakshit Tandon told 300 police officers five steps to stop financial fraud within the golden hour. The formulas aim to help victims recover money lost to cyber fraud.",
+    "beat": "Crime",
+    "topics": [
+      "cyber fraud",
+      "Raipur",
+      "police training"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "क्या आप भी हुए हैं साइबर ठगी के शिकार? याद रखें गोल्डन ऑवर के ये 5 फॉर्मूले, फटाक से मिल सकते हैं गायब पैसे!",
+        "link": "https://hindi.news18.com/news/chhattisgarh/raipur-cyber-crime-training-workshop-cyber-expert-rakshit-tandon-5-step-formula-golden-hour-report-trace-freeze-preserve-investigate-local18-10819198.html",
+        "published": "2026-09-09T07:05:07.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.3,
+      "corroboration": 0.33,
+      "recency": 0.97,
+      "trending": 0,
+      "beatWeight": 0.85,
+      "demand": 0.572
+    },
+    "pickReason": "Actionable cyber-fraud recovery guidance for readers' money, sourced from a documented police workshop",
+    "priority": 3
+  },
+  "pickReason": "Actionable cyber-fraud recovery guidance for readers' money, sourced from a documented police workshop",
+  "score": 0.572,
+  "story": {
+    "headline": "Cyber expert briefs 300 Chhattisgarh police officers on 'golden hour' fraud response",
+    "body": ""
+  },
+  "facts": [],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T07:41:03.337Z",
+  "updatedAt": "2026-09-09T07:41:04.798Z",
+  "error": "Connection error."
+}

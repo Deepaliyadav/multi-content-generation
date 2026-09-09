@@ -1,5 +1,127 @@
 [
   {
+    "id": "rd_mttrw6up_ubgzj",
+    "headline": "Himachal Pradesh brings in hemp cultivation policy, Rs 1,000 per bigha fee",
+    "clusterHeadline": "Himachal Pradesh implements hemp cultivation policy with per-bigha fee for farmers",
+    "beat": "India",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:24:28.465Z",
+    "updatedAt": "2026-09-09T07:42:16.737Z",
+    "formats": 4,
+    "approved": 0,
+    "factCount": 10,
+    "pickReason": "Fresh, concrete policy with named fee and official quote; livelihood impact for Himachal farmers",
+    "score": 0.615,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 1068271,
+    "error": null
+  },
+  {
+    "id": "rd_mttshii1_57gg4",
+    "headline": "Cyber expert briefs 300 Chhattisgarh police officers on 'golden hour' fraud response",
+    "clusterHeadline": "Cyber expert briefs 300 Chhattisgarh police officers on 'golden hour' fraud response",
+    "beat": "Crime",
+    "origin": "rss",
+    "status": "failed",
+    "createdAt": "2026-09-09T07:41:03.337Z",
+    "updatedAt": "2026-09-09T07:41:04.798Z",
+    "formats": 0,
+    "approved": 0,
+    "factCount": 0,
+    "pickReason": "Actionable cyber-fraud recovery guidance for readers' money, sourced from a documented police workshop",
+    "score": 0.572,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": null,
+    "error": "Connection error."
+  },
+  {
+    "id": "rd_mttrw6up_khnqz",
+    "headline": "New rules reported for domestic LPG cylinder booking; details unconfirmed",
+    "clusterHeadline": "Government notifies new rules for domestic LPG cylinder booking",
+    "beat": "Business",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:24:28.465Z",
+    "updatedAt": "2026-09-09T07:41:03.335Z",
+    "formats": 0,
+    "approved": 0,
+    "factCount": 11,
+    "pickReason": "New LPG booking rules touch nearly every household; direct consequence for money and daily access",
+    "score": 0.565,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 994869,
+    "error": null
+  },
+  {
+    "id": "rd_mttrr474_tsur7",
+    "headline": "Rahul Gandhi campaigns in Rae Bareli ahead of 2027 UP assembly polls",
+    "clusterHeadline": "Rahul Gandhi campaigns in Rae Bareli ahead of 2027 UP polls",
+    "beat": "Politics",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:20:31.744Z",
+    "updatedAt": "2026-09-09T07:22:15.566Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Distinct angle on opposition strategy; Rae Bareli record gives factual spine, though overlaps UP poll coverage.",
+    "score": 0.584,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 103818,
+    "error": null
+  },
+  {
+    "id": "rd_mttrpdhj_3laib",
+    "headline": "Baloch group writes open letter to 11 BRICS countries ahead of summit",
+    "clusterHeadline": "Baloch group sends open letter to 11 BRICS states before summit",
+    "beat": "World",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:19:10.471Z",
+    "updatedAt": "2026-09-09T07:20:43.891Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Single-outlet but consequential diplomacy story with sourced document; India-Pakistan stakes ahead of BRICS summit.",
+    "score": 0.551,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 93419,
+    "error": null
+  },
+  {
+    "id": "rd_mttrpdhi_ff04z",
+    "headline": "Caste equations in focus as parties eye 2027 Uttar Pradesh polls",
+    "clusterHeadline": "Parties court caste blocs ahead of Uttar Pradesh assembly elections",
+    "beat": "Politics",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:19:10.470Z",
+    "updatedAt": "2026-09-09T07:20:31.652Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Caste arithmetic shapes UP's 2027 outcome; high demand, fresh, produceable from known constituency and community detail.",
+    "score": 0.599,
+    "sources": [
+      "News18 Hindi",
+      "News18 Hindi",
+      "News18 Hindi"
+    ],
+    "genMs": 81181,
+    "error": null
+  },
+  {
     "id": "rd_mttrgeuo_39txx",
     "headline": "Viral clip appears to show unmanned railway crossing, location unverified",
     "clusterHeadline": "Video appears to show railway gate left unmanned at busy Ghaziabad crossing",

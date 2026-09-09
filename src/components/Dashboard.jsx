@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
  * only ever fills the queue.
  */
 const STATUS_LABEL = {
-  generating: 'Processing…',
+  generating: 'Editor agent is working…',
   awaiting_review: 'Needs review',
   draft: 'Draft',
   approved: 'Approved',
