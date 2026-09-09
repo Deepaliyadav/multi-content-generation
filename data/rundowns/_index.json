@@ -1,5 +1,123 @@
 [
   {
+    "id": "rd_mttt4sk0_8fylp",
+    "headline": "Himachal sets licence fees for controlled cannabis cultivation, intake note says",
+    "clusterHeadline": "Himachal Pradesh sets licence fees for controlled cannabis cultivation",
+    "beat": "India",
+    "origin": "trending",
+    "status": "generating",
+    "createdAt": "2026-09-09T07:59:09.456Z",
+    "updatedAt": "2026-09-09T07:59:29.119Z",
+    "formats": 0,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Trending policy with hard numbers on cannabis licence fees; money and rights for Himachal farmers",
+    "score": 0.525,
+    "sources": [],
+    "genMs": null,
+    "error": null
+  },
+  {
+    "id": "rd_mttt3823_4mwuo",
+    "headline": "Hillside slipping in Nainital's Alukhet, Krishnapur; 80 families live above slope",
+    "clusterHeadline": "Landslip threatens Nainital hillside where 80 families live; road cracks appear",
+    "beat": "India",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:57:56.235Z",
+    "updatedAt": "2026-09-09T07:59:26.650Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 9,
+    "pickReason": "Fresh, single-outlet, life-safety story: 80 families above a slipping slope; producible from inspection findings",
+    "score": 0.615,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 90412,
+    "error": null
+  },
+  {
+    "id": "rd_mttt3824_7ssmk",
+    "headline": "Excise officer who halted 'Sagar Gold' sales in Jabalpur issued show-cause notice",
+    "clusterHeadline": "Excise officer who banned liquor brand in Jabalpur served notice after Sagar deaths",
+    "beat": "Crime",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:57:56.236Z",
+    "updatedAt": "2026-09-09T07:59:09.391Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Accountability angle on toxic liquor deaths: officer who acted gets notice; concrete facts, real consequence",
+    "score": 0.578,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 73154,
+    "error": null
+  },
+  {
+    "id": "rd_mttss86a_3ttek",
+    "headline": "Voter roll verification in Jind said to reunite brothers separated 35 years",
+    "clusterHeadline": "Voter roll verification in Haryana reunites brothers separated for 35 years",
+    "beat": "India",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:49:23.170Z",
+    "updatedAt": "2026-09-09T07:54:38.136Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Fresh single-outlet human story with civic angle on SIR verification; documented case, clear facts",
+    "score": 0.606,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 80388,
+    "error": null
+  },
+  {
+    "id": "rd_mttspxvi_k3p1u",
+    "headline": "Cyber expert briefs 300 Chhattisgarh police officers on fraud 'golden hour'",
+    "clusterHeadline": "Cyber expert trains 300 Chhattisgarh police officers on fraud 'golden hour'",
+    "beat": "Crime",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:47:36.510Z",
+    "updatedAt": "2026-09-09T07:49:39.395Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 10,
+    "pickReason": "Direct reader utility: actionable fraud-recovery steps, statewide police training, produceable from concrete workshop facts",
+    "score": 0.564,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 122880,
+    "error": null
+  },
+  {
+    "id": "rd_mttspxvi_shx3f",
+    "headline": "Bhumihar-influenced UP seats draw party attention ahead of next year's polls",
+    "clusterHeadline": "Bhumihar-dominated seats in focus ahead of UP assembly elections",
+    "beat": "Politics",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T07:47:36.510Z",
+    "updatedAt": "2026-09-09T07:49:23.094Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 10,
+    "pickReason": "Caste arithmetic ahead of UP polls has real electoral consequence; named seats give reportable substance",
+    "score": 0.587,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 106582,
+    "error": null
+  },
+  {
     "id": "rd_mttrw6up_ubgzj",
     "headline": "Himachal Pradesh brings in hemp cultivation policy, Rs 1,000 per bigha fee",
     "clusterHeadline": "Himachal Pradesh implements hemp cultivation policy with per-bigha fee for farmers",

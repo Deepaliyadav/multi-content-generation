@@ -675,7 +675,12 @@ export default function App() {
 
   /* ── render ─────────────────────────────────────────────────────────── */
 
-  const showRail = stage === 'working' || (stage === 'review' && ledgerOpen);
+  // The fact ledger PANEL is parked at the desk's request. Fact extraction
+  // itself is untouched and must stay — it is what every format is written
+  // against, what grounding rejects ungrounded figures with, and what stale
+  // detection diffs after a source edit. Only the sidebar is hidden.
+  const SHOW_FACT_LEDGER = false;
+  const showRail = SHOW_FACT_LEDGER && (stage === 'working' || (stage === 'review' && ledgerOpen));
   const activeFormat = formats.find((f) => f.id === active) || formats[0] || null;
   const formatCount = Object.keys(outputs).length;
   const approvedCount = Object.keys(outputs).filter((k) => approvals[k]).length;
@@ -961,9 +966,11 @@ export default function App() {
                       )}
                     </label>
                   )}
-                  <button className="btn btn-sm" onClick={() => setLedgerOpen((v) => !v)}>
-                    {ledgerOpen ? 'Hide' : 'Show'} fact ledger · {facts.length}
-                  </button>
+                  {SHOW_FACT_LEDGER && (
+                    <button className="btn btn-sm" onClick={() => setLedgerOpen((v) => !v)}>
+                      {ledgerOpen ? 'Hide' : 'Show'} fact ledger · {facts.length}
+                    </button>
+                  )}
                   {rundownId && (
                     <button
                       className={`btn btn-sm ${rundownStatus === 'draft' ? 'btn-ink' : 'btn-draft'}`}

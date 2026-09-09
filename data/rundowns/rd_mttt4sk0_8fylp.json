@@ -1,0 +1,148 @@
+{
+  "id": "rd_mttt4sk0_8fylp",
+  "status": "generating",
+  "cluster": {
+    "headline": "Himachal Pradesh sets licence fees for controlled cannabis cultivation",
+    "summary": "Under a Department of Taxes and Excise notification, industrial hemp farmers in Himachal Pradesh pay ₹2,000 per bigha annually, licensed manufacturers cultivating their own crop ₹10 lakh per bigha, and independent medical or scientific cultivation licences ₹3 lakh per bigha. About two weeks ago the cultivation fee was cut to ₹1 lakh per bigha and processing unit fees from ₹2 crore to ₹1 crore; cultivators need at least three contiguous acres and Himachali agriculturist status.",
+    "beat": "India",
+    "topics": [
+      "cannabis",
+      "Himachal Pradesh",
+      "policy",
+      "agriculture"
+    ],
+    "evidence": "July notification, fee cut ~two weeks ago; not breaking",
+    "sources": [],
+    "origin": "trending",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 0,
+      "items": 0,
+      "ageHours": null,
+      "corroboration": 0,
+      "recency": 0.5,
+      "trending": 1,
+      "beatWeight": 1,
+      "demand": 0.525
+    },
+    "pickReason": "Trending policy with hard numbers on cannabis licence fees; money and rights for Himachal farmers",
+    "priority": 3
+  },
+  "pickReason": "Trending policy with hard numbers on cannabis licence fees; money and rights for Himachal farmers",
+  "score": 0.525,
+  "story": {
+    "headline": "Himachal sets licence fees for controlled cannabis cultivation, intake note says",
+    "body": "Himachal Pradesh has fixed a schedule of licence fees for controlled cannabis cultivation through a notification of the state Department of Taxes and Excise, according to the intake note circulated to the desk. No wire copy has come in on this yet, and the details below rest entirely on that note.\n\nAs described in the intake note, industrial hemp growers would pay ₹2,000 per bigha a year. Licensed manufacturers who cultivate their own crop would pay ₹10 lakh per bigha, while standalone licences for medical or scientific cultivation are pegged at ₹3 lakh per bigha.\n\nThe note further says that roughly two weeks ago the cultivation fee was reduced to ₹1 lakh per bigha, and that fees for processing units were halved from ₹2 crore to ₹1 crore. It is not stated in the note which of the categories above that ₹1 lakh figure applies to, and the desk should not assume.\n\nOn eligibility, the intake note says applicants must hold at least three contiguous acres and must qualify as Himachali agriculturists. The note does not spell out how contiguity is to be established, who certifies agriculturist status, or whether leased land counts.\n\nThe note dates the original notification to July and describes the fee cut as about two weeks old. It is not breaking news. No official quotes, no notification number, no named officials and no figures on how many licences have been applied for or granted are contained in the material available.\n\nBefore anything runs, the desk needs to obtain and read the Department of Taxes and Excise notification itself, along with the later fee-revision order; confirm the exact fee for each licence category and which one was reduced to ₹1 lakh; establish the notification dates and numbers; verify the eligibility conditions and the definition of Himachali agriculturist status; and secure on-record comment from the department. The relationship between this fee schedule and any enabling state law or central approval is also unconfirmed."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "State",
+      "value": "Himachal Pradesh",
+      "type": "location",
+      "evidence": "Himachal Pradesh has fixed a schedule of licence fees for controlled cannabis cultivation",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Issuing department",
+      "value": "Department of Taxes and Excise",
+      "type": "name",
+      "evidence": "a notification of the state Department of Taxes and Excise",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Source of details",
+      "value": "intake note circulated to desk",
+      "type": "attribution",
+      "evidence": "according to the intake note circulated to the desk",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Hemp grower fee",
+      "value": "₹2,000 per bigha per year",
+      "type": "amount",
+      "evidence": "industrial hemp growers would pay ₹2,000 per bigha a year",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Manufacturer fee",
+      "value": "₹10 lakh per bigha",
+      "type": "amount",
+      "evidence": "Licensed manufacturers who cultivate their own crop would pay ₹10 lakh per bigha",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Medical cultivation fee",
+      "value": "₹3 lakh per bigha",
+      "type": "amount",
+      "evidence": "standalone licences for medical or scientific cultivation are pegged at ₹3 lakh per bigha",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Reduced cultivation fee",
+      "value": "₹1 lakh per bigha",
+      "type": "amount",
+      "evidence": "the cultivation fee was reduced to ₹1 lakh per bigha",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Processing unit fee",
+      "value": "₹2 crore to ₹1 crore",
+      "type": "amount",
+      "evidence": "fees for processing units were halved from ₹2 crore to ₹1 crore",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Land requirement",
+      "value": "3 contiguous acres",
+      "type": "number",
+      "evidence": "applicants must hold at least three contiguous acres",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Eligibility status",
+      "value": "Himachali agriculturists",
+      "type": "status",
+      "evidence": "must qualify as Himachali agriculturists",
+      "grounded": true
+    },
+    {
+      "id": "f11",
+      "label": "Notification date",
+      "value": "July",
+      "type": "date",
+      "evidence": "The note dates the original notification to July",
+      "grounded": true
+    },
+    {
+      "id": "f12",
+      "label": "Fee cut timing",
+      "value": "2 weeks ago",
+      "type": "date",
+      "evidence": "roughly two weeks ago the cultivation fee was reduced",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T07:59:09.456Z",
+  "updatedAt": "2026-09-09T07:59:29.119Z",
+  "brief": {
+    "headline": "Himachal sets licence fees for controlled cannabis cultivation, intake note says",
+    "body": "Himachal Pradesh has fixed a schedule of licence fees for controlled cannabis cultivation through a notification of the state Department of Taxes and Excise, according to the intake note circulated to the desk. No wire copy has come in on this yet, and the details below rest entirely on that note.\n\nAs described in the intake note, industrial hemp growers would pay ₹2,000 per bigha a year. Licensed manufacturers who cultivate their own crop would pay ₹10 lakh per bigha, while standalone licences for medical or scientific cultivation are pegged at ₹3 lakh per bigha.\n\nThe note further says that roughly two weeks ago the cultivation fee was reduced to ₹1 lakh per bigha, and that fees for processing units were halved from ₹2 crore to ₹1 crore. It is not stated in the note which of the categories above that ₹1 lakh figure applies to, and the desk should not assume.\n\nOn eligibility, the intake note says applicants must hold at least three contiguous acres and must qualify as Himachali agriculturists. The note does not spell out how contiguity is to be established, who certifies agriculturist status, or whether leased land counts.\n\nThe note dates the original notification to July and describes the fee cut as about two weeks old. It is not breaking news. No official quotes, no notification number, no named officials and no figures on how many licences have been applied for or granted are contained in the material available.\n\nBefore anything runs, the desk needs to obtain and read the Department of Taxes and Excise notification itself, along with the later fee-revision order; confirm the exact fee for each licence category and which one was reduced to ₹1 lakh; establish the notification dates and numbers; verify the eligibility conditions and the definition of Himachali agriculturist status; and secure on-record comment from the department. The relationship between this fee schedule and any enabling state law or central approval is also unconfirmed.",
+    "unverified": true,
+    "sourcedFrom": []
+  }
+}

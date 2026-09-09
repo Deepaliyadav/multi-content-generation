@@ -21,6 +21,18 @@ const STATUS_LABEL = {
 };
 
 /**
+ * The filter tabs read as a column header, not as a report on one rundown, so
+ * "Editor agent is working…" is too long and too narrative up there. The card
+ * chip keeps the fuller wording; only the tab is shortened.
+ */
+const FILTER_LABEL = {
+  ...STATUS_LABEL,
+  all: 'All',
+  unclaimed: 'Unclaimed',
+  generating: 'Processing',
+};
+
+/**
  * A cycle error, in words.
  *
  * Provider failures arrive as `400 {"type":"error","error":{"message":…}}`.
@@ -402,7 +414,7 @@ export default function Dashboard({ onOpen }) {
                   setPageNum(1);
                 }}
               >
-                {f === 'all' ? 'All' : f === 'unclaimed' ? 'Unclaimed' : STATUS_LABEL[f]}
+                {FILTER_LABEL[f] || f}
                 {f === 'unclaimed' ? (unclaimed.length ? ` ${unclaimed.length}` : '') : counts[f] ? ` ${counts[f]}` : ''}
               </button>
             ))}
