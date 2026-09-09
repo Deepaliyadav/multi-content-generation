@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as api from './lib/api.js';
 import Masthead from './components/Masthead.jsx';
+import WireTicker from './components/WireTicker.jsx';
 import Composer from './components/Composer.jsx';
 import StoryDiscovery from './components/StoryDiscovery.jsx';
 import FactLedger from './components/FactLedger.jsx';
@@ -254,14 +255,15 @@ export default function App() {
   }
 
   /** A plain rewrite of one format against the current ledger. */
-  async function rewrite(formatId, steer = '') {
+  async function rewrite(formatId, steer = '', langOverride) {
     if (!facts.length) return;
     setBusy(formatId);
     setError(null);
     setErrors((e) => ({ ...e, [formatId]: undefined }));
     const before = outputs[formatId];
     try {
-      await api.generate({ story, facts, language, only: [formatId], steer }, (ev) => {
+      const lang = langOverride || language;
+      await api.generate({ story, facts, language: lang, only: [formatId], steer }, (ev) => {
         if (ev.type === 'format:done') {
           setRewriteNote((r) => ({
             ...r,
@@ -286,6 +288,12 @@ export default function App() {
     }
   }
 
+  /** Switch the translation to another language, in place. */
+  async function retranslate(lang) {
+    setLanguage(lang);
+    await rewrite('translation', '', lang);
+  }
+
   async function regenerateAll() {
     for (const id of staleIds) await regenerate(id); // sequential: readable on a projector
   }
@@ -298,6 +306,7 @@ export default function App() {
   return (
     <>
       <Masthead metrics={metrics} />
+      <WireTicker />
 
       <div className={`frame ${showRail ? 'split' : ''}`}>
         {showRail && (
@@ -534,6 +543,8 @@ export default function App() {
                   language={language}
                   story={story}
                   publish={meta?.publish?.instagram}
+                  languages={meta?.languages || []}
+                  onLanguage={retranslate}
                   voice={meta?.voice}
                   busy={busy === activeFormat?.id}
                   onSave={(blocks) =>

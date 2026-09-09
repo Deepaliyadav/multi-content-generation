@@ -782,8 +782,27 @@ label.field-label {
 .article .kicker { font-family: var(--font-mono); font-size: 11px; color: var(--teal); letter-spacing: .04em; margin-bottom: 8px; text-transform: uppercase; }
 .article h2 { font-family: var(--font-display); font-size: 27px; font-weight: 500; margin: 0 0 12px; max-width: 620px; line-height: 1.25; }
 .article .body p { max-width: 620px; margin: 0 0 14px; font-size: 14.5px; line-height: 1.78; }
-.article.hindi h2, .article.hindi .body p { font-family: var(--font-hi); }
-.article.hindi .body p { font-size: 15.5px; line-height: 1.95; }
+/* Each script sets its own face; one rule then applies it to the copy. Indic
+   and Arabic scripts also need more leading than Latin at the same size —
+   matras and ascenders collide otherwise. */
+.article.indic h2, .article.indic .body p { font-family: var(--script-font), var(--font-body); }
+.article.indic .body p { font-size: 15.5px; line-height: 1.95; }
+.article.indic h2 { line-height: 1.4; }
+
+.article.script-deva { --script-font: 'Noto Sans Devanagari'; }
+.article.script-beng { --script-font: 'Noto Sans Bengali'; }
+.article.script-guru { --script-font: 'Noto Sans Gurmukhi'; }
+.article.script-gujr { --script-font: 'Noto Sans Gujarati'; }
+.article.script-orya { --script-font: 'Noto Sans Oriya'; }
+.article.script-taml { --script-font: 'Noto Sans Tamil'; }
+.article.script-telu { --script-font: 'Noto Sans Telugu'; }
+.article.script-knda { --script-font: 'Noto Sans Kannada'; }
+.article.script-mlym { --script-font: 'Noto Sans Malayalam'; }
+.article.script-arab { --script-font: 'Noto Naskh Arabic'; }
+
+/* Right-to-left is a reading requirement, not a style choice. */
+.article.rtl { direction: rtl; text-align: right; }
+.article.rtl .kicker { text-align: right; }
 
 /* key points */
 .points { display: flex; flex-direction: column; gap: 9px; max-width: 620px; }
@@ -1546,3 +1565,124 @@ button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
 /* Nothing may scroll the page sideways — a stray fixed width is a bug, not a
    reason for a horizontal scrollbar. */
 html, body { max-width: 100%; overflow-x: hidden; }
+
+/* ── the wire strip ───────────────────────────────────────────────────── */
+/* Ambient, not a control: one thin muted line under the masthead. No accent
+   colour — the accents belong to the ledger and the stale flags. */
+
+.wire {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  height: 30px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+
+.wire-label {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-right: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+
+.wire-window { flex: 1; overflow: hidden; position: relative; }
+
+.wire-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  animation-name: wire-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.wire-track.paused { animation-play-state: paused; }
+
+@keyframes wire-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+.wire-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 0 18px;
+  text-decoration: none;
+  white-space: nowrap;
+  border-right: 1px solid var(--line-soft);
+}
+.wire-item:hover .wire-hed { color: var(--text); }
+
+.wire-src {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.wire-hed {
+  font-family: var(--font-hi), var(--font-body);
+  font-size: 12px;
+  color: var(--text-dim);
+  transition: color .12s;
+}
+
+.wire-count {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  border-left: 1px solid var(--line-soft);
+}
+
+/* Motion here is decorative; a reader who has asked for less gets a strip they
+   can scroll themselves rather than one that moves on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .wire-track { animation: none; }
+  .wire-window { overflow-x: auto; }
+}
+
+/* ── language picker (translation pane) ───────────────────────────────── */
+
+.lang-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 3px 8px 3px 11px;
+}
+.lang-pick > span {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.lang-select {
+  background: transparent;
+  border: none;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 4px 2px;
+  cursor: pointer;
+  max-width: 160px;
+}
+.lang-select:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+.lang-select:disabled { color: var(--text-faint); cursor: not-allowed; }
+.lang-select option { background: var(--bg-panel); color: var(--text); }

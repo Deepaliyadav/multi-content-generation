@@ -23,6 +23,27 @@ import { cms, cmsLabel, cmsSimulated, overlapScore } from './cms.js';
 
 const SWEEP_LIMIT = Number(process.env.LSS_SWEEP_LIMIT || 45);
 
+/**
+ * Hard ceiling on the search agent.
+ *
+ * It is an agent doing real research, so its latency is genuinely variable —
+ * measured between 30 seconds and past four minutes on identical input. Left
+ * uncapped it holds the whole sweep open, which blocks the auto-refresh cycle
+ * and leaves the desk watching a spinner long after the wire stories have
+ * landed. Better to abandon the lane and say so.
+ */
+const TREND_TIMEOUT_MS = Number(process.env.LSS_TREND_TIMEOUT_MS || 120_000);
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label} gave up after ${Math.round(ms / 1000)}s.`)), ms);
+    }),
+  ]);
+}
+
 /* ── 1. clustering ────────────────────────────────────────────────────── */
 
 const CLUSTER_SYSTEM = `You are the intake editor on a national news desk. You read the competitor wires and tell the desk which distinct stories are running.
@@ -350,7 +371,7 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
       (async () => {
         await seeded;
         onEvent({ type: 'phase', phase: 'Searching for what is breaking elsewhere…' });
-        const t = await trendingTopics({ seedTopics: seedForTrending });
+        const t = await withTimeout(trendingTopics({ seedTopics: seedForTrending }), TREND_TIMEOUT_MS, 'Trending search');
         out.searches = t.searches;
         onEvent({ type: 'clustered', origin: 'trending', count: t.clusters.length, searches: t.searches });
         if (!t.clusters.length)

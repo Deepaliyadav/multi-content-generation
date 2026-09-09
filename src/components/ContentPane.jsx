@@ -49,10 +49,18 @@ export default function ContentPane(props) {
 
 function Pane({
   format, output, stale, patches, visualBefore,
-  onSave, onRegenerate, busy, error, language, story, status, publish, voice, rewriteNote,
+  onSave, onRegenerate, busy, error, language, story, status, publish, voice,
+  languages = [], onLanguage, rewriteNote,
 }) {
   const preview = usePreview();
   const [steer, setSteer] = useState('');
+
+  // A steer is a one-shot instruction for the next rewrite, not a mode. Left in
+  // place it silently re-applies to every later Regenerate — you click
+  // "Shorter" once and every rewrite after that is quietly still shorter.
+  useEffect(() => {
+    if (rewriteNote?.steer) setSteer('');
+  }, [rewriteNote]);
   const [copied, setCopied] = useState(false);
   const [comparing, setComparing] = useState(false);
 
@@ -162,6 +170,21 @@ function Pane({
         <div className="toolbar-row">
           <div className="pane-label">{format.label}</div>
           <div className="toolbar-actions">
+            {canCompare && !!languages.length && onLanguage && (
+              <label className="lang-pick" title="Translate into another language">
+                <span>Language</span>
+                <select
+                  className="lang-select"
+                  value={language}
+                  disabled={busy}
+                  onChange={(e) => onLanguage(e.target.value)}
+                >
+                  {languages.map((l) => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </label>
+            )}
             {canCompare && (
               <button
                 className={`btn-copy ${comparing ? 'on' : ''}`}

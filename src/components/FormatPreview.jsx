@@ -11,8 +11,33 @@ const byLabel = (blocks, needle) =>
 
 const indexOfBlock = (blocks, block) => (blocks || []).indexOf(block);
 
-/** Scripts that read as Devanagari get the Devanagari face and looser leading. */
-const DEVANAGARI = /^(hindi|marathi|nepali|sanskrit|bhojpuri)$/i;
+/**
+ * Which writing system a translation target uses.
+ *
+ * A language without a face renders as fallback glyphs or empty boxes, so every
+ * script offered gets a font loaded for it, and the Perso-Arabic ones also get
+ * their direction flipped — Urdu set left-to-right is not merely ugly, it is
+ * unreadable.
+ */
+const SCRIPTS = [
+  ['deva', /^(hindi|marathi|nepali|sanskrit|bhojpuri|maithili|konkani|dogri)$/i],
+  ['beng', /^(bangla|bengali|assamese)$/i],
+  ['guru', /^punjabi$/i],
+  ['gujr', /^gujarati$/i],
+  ['orya', /^(odia|oriya)$/i],
+  ['taml', /^tamil$/i],
+  ['telu', /^telugu$/i],
+  ['knda', /^kannada$/i],
+  ['mlym', /^malayalam$/i],
+  ['arab', /^(urdu|kashmiri|sindhi|arabic|persian|farsi|pashto)$/i],
+];
+
+const RTL = /^(urdu|kashmiri|sindhi|arabic|persian|farsi|pashto)$/i;
+
+function scriptOf(language) {
+  const l = String(language || '').trim();
+  return SCRIPTS.find(([, re]) => re.test(l))?.[0] || null;
+}
 
 /**
  * One editable unit of copy. Every renderer goes through this, so click-to-edit
@@ -84,10 +109,14 @@ function ArticlePreview({ output, flag, edit, language }) {
   const blocks = output.blocks || [];
   const head = byLabel(blocks, 'Headline');
   const body = byLabel(blocks, 'Body');
-  const hi = DEVANAGARI.test(String(language || ''));
+  const script = scriptOf(language);
+  const rtl = RTL.test(String(language || '').trim());
 
   return (
-    <div className={`article ${hi ? 'hindi' : ''}`}>
+    <div
+      className={`article ${script ? `indic script-${script}` : ''} ${rtl ? 'rtl' : ''}`}
+      dir={rtl ? 'rtl' : undefined}
+    >
       <div className="kicker">{language ? `${language} edition` : 'Web article'}</div>
       {head && (
         <Ed

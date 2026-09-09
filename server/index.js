@@ -10,6 +10,8 @@ import { imageProviderId, imageProviderLabel } from './images.js';
 import { discover, draftBrief, trendsReady } from './discover.js';
 import { cms, cmsLabel, cmsSimulated } from './cms.js';
 import { configuredFeeds } from './feeds.js';
+import { fetchAll } from './rss.js';
+import crypto from 'node:crypto';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
 import { SAMPLES } from './samples.js';
 import {
@@ -32,7 +34,24 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 
-export const LANGUAGES = ['Hindi', 'Bangla', 'English', 'Marathi', 'Tamil', 'Telugu', 'Gujarati', 'Urdu'];
+/**
+ * Translation targets.
+ *
+ * Ordered by who this desk actually files for: the Indian languages first, then
+ * the international ones. Every entry here must have a font and a text
+ * direction behind it in the UI — offering a language the browser renders as
+ * empty boxes is worse than not offering it.
+ */
+export const LANGUAGES = [
+  // Indian languages
+  'Hindi', 'Bangla', 'Marathi', 'Telugu', 'Tamil', 'Gujarati', 'Urdu', 'Kannada',
+  'Malayalam', 'Punjabi', 'Odia', 'Assamese', 'Maithili', 'Bhojpuri', 'Konkani',
+  'Nepali', 'Sindhi', 'Kashmiri', 'Sanskrit',
+  // International
+  'English', 'Arabic', 'Chinese (Simplified)', 'Spanish', 'French', 'German',
+  'Portuguese', 'Russian', 'Japanese', 'Korean', 'Indonesian', 'Vietnamese',
+  'Thai', 'Turkish', 'Persian', 'Italian', 'Dutch', 'Swahili',
+];
 
 /** Run tasks with a fan-out cap, reporting each as it lands. */
 async function pooled(items, limit, worker) {
@@ -100,6 +119,44 @@ app.get('/api/meta', (_req, res) => {
       rules: f.rules({ language: 'the selected language' }),
     })),
   });
+});
+
+/* ── the wire ─────────────────────────────────────────────────────────── */
+
+/**
+ * Raw competitor headlines. No model call, so it is cheap enough to poll.
+ *
+ * Also returns a fingerprint of the current wire, which lets the client tell
+ * "nothing has moved" from "there is new copy" without paying for a sweep to
+ * find out. Cached briefly so several clients polling do not hammer the feeds.
+ */
+let wireCache = { at: 0, payload: null };
+const WIRE_TTL_MS = 30_000;
+
+app.get('/api/wire', async (_req, res) => {
+  try {
+    if (wireCache.payload && Date.now() - wireCache.at < WIRE_TTL_MS)
+      return res.json({ ...wireCache.payload, cached: true });
+
+    const t = Date.now();
+    const { sources, items } = await fetchAll(configuredFeeds());
+    const top = items.slice(0, 40).map((i) => ({
+      source: i.source,
+      title: i.title,
+      link: i.link,
+      published: i.published,
+    }));
+    const payload = {
+      items: top,
+      sources: sources.map((s) => ({ name: s.name, ok: s.ok, count: s.count, error: s.error })),
+      // Identity of the wire right now: if this is unchanged, so is the news.
+      fingerprint: crypto.createHash('sha1').update(top.map((i) => i.link).join('|')).digest('hex').slice(0, 12),
+      fetchedAt: new Date().toISOString(),
+      ms: Date.now() - t,
+    };
+    wireCache = { at: Date.now(), payload };
+    res.json({ ...payload, cached: false });
+  } catch (e) { fail(res, e); }
 });
 
 /* ── story discovery (competitor wires + trending topics) ─────────────── */

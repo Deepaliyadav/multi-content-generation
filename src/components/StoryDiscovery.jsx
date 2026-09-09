@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Intake lane 2: let the agent find the story.
@@ -11,6 +11,24 @@ import { useState } from 'react';
  * explicitly unverified starter brief that lands in the source panel for the
  * journalist to rewrite.
  */
+const AUTO_MS = 5 * 60_000;
+
+/**
+ * How many genuinely new headlines justify paying for another sweep.
+ *
+ * An exact fingerprint of the wire is the wrong test: these feeds push hundreds
+ * of items a day, so the top of the wire differs within a minute or two and
+ * every cycle would re-cluster essentially the same news. What matters is
+ * whether enough NEW copy has landed to change the answer.
+ */
+const NEW_ITEMS_TO_RESWEEP = 5;
+
+const countdown = (at) => {
+  const left = Math.max(0, at - Date.now());
+  const m = Math.floor(left / 60_000);
+  return m >= 1 ? `${m}m` : `${Math.ceil(left / 1000)}s`;
+};
+
 export default function StoryDiscovery({ meta, onUseStory, busy }) {
   const [open, setOpen] = useState(false);
   const [useRss, setUseRss] = useState(true);
@@ -22,15 +40,36 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
   const [drafting, setDrafting] = useState(null);
   const [filed, setFiled] = useState(() => new Set());
   const [filter, setFilter] = useState('all');
+  const [auto, setAuto] = useState(true);
+  const [nextAt, setNextAt] = useState(null);
+  const [autoNote, setAutoNote] = useState(null);
+  const [, tick] = useState(0);
+
+  // The headline links the last paid sweep actually saw. Anything outside this
+  // set is new copy that sweep never considered.
+  const wireSeen = useRef(null);
+  const runningRef = useRef(false);
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
 
   const d = meta?.discovery;
 
-  async function sweep() {
+  async function sweep({ automatic = false } = {}) {
+    if (runningRef.current) return;
+    runningRef.current = true;
     setRunning(true);
     setError(null);
     setResult(null);
-    setPhase('Starting…');
+    setAutoNote(null);
+    setPhase(automatic ? 'Auto-refresh — new copy on the wire…' : 'Starting…');
     try {
+      // Cheap and cached; pins the copy this sweep is answering for.
+      try {
+        const w = await (await fetch('/api/wire')).json();
+        wireSeen.current = new Set((w.items || []).map((i) => i.link));
+      } catch {
+        /* the freshness check is an optimisation, not a requirement */
+      }
       const r = await fetch('/api/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,10 +121,55 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
     } catch (e) {
       setError(String(e.message || e));
     } finally {
+      runningRef.current = false;
       setRunning(false);
       setPhase(null);
+      setNextAt(Date.now() + AUTO_MS);
     }
   }
+
+  useEffect(() => {
+    if (!open || !auto) {
+      setNextAt(null);
+      return;
+    }
+    setNextAt((n) => n ?? Date.now() + AUTO_MS);
+
+    const id = setInterval(async () => {
+      // Never sweep over the top of a running job, and never spend on a tab
+      // nobody is looking at.
+      if (document.hidden || runningRef.current || busyRef.current) {
+        setNextAt(Date.now() + AUTO_MS); // don't let the countdown sit at 0s
+        return;
+      }
+      try {
+        const w = await (await fetch('/api/wire')).json();
+        if (wireSeen.current) {
+          const fresh = (w.items || []).filter((i) => !wireSeen.current.has(i.link)).length;
+          if (fresh < NEW_ITEMS_TO_RESWEEP) {
+            setAutoNote(
+              `Checked ${new Date().toLocaleTimeString()} — ${fresh || 'no'} new headline${fresh === 1 ? '' : 's'} since the last sweep, not enough to re-run.`
+            );
+            setNextAt(Date.now() + AUTO_MS);
+            return;
+          }
+          setAutoNote(`${fresh} new headlines on the wire — re-sweeping.`);
+        }
+      } catch {
+        /* if the wire check fails, fall through and sweep anyway */
+      }
+      await sweep({ automatic: true });
+    }, AUTO_MS);
+
+    return () => clearInterval(id);
+  }, [open, auto]);
+
+  // Keeps the countdown honest without re-rendering every second.
+  useEffect(() => {
+    if (!nextAt) return;
+    const id = setInterval(() => tick((n) => n + 1), 15_000);
+    return () => clearInterval(id);
+  }, [nextAt]);
 
   async function useStory(cluster, i) {
     setDrafting(i);
@@ -185,8 +269,15 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                   'Sweep for stories'
                 )}
               </button>
+              <label className="tick" title="Re-checks the wire every 5 minutes and only re-sweeps when new copy has landed">
+                <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+                Auto
+                <span className="meter">
+                  {auto ? (nextAt ? `next check in ${countdown(nextAt)}` : 'every 5 min') : 'off'}
+                </span>
+              </label>
               <span className="meter">
-                {running ? phase || 'Working…' : `Checked against ${d?.cmsLabel || 'the CMS'}`}
+                {running ? phase || 'Working…' : autoNote || `Checked against ${d?.cmsLabel || 'the CMS'}`}
               </span>
             </div>
 
