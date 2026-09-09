@@ -161,6 +161,17 @@ app.get('/api/wire', async (_req, res) => {
 
 /* ── story discovery (competitor wires + trending topics) ─────────────── */
 
+/**
+ * The last completed sweep, kept so the desk opens on the list it already paid
+ * for rather than an empty panel. In memory by design — it is a cache of a live
+ * wire, and a restart should go and look again rather than serve yesterday.
+ */
+let lastDiscovery = null;
+
+app.get('/api/discover/last', (_req, res) => {
+  res.json(lastDiscovery || { empty: true });
+});
+
 app.post('/api/discover', async (req, res) => {
   const { useRss = true, useTrending = true } = req.body || {};
   res.writeHead(200, {
@@ -171,7 +182,14 @@ app.post('/api/discover', async (req, res) => {
   });
   const send = (o) => res.write(`${JSON.stringify(o)}\n`);
   try {
-    await discover({ useRss, useTrending }, send);
+    const out = await discover({ useRss, useTrending }, send);
+    lastDiscovery = {
+      ...out,
+      finishedAt: new Date().toISOString(),
+      // out.wireLinks comes from the sweep itself, so it is populated whether or
+      // not anything has warmed the /api/wire cache.
+      wireLinks: out.wireLinks ?? wireCache.payload?.items?.map((i) => i.link) ?? null,
+    };
   } catch (e) {
     send({ type: 'fatal', error: String(e?.message || e) });
   }

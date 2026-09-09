@@ -117,7 +117,7 @@ function ArticlePreview({ output, flag, edit, language }) {
       className={`article ${script ? `indic script-${script}` : ''} ${rtl ? 'rtl' : ''}`}
       dir={rtl ? 'rtl' : undefined}
     >
-      <div className="kicker">{language ? `${language} edition` : 'Web article'}</div>
+      <div className="kicker">{language ? `${language} edition` : 'Source article'}</div>
       {head && (
         <Ed
           as="h2"

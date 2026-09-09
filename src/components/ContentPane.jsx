@@ -50,7 +50,7 @@ export default function ContentPane(props) {
 function Pane({
   format, output, stale, patches, visualBefore,
   onSave, onRegenerate, busy, error, language, story, status, publish, voice,
-  languages = [], onLanguage, rewriteNote,
+  languages = [], onLanguage, versions = [], activeVersion = 0, onVersion, rewriteNote,
 }) {
   const preview = usePreview();
   const [steer, setSteer] = useState('');
@@ -134,6 +134,9 @@ function Pane({
   // has something to compare against. Splitting the pane in two for a carousel
   // or a photo essay just squeezes a layout that is already side by side.
   const canCompare = format.id === 'translation';
+  // The source entry mirrors the story: it is shown, never written to, and it
+  // carries no target language, so it must not pick up a translation's script.
+  const showingSource = !!versions[activeVersion]?.source;
   // The infographic's text blocks are the graphic's own data, shown in the
   // structured-data panel instead — so it has no copy to preview or edit.
   const showsCopy = format.id !== 'infographic';
@@ -233,6 +236,25 @@ function Pane({
             <span className="edit-hint spacer">Click any text below to edit it directly.</span>
           )}
         </div>
+
+        {/* Older takes stay one click away — a rewrite is often worse than what
+            it replaced, and regenerating to get back is a waste. */}
+        {versions.length > 1 && (
+          <div className="ver-tabs">
+            <span className="ver-label">{canCompare ? 'Languages' : 'Versions'}</span>
+            {versions.map((v, i) => (
+              <button
+                key={i}
+                className={`ver-tab ${i === activeVersion ? 'on' : ''}`}
+                title={canCompare ? `Show the ${v.label} translation` : `Show version ${i + 1}: ${v.label}`}
+                onClick={() => onVersion?.(i)}
+              >
+                {!canCompare && <span className="ver-num">{i + 1}</span>}
+                {v.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {isStale && (
@@ -310,8 +332,8 @@ function Pane({
                 format={format}
                 output={output}
                 flag={flag}
-                edit={edit}
-                language={language}
+                edit={showingSource ? undefined : edit}
+                language={showingSource ? null : language}
                 publish={publish}
                 voice={voice}
                 visual={visualNode}

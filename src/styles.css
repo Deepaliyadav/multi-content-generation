@@ -1686,3 +1686,47 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .lang-select:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
 .lang-select:disabled { color: var(--text-faint); cursor: not-allowed; }
 .lang-select option { background: var(--bg-panel); color: var(--text); }
+
+/* ── version tabs ─────────────────────────────────────────────────────── */
+
+/* Older takes stay one click away: a rewrite is often worse than what it
+   replaced, and the previous version should not have to be regenerated. */
+.ver-tabs { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+.ver-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-right: 2px;
+}
+
+.ver-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  padding: 5px 11px;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ver-tab:hover { border-color: var(--teal); color: var(--text); }
+.ver-tab.on { border-color: var(--gold); color: var(--gold); background: rgba(217, 164, 65, .09); }
+.ver-num { color: var(--text-faint); font-size: 10px; }
+.ver-tab.on .ver-num { color: var(--gold); }
+
+/* How old the story list is. Gold like the other counters, because a stale list
+   is a number the desk needs to notice, not decoration. */
+.meter.updated {
+  color: var(--gold);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}

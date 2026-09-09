@@ -353,6 +353,9 @@ export async function discover({ useRss = true, useTrending = true } = {}, onEve
         out.sources = sources;
         out.swept = items.length;
         onEvent({ type: 'sources', sources, swept: items.length });
+        // The wire this sweep actually answered for. Matches /api/wire's shape
+        // so a reloaded client can diff against it without re-fetching.
+        out.wireLinks = items.slice(0, 40).map((i) => i.link);
         if (!items.length) return seedReady();
         onEvent({ type: 'phase', phase: `Clustering ${Math.min(items.length, SWEEP_LIMIT)} wire items into distinct stories…` });
         const rssClusters = await clusterItems(items.slice(0, SWEEP_LIMIT));

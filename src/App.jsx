@@ -9,6 +9,21 @@ import ProgressPanel from './components/ProgressPanel.jsx';
 import FormatRail from './components/FormatRail.jsx';
 import ContentPane from './components/ContentPane.jsx';
 
+/**
+ * The source story shaped like a generated output, so it can sit in the version
+ * strip beside the translations. It is the thing every translation is measured
+ * against, and it should not take leaving the pane to read it.
+ */
+const sourceAsOutput = (story) => ({
+  blocks: [
+    { label: 'Headline', lines: [story.headline] },
+    { label: 'Body', lines: story.body.split(/\n{2,}/).map((x) => x.trim()).filter(Boolean) },
+  ],
+  meta: {},
+  factUsage: [],
+  warnings: [],
+});
+
 export default function App() {
   const [meta, setMeta] = useState(null);
   const [stage, setStage] = useState('compose'); // compose | working | review
@@ -34,6 +49,12 @@ export default function App() {
   const [patches, setPatches] = useState({});
   const [visualBefore, setVisualBefore] = useState({});
 
+  // Every format keeps its versions rather than overwriting them. A rewrite is
+  // paid-for work and often worse than what it replaced, so the previous take
+  // has to remain reachable. For the translation the "version" is the language,
+  // which is the same mechanism wearing a different label.
+  const [versions, setVersions] = useState({}); // formatId -> [{ label, output }]
+  const [activeVer, setActiveVer] = useState({}); // formatId -> index
   const [metrics, setMetrics] = useState({});
   const [selected, setSelected] = useState(() => new Set());
   const [active, setActive] = useState(null); // the format id in the pane
@@ -94,6 +115,8 @@ export default function App() {
     setPatches({});
     setVisualBefore({});
     setMetrics({});
+    setVersions({});
+    setActiveVer({});
     setActive(ids[0] ?? null);
 
     try {
@@ -110,6 +133,19 @@ export default function App() {
           setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
           setTimes((t) => ({ ...t, [ev.formatId]: ev.output.ms }));
           setStatus((s) => ({ ...s, [ev.formatId]: 'done' }));
+          if (ev.formatId === 'translation') {
+            setVersions((v) => ({
+              ...v,
+              translation: [
+                { label: 'Source', output: sourceAsOutput(story), source: true },
+                { label: language, output: ev.output },
+              ],
+            }));
+            setActiveVer((a) => ({ ...a, translation: 1 }));
+          } else {
+            setVersions((v) => ({ ...v, [ev.formatId]: [{ label: 'Original', output: ev.output }] }));
+            setActiveVer((a) => ({ ...a, [ev.formatId]: 0 }));
+          }
         }
         if (ev.type === 'format:error') {
           setErrors((e) => ({ ...e, [ev.formatId]: ev.error }));
@@ -143,6 +179,16 @@ export default function App() {
       const { facts: newFacts, diff: d } = await api.rediff(sourceDraft, facts);
       setStory(sourceDraft);
       setFacts(newFacts);
+      setVersions((v) =>
+        v.translation
+          ? {
+              ...v,
+              translation: v.translation.map((x) =>
+                x.source ? { ...x, output: sourceAsOutput(sourceDraft) } : x
+              ),
+            }
+          : v
+      );
       setDiff(d);
       setSourceOpen(false);
 
@@ -272,6 +318,14 @@ export default function App() {
           setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
           setTimes((t) => ({ ...t, [ev.formatId]: ev.output.ms }));
           setStatus((s) => ({ ...s, [ev.formatId]: 'done' }));
+          setVersions((v) => {
+            const list = v[ev.formatId] || [];
+            const label =
+              ev.formatId === 'translation' ? lang : steer.trim() || `Rewrite ${list.length}`;
+            const next = [...list, { label, output: ev.output }];
+            setActiveVer((a) => ({ ...a, [ev.formatId]: next.length - 1 }));
+            return { ...v, [ev.formatId]: next };
+          });
           setPatches((p) => ({ ...p, [ev.formatId]: null }));
           setVisualBefore((v) => ({ ...v, [ev.formatId]: null }));
         }
@@ -291,7 +345,19 @@ export default function App() {
   /** Switch the translation to another language, in place. */
   async function retranslate(lang) {
     setLanguage(lang);
+    const i = (versions.translation || []).findIndex((v) => v.label === lang);
+    if (i >= 0) return showVersion('translation', i);
     await rewrite('translation', '', lang);
+  }
+
+  /** Show a version already generated. No API call — it is already paid for. */
+  function showVersion(formatId, i) {
+    const v = versions[formatId]?.[i];
+    if (!v) return;
+    setOutputs((o) => ({ ...o, [formatId]: v.output }));
+    setActiveVer((a) => ({ ...a, [formatId]: i }));
+    // The source carries no target language, so the picker keeps its value.
+    if (formatId === 'translation' && !v.source) setLanguage(v.label);
   }
 
   async function regenerateAll() {
@@ -545,11 +611,22 @@ export default function App() {
                   publish={meta?.publish?.instagram}
                   languages={meta?.languages || []}
                   onLanguage={retranslate}
+                  versions={versions[activeFormat?.id] || []}
+                  activeVersion={activeVer[activeFormat?.id] ?? 0}
+                  onVersion={(i) => showVersion(activeFormat.id, i)}
                   voice={meta?.voice}
                   busy={busy === activeFormat?.id}
-                  onSave={(blocks) =>
-                    setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }))
-                  }
+                  onSave={(blocks) => {
+                    setOutputs((o) => ({ ...o, [activeFormat.id]: { ...o[activeFormat.id], blocks } }));
+                    setVersions((v) => {
+                      const list = v[activeFormat.id];
+                      const i = activeVer[activeFormat.id] ?? 0;
+                      if (!list?.[i] || list[i].source) return v;
+                      const next = [...list];
+                      next[i] = { ...next[i], output: { ...next[i].output, blocks } };
+                      return { ...v, [activeFormat.id]: next };
+                    });
+                  }}
                   onRegenerate={(steer) => regenerate(activeFormat.id, steer)}
                   rewriteNote={rewriteNote[activeFormat.id]}
                 />

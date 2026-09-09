@@ -23,6 +23,17 @@ const AUTO_MS = 5 * 60_000;
  */
 const NEW_ITEMS_TO_RESWEEP = 5;
 
+/** "just now" / "4 min ago" / "1 hr 20 min ago" — how stale the list is. */
+const ago = (iso) => {
+  const secs = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (secs < 45) return 'just now';
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem ? `${hrs} hr ${rem} min ago` : `${hrs} hr ago`;
+};
+
 const countdown = (at) => {
   const left = Math.max(0, at - Date.now());
   const m = Math.floor(left / 60_000);
@@ -43,6 +54,7 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
   const [auto, setAuto] = useState(true);
   const [nextAt, setNextAt] = useState(null);
   const [autoNote, setAutoNote] = useState(null);
+  const [fetchedAt, setFetchedAt] = useState(null);
   const [, tick] = useState(0);
 
   // The headline links the last paid sweep actually saw. Anything outside this
@@ -114,7 +126,10 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
               const kept = (p?.clusters || []).filter((c) => c.origin !== ev.origin);
               return { ...(p || {}), clusters: [...kept, ...ev.clusters] };
             });
-          else if (ev.type === 'done') setResult((p) => ({ ...ev, clusters: ev.clusters?.length ? ev.clusters : p?.clusters }));
+          else if (ev.type === 'done') {
+            setResult((p) => ({ ...ev, clusters: ev.clusters?.length ? ev.clusters : p?.clusters }));
+            setFetchedAt(new Date().toISOString());
+          }
           else if (ev.type === 'fatal') throw new Error(ev.error);
         }
       }
@@ -127,6 +142,25 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
       setNextAt(Date.now() + AUTO_MS);
     }
   }
+
+  // Open on the list the desk already paid for, not an empty panel.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const last = await (await fetch('/api/discover/last')).json();
+        if (!alive || last?.empty || !last?.clusters?.length) return;
+        setResult(last);
+        setFetchedAt(last.finishedAt || null);
+        if (Array.isArray(last.wireLinks)) wireSeen.current = new Set(last.wireLinks);
+      } catch {
+        /* an empty panel is a fine fallback */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!open || !auto) {
@@ -166,10 +200,10 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
 
   // Keeps the countdown honest without re-rendering every second.
   useEffect(() => {
-    if (!nextAt) return;
+    if (!nextAt && !fetchedAt) return;
     const id = setInterval(() => tick((n) => n + 1), 15_000);
     return () => clearInterval(id);
-  }, [nextAt]);
+  }, [nextAt, fetchedAt]);
 
   async function useStory(cluster, i) {
     setDrafting(i);
@@ -276,18 +310,15 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                   {auto ? (nextAt ? `next check in ${countdown(nextAt)}` : 'every 5 min') : 'off'}
                 </span>
               </label>
-              <span className="meter">
-                {running ? phase || 'Working…' : autoNote || `Checked against ${d?.cmsLabel || 'the CMS'}`}
-              </span>
+              {fetchedAt && !running && (
+                <span className="meter updated" title={new Date(fetchedAt).toLocaleString()}>
+                  Updated {ago(fetchedAt)}
+                </span>
+              )}
+              {(running || autoNote) && (
+                <span className="meter">{running ? phase || 'Working…' : autoNote}</span>
+              )}
             </div>
-
-            {d?.cmsSimulated && (
-              <p className="hint" style={{ marginTop: 8 }}>
-                The CMS here is a local stand-in, so “Already filed” is demonstrable. The matching
-                that runs against it is real. Point <code>CMS_SEARCH_URL</code> at the newsroom CMS
-                to use live data.
-              </p>
-            )}
 
             {error && <div className="error-box" style={{ marginTop: 12 }}>{error}</div>}
 
