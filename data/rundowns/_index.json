@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rd_mttm3qth_f16hn",
+    "headline": "MCD razes 24 buildings after fatal Satya Niketan PG collapse, Hindi outlets report",
+    "beat": "India",
+    "origin": "rss",
+    "status": "generating",
+    "createdAt": "2026-09-09T04:42:23.237Z",
+    "updatedAt": "2026-09-09T04:42:42.537Z",
+    "formats": 0,
+    "approved": 0,
+    "factCount": 12,
+    "pickReason": "Deadly collapse aftermath: 1,100 hostels inspected, 24 razed; safety, housing and displacement consequence for students",
+    "score": 0.598,
+    "sources": [
+      "News18 Hindi",
+      "News18 Hindi"
+    ],
+    "genMs": null,
+    "error": null
+  },
+  {
+    "id": "rd_mttm20j4_val8c",
+    "headline": "News18 Hindi reports Ganga at record levels, 36 lakh affected in Bihar floods",
+    "beat": "India",
+    "origin": "rss",
+    "status": "awaiting_review",
+    "createdAt": "2026-09-09T04:41:02.512Z",
+    "updatedAt": "2026-09-09T04:42:23.087Z",
+    "formats": 13,
+    "approved": 0,
+    "factCount": 10,
+    "pickReason": "Mass-casualty disaster: 36 lakh affected, record Ganga levels, freshest figures; largest consequence for lives and livelihoods",
+    "score": 0.608,
+    "sources": [
+      "News18 Hindi"
+    ],
+    "genMs": 80573,
+    "error": null
+  }
+]

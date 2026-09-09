@@ -11,6 +11,8 @@ import { discover, draftBrief, trendsReady } from './discover.js';
 import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
+import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot } from './autopilot.js';
+import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS } from './store.js';
 import crypto from 'node:crypto';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
 import { SAMPLES } from './samples.js';
@@ -121,6 +123,99 @@ app.get('/api/meta', (_req, res) => {
       rules: f.rules({ language: 'the selected language' }),
     })),
   });
+});
+
+/* ── autopilot & rundowns ─────────────────────────────────────────────── */
+
+app.get('/api/autopilot', (_req, res) => res.json(autopilotStatus()));
+
+app.post('/api/autopilot', (req, res) => {
+  const { on, count, intervalMs, maxPerHour, language } = req.body || {};
+  res.json(on === false ? stopAutopilot() : startAutopilot({ count, intervalMs, maxPerHour, language }));
+});
+
+/** Run one cycle immediately, without waiting for the timer. */
+app.post('/api/autopilot/run', async (req, res) => {
+  try {
+    res.json(await runCycle({ count: req.body?.count }));
+  } catch (e) { fail(res, e); }
+});
+
+/** Live progress, so the dashboard reflects work as it happens. */
+app.get('/api/autopilot/events', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.write(`data: ${JSON.stringify({ type: 'hello', ...autopilotStatus() })}\n\n`);
+  const off = onAutopilot((ev) => res.write(`data: ${JSON.stringify(ev)}\n\n`));
+  // A comment frame every 25s keeps proxies from closing an idle stream.
+  const ping = setInterval(() => res.write(': ping\n\n'), 25_000);
+  req.on('close', () => {
+    off();
+    clearInterval(ping);
+  });
+});
+
+app.get('/api/rundowns', (req, res) => {
+  const { status, limit } = req.query;
+  res.json({
+    rundowns: listRundowns({ status, limit: limit ? Number(limit) : undefined }),
+    counts: rundownCounts(),
+    autopilot: autopilotStatus(),
+  });
+});
+
+app.get('/api/rundowns/:id', async (req, res) => {
+  const r = await getRundown(req.params.id);
+  if (!r) return res.status(404).json({ error: 'No such rundown.' });
+  res.json(r);
+});
+
+/** Editor approves one format, or all of them. */
+app.post('/api/rundowns/:id/approve', async (req, res) => {
+  try {
+    const r = await getRundown(req.params.id);
+    if (!r) return res.status(404).json({ error: 'No such rundown.' });
+    const { formatId, approved = true } = req.body || {};
+    const approvals = { ...(r.approvals || {}) };
+    if (formatId) approvals[formatId] = approved ? new Date().toISOString() : undefined;
+    else for (const k of Object.keys(r.outputs || {})) approvals[k] = approved ? new Date().toISOString() : undefined;
+    const done = Object.keys(r.outputs || {}).every((k) => approvals[k]);
+    res.json(await updateRundown(req.params.id, {
+      approvals,
+      status: done ? STATUS.APPROVED : r.status === STATUS.APPROVED ? STATUS.REVIEW : r.status,
+    }));
+  } catch (e) { fail(res, e); }
+});
+
+/** Move a rundown along: published (simulated) or discarded. */
+app.post('/api/rundowns/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!Object.values(STATUS).includes(status))
+      return res.status(400).json({ error: `Unknown status "${status}".` });
+    const r = await updateRundown(req.params.id, { status });
+    if (!r) return res.status(404).json({ error: 'No such rundown.' });
+    res.json(r);
+  } catch (e) { fail(res, e); }
+});
+
+/** Editor edits one line of one output, same shape the review pane already uses. */
+app.post('/api/rundowns/:id/output', async (req, res) => {
+  try {
+    const { formatId, output } = req.body || {};
+    const r = await getRundown(req.params.id);
+    if (!r) return res.status(404).json({ error: 'No such rundown.' });
+    if (!formatId || !output) return res.status(400).json({ error: 'formatId and output are required.' });
+    res.json(await updateRundown(req.params.id, {
+      outputs: { ...r.outputs, [formatId]: output },
+      // An edit un-approves that format: it is no longer the thing that was signed off.
+      approvals: { ...(r.approvals || {}), [formatId]: undefined },
+    }));
+  } catch (e) { fail(res, e); }
 });
 
 /* ── the wire ─────────────────────────────────────────────────────────── */

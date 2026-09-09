@@ -1,0 +1,51 @@
+{
+  "id": "rd_mttm20j5_t5oyj",
+  "status": "generating",
+  "cluster": {
+    "headline": "Sagar hooch tragedy death toll reaches 25 in Madhya Pradesh",
+    "summary": "Twenty-five people have died after consuming toxic liquor in the Banda area of Sagar district, with dozens hospitalised and many patients referred to AIIMS. A shopkeeper denied selling spurious liquor, saying the price was only Rs 20 lower.",
+    "beat": "Crime",
+    "topics": [
+      "Madhya Pradesh",
+      "hooch tragedy",
+      "Sagar",
+      "deaths"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "सागर जहरीली शराब कांड: 20 रुपये कम था दाम, दुकानदार बोला- नकली शराब नहीं है",
+        "link": "https://hindi.news18.com/news/madhya-pradesh/sagar-hooch-tragedy-victims-bought-liquor-to-save-20-rupees-were-assured-for-its-not-spurious-local18-10818679.html",
+        "published": "2026-09-09T04:10:44.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.5,
+      "corroboration": 0.33,
+      "recency": 0.96,
+      "trending": 0,
+      "beatWeight": 0.85,
+      "demand": 0.569
+    },
+    "pickReason": "25 dead from toxic liquor, accountability angle on excise failure; fresher and higher toll than duplicate",
+    "priority": 2
+  },
+  "pickReason": "25 dead from toxic liquor, accountability angle on excise failure; fresher and higher toll than duplicate",
+  "score": 0.569,
+  "story": {
+    "headline": "Sagar hooch tragedy death toll reaches 25 in Madhya Pradesh",
+    "body": ""
+  },
+  "facts": [],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T04:41:02.513Z",
+  "updatedAt": "2026-09-09T04:41:02.513Z"
+}

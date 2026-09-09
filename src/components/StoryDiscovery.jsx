@@ -41,7 +41,9 @@ const countdown = (at) => {
 };
 
 export default function StoryDiscovery({ meta, onUseStory, busy }) {
-  const [open, setOpen] = useState(false);
+  // Discovery leads: most sessions start by asking what is worth filing, not by
+  // pasting copy that already exists. Writing it yourself is one click away.
+  const [open, setOpen] = useState(true);
   const [useRss, setUseRss] = useState(true);
   const [useTrending, setUseTrending] = useState(true);
   const [result, setResult] = useState(null);

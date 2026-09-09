@@ -1,42 +1,136 @@
-/* Rundown — desk copy, adaptation unit.
-   Dark newsroom chrome. Display serif for copy that gets read, sans for the
-   chrome that gets operated, mono for anything numeric or machine-ish.
+/* Rundown Desk
+   A working newsroom instrument: dense, scannable, quiet.
+   Dark is the default desk; light is available on the toggle.
+   Every colour is declared on bare :root first, so the un-stamped
+   (system-default) state always resolves.
+
    Three accents, each with one job:
      red   — the primary action, the live dot, stale flags
-     gold  — panel numbers, counters, changed values
+     gold  — counters and changed values
      teal  — affirmative state, secondary actions, selection */
 
+  :root{
+    /* --- dark desk (default) --- */
+    --bg:#121110;
+    --bg-panel:#191817;
+    --bg-raised:#211F1D;
+    --bg-well:#0C0B0B;
+    --bg-glass:rgba(18,17,16,.86);
+
+    --line:#302E2B;
+    --line-soft:#232221;
+    --line-strong:#454340;
+
+    --text:#F1EEE7;
+    --text-dim:#A29C92;
+    --text-faint:#6C665E;
+
+    --red:#E8503A;
+    --red-ink:#FFFFFF;
+    --red-wash:rgba(232,80,58,.13);
+    --teal:#4FB3A8;
+    --teal-ink:#08110F;
+    --teal-wash:rgba(79,179,168,.13);
+    --gold:#D9A441;
+    --gold-wash:rgba(217,164,65,.13);
+
+    --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+    --shadow-md:0 4px 14px -6px rgba(0,0,0,.6);
+    --shadow-lg:0 18px 44px -20px rgba(0,0,0,.8);
+
+    --font-display:'Newsreader', Georgia, 'Times New Roman', serif;
+    --font-body:'Geist', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono:'Geist Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-hi:'Noto Sans Devanagari', 'Geist', system-ui, sans-serif;
+
+    /* type scale, ~1.2 ratio — replaces the one-off sizes that had
+       accumulated across the sheet */
+    --t-2xs:9.5px; --t-xs:10.5px; --t-sm:12px; --t-base:13px;
+    --t-md:14px;   --t-lg:15px;   --t-xl:1.15rem; --t-2xl:1.35rem; --t-3xl:1.6rem;
+    --lh-tight:1.2; --lh-snug:1.35; --lh-base:1.55; --lh-relaxed:1.75; --lh-hi:1.95;
+    --track-tight:-.02em; --track-caps:.09em;
+
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
+    --s6:28px; --s7:40px; --s8:56px;
+
+    --r-sm:3px; --r-md:6px; --r-lg:10px; --r-pill:999px;
+
+    --ease:cubic-bezier(.2,.8,.3,1);
+    --dur-fast:.13s; --dur:.24s;
+  }
+  /* light, when the OS asks for it and no explicit choice overrides */
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F7F6F3;
+      --bg-panel:#FFFFFF;
+      --bg-raised:#F2F0EC;
+      --bg-well:#FFFFFF;
+      --bg-glass:rgba(247,246,243,.88);
+
+      --line:#DFDBD3;
+      --line-soft:#EBE8E1;
+      --line-strong:#BFB8AC;
+
+      --text:#16150F;
+      --text-dim:#57534B;
+      --text-faint:#8A857C;
+
+      --red:#BF3419;
+      --red-ink:#FFFFFF;
+      --red-wash:rgba(191,52,25,.09);
+      --teal:#186F66;
+      --teal-ink:#FFFFFF;
+      --teal-wash:rgba(24,111,102,.10);
+      --gold:#7E5A0E;
+      --gold-wash:rgba(126,90,14,.11);
+
+      --shadow-sm:0 1px 2px rgba(20,18,14,.05);
+      --shadow-md:0 4px 14px -8px rgba(20,18,14,.16);
+      --shadow-lg:0 18px 44px -22px rgba(20,18,14,.24);
+    }
+  }
+  /* explicit light choice beats a dark OS */
+  :root[data-theme="light"]{
+    --bg:#F7F6F3;
+    --bg-panel:#FFFFFF;
+    --bg-raised:#F2F0EC;
+    --bg-well:#FFFFFF;
+    --bg-glass:rgba(247,246,243,.88);
+
+    --line:#DFDBD3;
+    --line-soft:#EBE8E1;
+    --line-strong:#BFB8AC;
+
+    --text:#16150F;
+    --text-dim:#57534B;
+    --text-faint:#8A857C;
+
+    --red:#BF3419;
+    --red-ink:#FFFFFF;
+    --red-wash:rgba(191,52,25,.09);
+    --teal:#186F66;
+    --teal-ink:#FFFFFF;
+    --teal-wash:rgba(24,111,102,.10);
+    --gold:#7E5A0E;
+    --gold-wash:rgba(126,90,14,.11);
+
+    --shadow-sm:0 1px 2px rgba(20,18,14,.05);
+    --shadow-md:0 4px 14px -8px rgba(20,18,14,.16);
+    --shadow-lg:0 18px 44px -22px rgba(20,18,14,.24);
+  }
+
 :root {
-  --bg:        #14171B;
-  --bg-panel:  #1B1F24;
-  --bg-raised: #232830;
-  --bg-sunken: #0F1215;
-  --line:      #333A40;
-  --line-soft: #272D33;
-  --text:      #ECEAE3;
-  --text-dim:  #9AA1A8;
-  --text-faint:#5C646C;
-  --red:       #E14B36;
-  --teal:      #4FA8A0;
-  --gold:      #D9A441;
-
-  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-body:    'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono:    'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-hi:      'Noto Sans Devanagari', 'IBM Plex Sans', sans-serif;
-
-  /* Kept so any straggling rule from the old palette still resolves to
-     something sane rather than transparent. */
-  --ink:   var(--text);
+  /* Aliases kept so rules written against the old names keep resolving. */
+  --ink: var(--text);
   --ink-2: var(--text-dim);
   --ink-3: var(--text-faint);
-  --rule:  var(--line);
+  --rule: var(--line);
   --rule-soft: var(--line-soft);
   --accent: var(--red);
+  --bg-sunken: var(--bg-well);
   --sans: var(--font-body);
   --serif: var(--font-display);
-
-  --gut: 22px;
+  --gut: var(--s5);
 }
 
 * { box-sizing: border-box; }
@@ -47,14 +141,26 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: var(--t-md);
+  line-height: var(--lh-base);
+  font-optical-sizing: auto;
+  font-feature-settings: 'ss01';
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* Digits that sit in columns must not jitter between rows. */
+.meter, .metric, .rmeta, .wordcount, .charcount, .ig-counter, .chip-num,
+.rnum, .ver-num, .prow-time, .fact-id, .script-table td.time {
+  font-variant-numeric: tabular-nums;
 }
 
 button, input, select, textarea { font-family: inherit; color: inherit; }
 button { cursor: pointer; }
-::selection { background: var(--gold); color: var(--bg-sunken); }
+::selection { background: var(--gold-wash); color: var(--text); }
 
 /* ── shared type ──────────────────────────────────────────────────────── */
 
@@ -80,7 +186,7 @@ button { cursor: pointer; }
 }
 
 .masthead-inner {
-  max-width: 1180px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 11px 28px 12px;
   display: flex;
@@ -157,7 +263,7 @@ button { cursor: pointer; }
 /* ── page frame ───────────────────────────────────────────────────────── */
 
 .frame {
-  max-width: 1180px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 28px 80px;
 }
@@ -182,7 +288,7 @@ button { cursor: pointer; }
   margin-top: 28px;
   border: 1px solid var(--line);
   background: var(--bg-panel);
-  border-radius: 3px;
+  border-radius: var(--r-lg);
 }
 
 .panel-head {
@@ -597,7 +703,7 @@ label.field-label {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: var(--r-lg);
   overflow: hidden;
   min-height: 480px;
 }
