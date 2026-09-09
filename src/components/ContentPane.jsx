@@ -174,21 +174,6 @@ function Pane({
         <div className="toolbar-row">
           <div className="pane-label">{format.label}</div>
           <div className="toolbar-actions">
-            {canCompare && !!languages.length && onLanguage && (
-              <label className="lang-pick" title="Translate into another language">
-                <span>Language</span>
-                <select
-                  className="lang-select"
-                  value={language}
-                  disabled={busy}
-                  onChange={(e) => onLanguage(e.target.value)}
-                >
-                  {languages.map((l) => (
-                    <option key={l}>{l}</option>
-                  ))}
-                </select>
-              </label>
-            )}
             {canCompare && (
               <button
                 className={`btn-copy ${comparing ? 'on' : ''}`}
@@ -271,15 +256,14 @@ function Pane({
             it replaced, and regenerating to get back is a waste. */}
         {versions.length > 1 && (
           <div className="ver-tabs">
-            <span className="ver-label">{canCompare ? 'Languages' : 'Versions'}</span>
+            <span className="ver-label">Editions</span>
             {versions.map((v, i) => (
               <button
                 key={i}
                 className={`ver-tab ${i === activeVersion ? 'on' : ''}`}
-                title={canCompare ? `Show the ${v.label} translation` : `Show version ${i + 1}: ${v.label}`}
+                title={v.source ? 'Show the original copy' : `Show the ${v.label} edition of this section`}
                 onClick={() => onVersion?.(i)}
               >
-                {!canCompare && <span className="ver-num">{i + 1}</span>}
                 {v.label}
               </button>
             ))}

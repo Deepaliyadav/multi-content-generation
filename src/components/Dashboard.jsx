@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 const STATUS_LABEL = {
   generating: 'Processing…',
   awaiting_review: 'Needs review',
+  draft: 'Draft',
   approved: 'Approved',
   published: 'Published',
   failed: 'Failed',
@@ -32,6 +33,39 @@ const inMins = (iso) => {
   const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
   return m <= 0 ? 'due now' : m === 1 ? 'in 1 min' : `in ${m} min`;
 };
+
+/**
+ * Marks for the live agent trail.
+ *
+ * Inline rather than an icon dependency: there are four of them, they are all
+ * one or two paths, and the CSS animates their parts directly.
+ */
+const RadarIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle className="radar-ring" cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+    <path className="radar-sweep" d="M12 12 L12 3.5 A8.5 8.5 0 0 1 19.5 8" />
+  </svg>
+);
+
+const PulseIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+    <path d="M2 12h4l2.5-6 3.5 12 3-9 2 3h5" />
+  </svg>
+);
+
+const TickIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 12.5l5 5L20 6.5" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <path d="M12 3.5L21.5 20H2.5L12 3.5z" />
+    <path d="M12 9.5v4.5M12 17h.01" />
+  </svg>
+);
 
 /** Group by the day it ran, so a long night reads as a timeline. */
 function groupByDay(rows) {
@@ -182,6 +216,9 @@ export default function Dashboard({ onOpen }) {
     return data.rundowns.filter((r) => r.status === filter).map((r) => ({ ...r, _kind: 'rundown' }));
   }, [data.rundowns, unclaimed, filter]);
   const needsReview = counts.awaiting_review || 0;
+  // One flag for "the agent is mid-cycle", so the header, the orb and the last
+  // step line can never disagree about whether anything is actually moving.
+  const working = !!(live || ap.running);
 
   return (
     <div className="board">
@@ -243,24 +280,43 @@ export default function Dashboard({ onOpen }) {
             ) : (
               'Not swept yet this session'
             )}
-            {ap.on && ap.nextRunAt && !ap.capReached && <> · next {inMins(ap.nextRunAt)}</>}
+            {ap.on && ap.nextRunAt && <> · next {inMins(ap.nextRunAt)}</>}
           </p>
 
-          {(live || ap.running || steps.length > 0) && (
-            <div className="live">
+          {(working || steps.length > 0) && (
+            <div className={`live ${working ? 'is-working' : ''}`}>
               <div className="live-head">
-                {(live || ap.running) && <span className="spinner" />}
-                <b>{live || (ap.running ? 'Working…' : 'Last cycle')}</b>
+                <span className="agent-orb" aria-hidden="true">
+                  <RadarIcon />
+                </span>
+                <b>
+                  {working ? (
+                    <>
+                      Your search agent is working
+                      <span className="ell" aria-hidden="true">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    </>
+                  ) : (
+                    'Your search agent is idle'
+                  )}
+                </b>
+                {working && live && <span className="live-now">{live}</span>}
               </div>
               {!!steps.length && (
                 <ol className="steplog">
                   {steps.map((s, i) => {
                     const last = i === steps.length - 1;
-                    const active = last && (live || ap.running);
+                    const active = last && working;
                     return (
-                      <li key={s.at + '-' + i} className={`${s.level || ''} ${active ? 'now' : 'was'}`}>
+                      <li
+                        key={s.at + '-' + i}
+                        className={`${s.level || ''} ${active ? 'now' : 'was'}`}
+                      >
                         <span className="step-mark" aria-hidden="true">
-                          {s.level === 'warn' ? '!' : active ? '·' : '✓'}
+                          {s.level === 'warn' ? <AlertIcon /> : active ? <PulseIcon /> : <TickIcon />}
                         </span>
                         {s.text}
                       </li>
@@ -271,14 +327,8 @@ export default function Dashboard({ onOpen }) {
             </div>
           )}
 
-          {ap.capReached && (
-            <p className="hint warn-hint">
-              Hourly ceiling reached ({ap.producedLastHour}/{ap.maxPerHour}) — cycles resume next hour.
-            </p>
-          )}
-
           <div className="btn-row filters">
-            {['all', 'unclaimed', 'awaiting_review', 'approved', 'published', 'failed'].map((f) => (
+            {['all', 'unclaimed', 'awaiting_review', 'draft', 'failed'].map((f) => (
               <button
                 key={f}
                 className={`btn btn-sm ${filter === f ? 'btn-ink' : ''} ${f === 'unclaimed' ? 'is-unclaimed' : ''}`}

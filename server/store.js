@@ -59,6 +59,9 @@ function externaliseMedia(node, dir, urlBase) {
 export const STATUS = {
   GENERATING: 'generating',
   REVIEW: 'awaiting_review',
+  // Parked by a human: read, kept, not filed yet. Distinct from awaiting_review,
+  // which only means nobody has looked.
+  DRAFT: 'draft',
   APPROVED: 'approved',
   PUBLISHED: 'published',
   FAILED: 'failed',

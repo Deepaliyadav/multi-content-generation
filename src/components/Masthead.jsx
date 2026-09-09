@@ -20,7 +20,9 @@ export default function Masthead({ metrics, stage }) {
     <header className="masthead">
       <div className="masthead-inner">
         <div className="mast-brand">
-          <h1 className="wordmark">Rundown</h1>
+          <h1 className="wordmark">
+            <img src="/more-logo.png" alt="More" />
+          </h1>
           <span className="mast-tag">One story. Every platform.</span>
         </div>
 

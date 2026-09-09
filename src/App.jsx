@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as api from './lib/api.js';
 import Masthead from './components/Masthead.jsx';
-import WireTicker from './components/WireTicker.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Composer from './components/Composer.jsx';
 import StoryDiscovery from './components/StoryDiscovery.jsx';
@@ -42,6 +41,13 @@ export default function App() {
   // differently-worded click commits. Both are decisions about a whole story.
   const [confirming, setConfirming] = useState(null);
   const [dispatches, setDispatches] = useState({});
+  // Every format in one language. The original is always kept alongside, so
+  // switching back costs nothing and nothing is overwritten.
+  const [originals, setOriginals] = useState({});
+  const [translations, setTranslations] = useState({});
+  const [activeLang, setActiveLang] = useState('Original');
+  const [translating, setTranslating] = useState(null);
+  const [translateProgress, setTranslateProgress] = useState(0);
   const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
   // What the last plain rewrite actually did. A rewrite against an unchanged
   // ledger legitimately returns near-identical copy, which reads as a dead
@@ -322,6 +328,9 @@ export default function App() {
         return;
       }
 
+      setOriginals(r.outputs || {});
+      setTranslations(r.translations || {});
+      setActiveLang('Original');
       setStatus(Object.fromEntries(Object.keys(r.outputs || {}).map((k) => [k, 'done'])));
       setSelected(new Set(Object.keys(r.outputs || {})));
       setActive(Object.keys(r.outputs || {})[0] || null);
@@ -401,6 +410,123 @@ export default function App() {
       setError(String(e.message || e));
     } finally {
       setRundownBusy(false);
+    }
+  }
+
+  /**
+   * Every edition of one format: the original, then each language that has been
+   * generated, in the order they were made. This is what the per-section tabs
+   * list, so an editor can hold one section's translations side by side without
+   * moving the whole rundown to another language.
+   */
+  function editionsFor(formatId) {
+    if (!formatId) return [];
+    const base = originals[formatId] || outputs[formatId];
+    if (!base) return [];
+    return [
+      { label: 'Original', output: base, source: true },
+      ...Object.entries(translations)
+        .map(([lang, t]) => ({ label: lang, output: t?.outputs?.[formatId] }))
+        .filter((v) => v.output),
+    ];
+  }
+
+  /** Where a language sits in the edition list. 0 is always the original. */
+  function editionIndex(lang) {
+    if (lang === 'Original') return 0;
+    return 1 + Object.keys(translations).indexOf(lang);
+  }
+
+  /** Show one section in one edition. The rest of the rundown is untouched. */
+  function showEdition(formatId, i) {
+    const v = editionsFor(formatId)[i];
+    if (!v) return;
+    setOutputs((o) => ({ ...o, [formatId]: v.output }));
+    setActiveVer((a) => ({ ...a, [formatId]: i }));
+  }
+
+  /**
+   * Show every format in one language.
+   *
+   * Translating is done once per language and kept, so switching between
+   * editions afterwards is instant and the original is never overwritten.
+   */
+  async function switchLanguage(lang) {
+    if (lang === activeLang || translating) return;
+
+    // The per-section tabs have to follow the rundown-level switch, or they
+    // show "Original" highlighted while Bangla copy is on screen.
+    const syncTabs = (i) =>
+      setActiveVer(Object.fromEntries(Object.keys(originals).map((k) => [k, i])));
+
+    if (lang === 'Original') {
+      setOutputs(originals);
+      setActiveLang('Original');
+      syncTabs(0);
+      return;
+    }
+    // A stored edition can be short a format — one that failed when it was
+    // first made. Show what exists, then quietly fill the gaps rather than
+    // leaving that section without its edition forever.
+    const stored = translations[lang]?.outputs;
+    const missing = stored ? Object.keys(originals).filter((k) => !stored[k]) : [];
+    if (stored && !missing.length) {
+      setOutputs({ ...originals, ...stored });
+      setActiveLang(lang);
+      syncTabs(editionIndex(lang));
+      return;
+    }
+    if (stored) {
+      setOutputs({ ...originals, ...stored });
+      setActiveLang(lang);
+      syncTabs(editionIndex(lang));
+    }
+    if (!rundownId) return;
+
+    setTranslating(lang);
+    setTranslateProgress(0);
+    setError(null);
+    try {
+      const res = await fetch(`/api/rundowns/${rundownId}/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: lang }),
+      });
+      if (!res.ok || !res.body) throw new Error(`Translation failed (${res.status})`);
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      const got = {};
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const ev = JSON.parse(line);
+          if (ev.type === 'format:done') {
+            got[ev.formatId] = ev.output;
+            setTranslateProgress(Object.keys(got).length);
+            // Show each edition as it lands rather than at the end.
+            setOutputs((o) => ({ ...o, [ev.formatId]: ev.output }));
+          }
+          if (ev.type === 'fatal') throw new Error(ev.error);
+        }
+      }
+      const next = { ...translations, [lang]: { outputs: got, at: new Date().toISOString() } };
+      setTranslations(next);
+      setActiveLang(lang);
+      setActiveVer(
+        Object.fromEntries(Object.keys(originals).map((k) => [k, 1 + Object.keys(next).indexOf(lang)]))
+      );
+    } catch (e) {
+      setError(String(e.message || e));
+      setOutputs(originals);
+      setActiveLang('Original');
+    } finally {
+      setTranslating(null);
     }
   }
 
@@ -553,7 +679,6 @@ export default function App() {
   return (
     <>
       <Masthead metrics={metrics} stage={stage} />
-      <WireTicker />
 
       <nav className="view-nav">
         <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
@@ -804,9 +929,50 @@ export default function App() {
               <div className="output-head">
                 <div className="output-title">{story.headline || 'Rundown'}</div>
                 <div className="toolbar-actions">
+                  {rundownId && (
+                    <label className="edition" title="Translate every format into one language. The original is kept.">
+                      <span>Edition</span>
+                      <select
+                        className="mini-select"
+                        value={translating || activeLang}
+                        disabled={!!translating}
+                        onChange={(e) => switchLanguage(e.target.value)}
+                      >
+                        <option value="Original">Original</option>
+                        {(meta?.languages || []).map((l) => (
+                          <option key={l} value={l}>
+                            {l}
+                            {translations[l] ? ' ✓' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {translating && (
+                        <span className="meter">
+                          <span className="spinner" /> {translateProgress}/{formatCount}
+                        </span>
+                      )}
+                      {!translating && activeLang !== 'Original' && (
+                        <span className="meter">showing {activeLang} · original kept</span>
+                      )}
+                    </label>
+                  )}
                   <button className="btn btn-sm" onClick={() => setLedgerOpen((v) => !v)}>
                     {ledgerOpen ? 'Hide' : 'Show'} fact ledger · {facts.length}
                   </button>
+                  {rundownId && (
+                    <button
+                      className={`btn btn-sm ${rundownStatus === 'draft' ? 'btn-ink' : 'btn-draft'}`}
+                      disabled={rundownBusy}
+                      title={
+                        rundownStatus === 'draft'
+                          ? 'Already in drafts — it stays on the board under Draft'
+                          : 'Park this rundown in drafts: read and kept, not filed yet'
+                      }
+                      onClick={() => setRundownState('draft')}
+                    >
+                      {rundownStatus === 'draft' ? '✓ In drafts' : 'Move to Draft'}
+                    </button>
+                  )}
                   {rundownId && (
                     <button
                       className="btn btn-sm"
@@ -951,9 +1117,9 @@ export default function App() {
                   publish={meta?.publish?.instagram}
                   languages={meta?.languages || []}
                   onLanguage={retranslate}
-                  versions={versions[activeFormat?.id] || []}
+                  versions={editionsFor(activeFormat?.id)}
                   activeVersion={activeVer[activeFormat?.id] ?? 0}
-                  onVersion={(i) => showVersion(activeFormat.id, i)}
+                  onVersion={(i) => showEdition(activeFormat.id, i)}
                   voice={meta?.voice}
                   busy={busy === activeFormat?.id}
                   onSave={(blocks) => {

@@ -31,10 +31,10 @@ const allLines = (o) => (o.blocks || []).flatMap((b) => b.lines || []);
 export const FORMATS = [
   {
     id: 'translation',
-    label: 'Translation',
+    label: 'Article',
     group: 'article',
     kind: 'text',
-    blurb: 'Full article in the selected language',
+    blurb: 'The full article',
     maxTokens: 8000,
     rules: (ctx) => [
       `Translate the ENTIRE article into ${ctx.language}.`,

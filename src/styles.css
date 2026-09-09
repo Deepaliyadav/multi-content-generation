@@ -205,7 +205,7 @@ button { cursor: pointer; }
 }
 @media (max-width: 700px) { .masthead-inner { padding: var(--s3) var(--s4); } }
 
-.mast-brand { display: flex; align-items: baseline; gap: var(--s3); min-width: 0; }
+.mast-brand { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
 .mast-tag { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--text-faint); white-space: nowrap; }
 @media (max-width: 900px) { .mast-tag { display: none; } }
 .mast-right { margin-left: auto; display: flex; align-items: center; gap: var(--s3); }
@@ -271,17 +271,19 @@ button { cursor: pointer; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
 .wordmark {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 500;
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
   line-height: 1;
   margin: 0;
-  letter-spacing: var(--track-tight);
-  color: var(--text);
-  white-space: nowrap;
+  font-size: 0;
 }
-.wordmark span { color: var(--red); }
+/* The mark ships as black artwork on transparent, so the dark desk flips it to
+   white and the light desk leaves it alone. One file, both themes. */
+.wordmark img { height: 26px; width: auto; display: block; filter: invert(1); }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .wordmark img { filter: none; }
+}
+:root[data-theme="light"] .wordmark img { filter: none; }
 
 .tagline {
   font-family: var(--font-mono);
@@ -1722,7 +1724,7 @@ button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
 @media (max-width: 640px) {
   .frame { padding: 0 14px 56px; }
   .masthead-inner { padding: 10px 14px 11px; gap: 12px; }
-  .wordmark { font-size: 21px; }
+  .wordmark img { height: 21px; }
   .tagline { display: none; }          /* the strapline is the first thing to go */
   .metrics { margin-left: 0; gap: 12px; }
   .metric { text-align: left; }
@@ -1766,95 +1768,6 @@ button.visual-wrap { cursor: zoom-in; padding: 0; display: block; }
 /* Nothing may scroll the page sideways — a stray fixed width is a bug, not a
    reason for a horizontal scrollbar. */
 html, body { max-width: 100%; overflow-x: hidden; }
-
-/* ── the wire strip ───────────────────────────────────────────────────── */
-/* Ambient, not a control: one thin muted line under the masthead. No accent
-   colour — the accents belong to the ledger and the stale flags. */
-
-.wire {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  height: 30px;
-  border-bottom: 1px solid var(--line-soft);
-  background: var(--bg-sunken);
-  overflow: hidden;
-}
-
-.wire-label {
-  flex: none;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  border-right: 1px solid var(--line-soft);
-  white-space: nowrap;
-}
-
-.wire-window { flex: 1; overflow: hidden; position: relative; }
-
-.wire-track {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  width: max-content;
-  animation-name: wire-scroll;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-.wire-track.paused { animation-play-state: paused; }
-
-@keyframes wire-scroll {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-50%, 0, 0); }
-}
-
-.wire-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  padding: 0 18px;
-  text-decoration: none;
-  white-space: nowrap;
-  border-right: 1px solid var(--line-soft);
-}
-.wire-item:hover .wire-hed { color: var(--text); }
-
-.wire-src {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.wire-hed {
-  font-family: var(--font-hi), var(--font-body);
-  font-size: 12px;
-  color: var(--text-dim);
-  transition: color .12s;
-}
-
-.wire-count {
-  flex: none;
-  display: flex;
-  align-items: center;
-  padding: 0 11px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  border-left: 1px solid var(--line-soft);
-}
-
-/* Motion here is decorative; a reader who has asked for less gets a strip they
-   can scroll themselves rather than one that moves on its own. */
-@media (prefers-reduced-motion: reduce) {
-  .wire-track { animation: none; }
-  .wire-window { overflow-x: auto; }
-}
 
 /* ── language picker (translation pane) ───────────────────────────────── */
 
@@ -1995,19 +1908,107 @@ html, body { max-width: 100%; overflow-x: hidden; }
   padding: 3px 6px;
 }
 
+/* ── the live agent trail ─────────────────────────────────────────────────
+   Two rows, not two columns: a header that names the agent and says whether it
+   is moving, then the trail of what it has actually done. Laid out as a row it
+   pushed the log off to the side and read as two unrelated things. */
 .live {
-  display: flex;
-  align-items: center;
-  gap: 9px;
   margin-top: 12px;
-  padding: 9px 12px;
+  padding: 10px 13px 11px;
   border: 1px solid var(--line-soft);
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--line);
   border-radius: 2px;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-dim);
+  transition: border-left-color var(--dur) var(--ease);
 }
+.live.is-working { border-left-color: var(--teal); }
+
+.live-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.live-head b { color: var(--text); font-weight: 500; display: inline-flex; align-items: baseline; }
+
+/* The radar names the job — sweeping for stories — and only turns while there
+   is a job. A still icon on a finished cycle is the honest state. */
+.agent-orb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  color: var(--text-faint);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-soft);
+}
+.agent-orb svg { width: 13px; height: 13px; display: block; }
+.live.is-working .agent-orb {
+  color: var(--teal);
+  border-color: rgba(79, 168, 160, .45);
+  background: rgba(79, 168, 160, .10);
+}
+
+/* The last step already carries the detail; the header repeats only the short
+   headline of it, and only while something is running. */
+.live-now {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 700px) { .live-now { display: none; } }
+
+/* Three dots that carry the "still going" signal without moving the text. */
+.ell { display: inline-flex; align-items: center; gap: 2px; margin-left: 3px; }
+.ell i { width: 3px; height: 3px; border-radius: 50%; background: var(--teal); opacity: .3; }
+
+.steplog {
+  list-style: none;
+  margin: 9px 0 0;
+  padding: 0 0 0 1px;
+  display: grid;
+  gap: 5px;
+}
+.steplog li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}
+.steplog li.now { color: var(--text); }
+/* A step's level is also the name of the standalone .warn callout, which was
+   dropping a bordered box into the middle of the trail. Colour is the only
+   signal a line in a list needs. */
+.steplog li.warn {
+  color: var(--gold);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  line-height: 1.45;
+}
+
+.step-mark { flex: none; width: 13px; height: 17px; display: grid; place-items: center; color: var(--teal); }
+.step-mark svg { width: 12px; height: 12px; display: block; }
+.steplog li.was .step-mark { color: var(--text-faint); opacity: .8; }
+.steplog li.warn .step-mark { color: var(--gold); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .live.is-working .radar-sweep { animation: spin 1.6s linear infinite; transform-origin: 12px 12px; }
+  .live.is-working .radar-ring { animation: radar-ring 1.6s ease-out infinite; transform-origin: 12px 12px; }
+  .live.is-working .ell i { animation: ell 1.1s ease-in-out infinite; }
+  .live.is-working .ell i:nth-child(2) { animation-delay: .18s; }
+  .live.is-working .ell i:nth-child(3) { animation-delay: .36s; }
+  /* The line being worked on breathes; the ones behind it are settled. */
+  .steplog li.now .step-mark { animation: pulse 1.4s ease-in-out infinite; }
+  .steplog li.now { animation: step-in .22s var(--ease) both; }
+}
+@keyframes radar-ring { 0% { opacity: .9; } 60% { opacity: .25; } 100% { opacity: .9; } }
+@keyframes ell { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+@keyframes step-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 
 .warn-hint { color: var(--gold); }
 .filters { margin-top: 14px; }
@@ -2308,3 +2309,48 @@ html, body { max-width: 100%; overflow-x: hidden; }
      taller than the one immediately beside it. */
   border: none;
 }
+
+/* Rundown-level language switch. Reads as a label with a control, not a button,
+   because it changes what you are looking at rather than doing something. */
+.edition {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.edition select { text-transform: none; letter-spacing: 0; }
+.edition .meter { text-transform: none; letter-spacing: 0; color: var(--gold); }
+
+/* Draft: parked by a person, not just unread. Quieter than "needs review". */
+.rd-draft { border-left-color: var(--text-faint); }
+.chip.st-draft { color: var(--text-dim); border-color: var(--line-strong); }
+
+/* Move to Draft is the main call on the review screen now that sign-off is
+   parked, so it carries the affirmative accent filled rather than outlined.
+   Once parked it drops back to the quiet outlined state — the work is done. */
+.btn.btn-draft {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--teal-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  box-shadow: 0 0 0 3px var(--teal-wash);
+}
+@media (hover: hover) {
+  .btn.btn-draft:hover:not(:disabled) {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--teal-ink);
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+.btn.btn-draft:active:not(:disabled) { transform: translateY(0) scale(.985); filter: brightness(.97); }
+.btn.btn-draft:disabled { background: var(--line-strong); border-color: var(--line-strong); color: var(--bg-panel); box-shadow: none; }

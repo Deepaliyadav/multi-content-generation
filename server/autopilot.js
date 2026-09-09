@@ -6,10 +6,8 @@
  * lands in "awaiting review" for an editor to check and push. The machine
  * decides what to work on; a person decides what goes out.
  *
- * Two guards matter more than the feature:
- *   - it never runs a story the desk already produced (the store's own check);
- *   - it stops at an hourly ceiling, because 3 rundowns x 13 formats every 5
- *     minutes is 468 generations an hour and that is real money.
+ * The guard that matters more than the feature: it never runs a story the desk
+ * already produced (the store's own check).
  */
 import './env.js';
 import { discover } from './discover.js';
@@ -23,7 +21,6 @@ import { saveRundown, updateRundown, newId, listRundowns, STATUS } from './store
 const DEFAULTS = {
   count: Number(process.env.LSS_AUTOPILOT_COUNT || 3),
   intervalMs: Number(process.env.LSS_AUTOPILOT_INTERVAL_MS || 5 * 60_000),
-  maxPerHour: Number(process.env.LSS_AUTOPILOT_MAX_PER_HOUR || 12),
   language: process.env.LSS_AUTOPILOT_LANGUAGE || 'Hindi',
   concurrency: Number(process.env.LSS_CONCURRENCY || 13),
   // Rundowns produced at once. Total in-flight model calls is this times the
@@ -78,7 +75,6 @@ export function autopilotStatus() {
   return {
     ...state,
     producedLastHour: producedLastHour(),
-    capReached: producedLastHour() >= state.maxPerHour,
   };
 }
 
@@ -185,18 +181,10 @@ export async function produce(cluster) {
 export async function runCycle({ count = state.count } = {}) {
   if (state.running) return { skipped: 'a cycle is already running' };
 
-  const room = state.maxPerHour - producedLastHour();
-  if (room <= 0) {
-    const msg = `Hourly ceiling reached (${state.maxPerHour}/hr). Skipping this cycle.`;
-    state.lastResult = { at: new Date().toISOString(), skipped: msg };
-    emit({ type: 'cycle:skipped', reason: msg });
-    return state.lastResult;
-  }
-
   state.running = true;
   state.cycles += 1;
   const started = Date.now();
-  emit({ type: 'cycle:start', count: Math.min(count, room) });
+  emit({ type: 'cycle:start', count });
 
   try {
     // The standing sweep already runs every five minutes; reuse its result
@@ -231,7 +219,7 @@ export async function runCycle({ count = state.count } = {}) {
     emit({ type: 'cycle:swept', clusters: sweep.clusters.length, reused: !!cached });
 
     const { picks, ranked, skipped, rejected } = await selectStories(sweep.clusters, {
-      count: Math.min(count, room),
+      count,
     });
     emit({ type: 'cycle:picked', picks: picks.map((p) => ({ headline: p.headline, reason: p.pickReason })) });
 
@@ -273,7 +261,6 @@ export function startAutopilot(opts = {}) {
   Object.assign(state, {
     count: opts.count ?? state.count,
     intervalMs: opts.intervalMs ?? state.intervalMs,
-    maxPerHour: opts.maxPerHour ?? state.maxPerHour,
     language: opts.language ?? state.language,
   });
   if (state.on) return autopilotStatus();

@@ -12,6 +12,7 @@ import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
 import { dispatch, firePending, destinationFor, DESTINATIONS, cmsDraftReady, mailTo } from './destinations.js';
+import { translateOutput } from './translate.js';
 import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery, recordSweep } from './sweeper.js';
 import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress, produce, beginProduce } from './autopilot.js';
 import { scoops, topicById, asCluster } from './scoops.js';
@@ -163,8 +164,8 @@ app.use('/api/media', express.static(MEDIA_DIR, { maxAge: '1h', immutable: true 
 app.get('/api/autopilot', (_req, res) => res.json(autopilotStatus()));
 
 app.post('/api/autopilot', (req, res) => {
-  const { on, count, intervalMs, maxPerHour, language } = req.body || {};
-  res.json(on === false ? stopAutopilot() : startAutopilot({ count, intervalMs, maxPerHour, language }));
+  const { on, count, intervalMs, language } = req.body || {};
+  res.json(on === false ? stopAutopilot() : startAutopilot({ count, intervalMs, language }));
 });
 
 /** Run one cycle immediately, without waiting for the timer. */
@@ -276,6 +277,61 @@ app.post('/api/rundowns/:id/status', async (req, res) => {
     const r = await updateRundown(req.params.id, { status, dispatches });
     res.json({ ...r, fired });
   } catch (e) { fail(res, e); }
+});
+
+/**
+ * Translate every format in a rundown into one language, keeping the original.
+ * Streams per-format so the desk watches it rather than waiting on one response.
+ */
+app.post('/api/rundowns/:id/translate', async (req, res) => {
+  const { language } = req.body || {};
+  const r = await getRundown(req.params.id);
+  if (!r) return res.status(404).json({ error: 'No such rundown.' });
+  if (!language) return res.status(400).json({ error: 'A target language is required.' });
+
+  res.writeHead(200, {
+    'Content-Type': 'application/x-ndjson; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = (o) => res.write(`${JSON.stringify(o)}\n`);
+  // Re-selecting a language should not pay to redo work that is already done;
+  // it should finish what is missing. `force` redoes the lot.
+  const existing = (r.translations?.[language]?.outputs) || {};
+  const ids = Object.keys(r.outputs || {}).filter((k) => req.body?.force || !existing[k]);
+  send({ type: 'start', total: ids.length, language, already: Object.keys(existing).length });
+
+  const done = {};
+  await pooled(ids, CONCURRENCY, async (formatId) => {
+    send({ type: 'format:start', formatId });
+    try {
+      const out = await translateOutput({
+        formatId,
+        output: r.outputs[formatId],
+        language,
+        story: r.story,
+      });
+      done[formatId] = out;
+      send({ type: 'format:done', formatId, output: out });
+    } catch (e) {
+      send({ type: 'format:error', formatId, error: String(e?.message || e) });
+    }
+  });
+
+  try {
+    const cur = await getRundown(req.params.id);
+    await updateRundown(req.params.id, {
+      translations: {
+        ...(cur?.translations || {}),
+        [language]: { outputs: { ...existing, ...done }, at: new Date().toISOString() },
+      },
+    });
+  } catch (e) {
+    send({ type: 'fatal', error: String(e?.message || e) });
+  }
+  send({ type: 'done', language, translated: Object.keys(done).length });
+  res.end();
 });
 
 /** Editor edits one line of one output, same shape the review pane already uses. */
@@ -639,6 +695,11 @@ rebuildIndex()
   .catch(() => {});
 
 startSweeper();
+
+// The autopilot runs from boot. The desk's whole point is that the review queue
+// is already filling when an editor sits down; nothing it makes is published
+// without a person approving it, so there is nothing to opt into.
+startAutopilot();
 
 app.listen(PORT, () => {
   console.log(`\n  Living Story Sync — API on http://localhost:${PORT}`);
