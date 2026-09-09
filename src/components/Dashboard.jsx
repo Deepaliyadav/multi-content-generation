@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import ScoopBoard from './ScoopBoard.jsx';
 
 /**
  * The desk board.
@@ -125,6 +126,10 @@ export default function Dashboard({ onOpen }) {
 
   return (
     <div className="board">
+      {/* Above the desk board on purpose: what nobody has filed is the most
+          perishable thing on this screen. */}
+      <ScoopBoard onProduced={(id) => { load(); onOpen?.(id); }} />
+
       <section className="panel">
         <div className="panel-head">
           <span className="panel-num">00</span>

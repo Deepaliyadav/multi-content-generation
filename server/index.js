@@ -13,7 +13,8 @@ import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
 import { dispatch, firePending, destinationFor, DESTINATIONS, cmsDraftReady, mailTo } from './destinations.js';
 import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery, recordSweep } from './sweeper.js';
-import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress } from './autopilot.js';
+import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress, produce } from './autopilot.js';
+import { scoops, topicById, asCluster } from './scoops.js';
 import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS, MEDIA_DIR, recoverOrphans, rebuildIndex } from './store.js';
 import crypto from 'node:crypto';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
@@ -130,6 +131,26 @@ app.get('/api/meta', (_req, res) => {
       rules: f.rules({ language: 'the selected language' }),
     })),
   });
+});
+
+/* ── unclaimed board ──────────────────────────────────────────────────── */
+
+/** Trending on social, filed by nobody. Sorted by how many platforms carry it. */
+app.get('/api/scoops', async (_req, res) => {
+  try {
+    res.json(await scoops());
+  } catch (e) { fail(res, e); }
+});
+
+/** Take one: produce a full rundown from an unclaimed topic. */
+app.post('/api/scoops/:id/produce', async (req, res) => {
+  try {
+    const topic = topicById(req.params.id);
+    if (!topic) return res.status(404).json({ error: 'No such topic.' });
+    const rec = await produce(asCluster(topic));
+    if (!rec) return res.status(500).json({ error: 'Could not produce that rundown.' });
+    res.json({ id: rec.id, status: rec.status });
+  } catch (e) { fail(res, e); }
 });
 
 /* ── autopilot & rundowns ─────────────────────────────────────────────── */

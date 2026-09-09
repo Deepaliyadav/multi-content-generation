@@ -1592,10 +1592,12 @@
   },
   "approvals": {
     "tv_script": "2026-09-09T05:45:09.123Z",
-    "translation": "2026-09-09T05:49:16.956Z"
+    "translation": "2026-09-09T05:49:16.956Z",
+    "video_script": "2026-09-09T05:50:23.486Z",
+    "reel": "2026-09-09T05:50:50.425Z"
   },
   "createdAt": "2026-09-09T05:34:18.317Z",
-  "updatedAt": "2026-09-09T05:49:16.961Z",
+  "updatedAt": "2026-09-09T05:50:50.429Z",
   "brief": {
     "headline": "Ahmedabad woman's death was murder by father and brother, police say",
     "body": "Police in Ahmedabad have concluded that the death of a 22-year-old woman initially recorded as a road accident was in fact a killing, according to the intake note on this story. The woman has been named in the reporting as Sofia Farooq.\n\nNews18 Hindi reported that Sofia was killed with a hammer by her father and brother, and that the scene was subsequently arranged to resemble a traffic crash. That account has not yet been independently verified by this desk.\n\nAccording to News18 Hindi, the dispute that preceded the killing followed a video that had circulated widely online, and involved questions of family honour. The report does not, as summarised on the wire, set out what the video showed or how it came to be shared.\n\nThe intake note says police are the source for the finding that the death was a killing rather than an accident. No police officer has been named in the material available, and no direct quotes from investigators are in hand.\n\nBefore this runs, the desk needs to confirm: the exact date, time and location of the death; whether the father and brother have been arrested and what charges, if any, have been filed; the names of the accused; the identity of the police station or officer making the claim; how and when investigators reclassified the case; and any statement from the family or their lawyer. The nature and content of the viral video, and its connection to the killing, are also unconfirmed. None of this should be published on a single outlet's reporting alone.",
@@ -1619,6 +1621,22 @@
       "delivered": false,
       "note": "No CMS draft endpoint configured. The draft is recorded here — set CMS_DRAFT_URL to deliver it.",
       "at": "2026-09-09T05:49:16.956Z"
+    },
+    "video_script": {
+      "kind": "mail",
+      "delivered": false,
+      "opensClient": true,
+      "mailto": "mailto:?subject=%5BDraft%20a%20mail%5D%20Ahmedabad%20woman's%20death%20was%20murder%20by%20father%20and%20brother%2C%20police%20say&body=Draft%20a%20mail%20%E2%80%94%20drafted%20by%20the%20desk%2C%20not%20yet%20verified.%0A%0AStory%3A%20Ahmedabad%20woman's%20death%20was%20murder%20by%20father%20and%20brother%2C%20police%20say%0A%0AIntro%0A-----%0AA%20death%20in%20Ahmedabad%2C%20first%20recorded%20as%20a%20road%20accident%2C%20is%20now%20being%20treated%20as%20a%20killing.%0APolice%20say%20the%20case%20has%20changed.%20Here%20is%20what%20we%20know.%0A%0ABody%0A----%0AThe%20woman%20has%20been%20named%20in%20reporting%20as%20Sofia%20Farooq.%20She%20was%20twenty-two.%0APolice%20are%20the%20source%20for%20the%20finding%20that%20this%20was%20a%20killing%2C%20and%20not%20an%20accident.%0ANews18%20Hindi%20reports%20she%20was%20killed%20with%20a%20hammer%20by%20her%20father%20and%20her%20brother.%0AAccording%20to%20that%20report%2C%20the%20scene%20was%20then%20arranged%20to%20look%20like%20a%20traffic%20crash.%0AThe%20same%20report%20says%20the%20dispute%20followed%20a%20video%20circulated%20online%2C%20and%20involved%20questions%20of%20family%20honour.%0A%0AOutro%0A-----%0AThose%20claims%20have%20not%20been%20independently%20verified%20by%20this%20desk.%20No%20police%20officer%20has%20been%20named.%0AWe%20will%20bring%20you%20more%20as%20the%20details%20are%20confirmed.%0A%0A%E2%80%94%20Sent%20from%20Rundown",
+      "note": "Opens your mail client with the copy prefilled.",
+      "at": "2026-09-09T05:50:23.486Z"
+    },
+    "reel": {
+      "kind": "mail",
+      "delivered": false,
+      "opensClient": true,
+      "mailto": "mailto:?subject=%5BDraft%20a%20mail%5D%20Ahmedabad%20woman's%20death%20was%20murder%20by%20father%20and%20brother%2C%20police%20say&body=Draft%20a%20mail%20%E2%80%94%20drafted%20by%20the%20desk%2C%20not%20yet%20verified.%0A%0AStory%3A%20Ahmedabad%20woman's%20death%20was%20murder%20by%20father%20and%20brother%2C%20police%20say%0A%0AHook%20(0%E2%80%933s)%0A-----------%0AA%20road%20accident%20in%20Ahmedabad%20wasn't%20an%20accident%20at%20all%20%E2%80%94%20police%20say%20it%20was%20a%20killing.%0A%0AScript%0A------%0AThe%20victim%3A%20Sofia%20Farooq%2C%2022%20years%20old.%0AHer%20death%20was%20first%20recorded%20as%20a%20traffic%20crash.%0APolice%20are%20the%20source%20for%20the%20finding%20that%20she%20was%20killed.%0ANews18%20Hindi%20reports%20she%20was%20struck%20with%20a%20hammer%20by%20her%20father%20and%20brother%2C%20and%20the%20scene%20arranged%20to%20look%20like%20a%20road%20crash.%0AThat%20same%20report%20links%20the%20dispute%20to%20a%20video%20circulating%20online%20and%20to%20questions%20of%20family%20honour.%0AThis%20desk%20has%20not%20independently%20verified%20those%20claims.%0A%0AEnd%20card%0A--------%0AOne%20outlet's%20reporting.%20Police%20say%3A%20not%20an%20accident.%0A%0A%E2%80%94%20Sent%20from%20Rundown",
+      "note": "Opens your mail client with the copy prefilled.",
+      "at": "2026-09-09T05:50:50.425Z"
     }
   }
 }

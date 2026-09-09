@@ -99,7 +99,7 @@ async function pooled(items, limit, fn) {
 }
 
 /** Produce one full rundown from a selected story. Never publishes. */
-async function produce(cluster) {
+export async function produce(cluster) {
   const id = newId();
   const started = Date.now();
   await saveRundown({
@@ -184,7 +184,32 @@ export async function runCycle({ count = state.count } = {}) {
     // The standing sweep already runs every five minutes; reuse its result
     // rather than paying for a second identical one.
     const cached = freshEnough();
-    const sweep = cached || (await discover({ useRss: true, useTrending: true }));
+    // discover() already narrates itself; the autopilot was throwing that away
+    // and reporting one flat "working" for a minute of real work. Re-emit each
+    // phase so the board can show what the agent is actually doing.
+    const step = (text, extra = {}) => emit({ type: 'cycle:step', step: text, ...extra });
+    const sweep =
+      cached ||
+      (await discover({ useRss: true, useTrending: true }, (ev) => {
+        if (ev.type === 'phase') step(ev.phase);
+        else if (ev.type === 'sources') {
+          for (const src of ev.sources || []) {
+            step(
+              src.ok
+                ? `${src.name} — ${src.count} headlines`
+                : `${src.name} — unreachable`,
+              src.ok ? {} : { level: 'warn' }
+            );
+          }
+        } else if (ev.type === 'clustered') {
+          step(`${ev.count} distinct stories from ${ev.origin === 'rss' ? 'the wires' : 'search'}`);
+        } else if (ev.type === 'checked') {
+          step(`Checked ${ev.clusters.length} against the CMS`);
+        } else if (ev.type === 'error') {
+          step(`${ev.scope} failed — ${ev.error}`, { level: 'warn' });
+        }
+      }));
+    if (cached) step('Reusing the standing sweep — it is still fresh');
     emit({ type: 'cycle:swept', clusters: sweep.clusters.length, reused: !!cached });
 
     const { picks, ranked, skipped, rejected } = await selectStories(sweep.clusters, {

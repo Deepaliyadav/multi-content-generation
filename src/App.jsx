@@ -339,8 +339,18 @@ export default function App() {
       setDispatches(r.dispatches || {});
       setRundownStatus(r.status);
       // A mail destination hands back a prefilled draft for the desk's own
-      // client rather than sending anything itself.
-      if (r.result?.mailto) window.location.href = r.result.mailto;
+      // client rather than sending anything itself. Opened via a real anchor:
+      // assigning window.location.href risks navigating the desk away from the
+      // rundown if no mail client picks the scheme up.
+      if (r.result?.mailto) {
+        const a = document.createElement('a');
+        a.href = r.result.mailto;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     } catch (e) {
       setError(String(e.message || e));
     } finally {
