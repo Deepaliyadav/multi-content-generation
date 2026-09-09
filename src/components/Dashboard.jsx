@@ -276,14 +276,14 @@ export default function Dashboard({ onOpen }) {
         <div className="panel-head">
           <span className="panel-num">00</span>
           <h2>Desk board</h2>
-          <span className="count">{data.rundowns.length} rundowns</span>
+          <span className="count">{data.rundowns.length} articles</span>
         </div>
 
         <div className="panel-body">
           <div className="board-top">
             <div className={`queue ${needsReview ? 'hot' : ''}`}>
               <b>{needsReview}</b>
-              <span>{needsReview === 1 ? 'rundown needs review' : 'rundowns need review'}</span>
+              <span>{needsReview === 1 ? 'article needs review' : 'articles need review'}</span>
             </div>
 
             <div className="ap">
@@ -414,7 +414,7 @@ export default function Dashboard({ onOpen }) {
         <div className="empty board-empty">
           {data.rundowns.length
             ? 'Nothing in this view.'
-            : 'No rundowns yet. Turn on the autopilot, or run one cycle to see the desk work.'}
+            : 'No articles yet. Turn on the autopilot, or run one cycle to see the desk work.'}
         </div>
       )}
 

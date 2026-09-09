@@ -162,7 +162,7 @@ export default function Composer({
       <section className="panel">
         <div className="panel-body">
         <button className="btn btn-primary btn-generate" disabled={!ready || busy} onClick={onGenerate}>
-          {busy ? 'Working…' : 'Generate rundown'}
+          {busy ? 'Working…' : 'Generate article'}
         </button>
         <span className="gen-hint">
           {!story.headline.trim() || !story.body.trim()

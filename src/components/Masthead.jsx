@@ -10,7 +10,7 @@ import ThemeToggle from './ThemeToggle.jsx';
 const STEPS = [
   ['compose', 'Source'],
   ['working', 'Writing'],
-  ['review', 'Rundown'],
+  ['review', 'Article'],
 ];
 
 export default function Masthead({ metrics, stage }) {

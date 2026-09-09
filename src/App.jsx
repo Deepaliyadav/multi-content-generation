@@ -341,7 +341,7 @@ export default function App() {
       );
       setStage('review');
     } catch (e) {
-      setError(`Could not open that rundown: ${String(e.message || e)}`);
+      setError(`Could not open that article: ${String(e.message || e)}`);
     }
   }
 
@@ -710,7 +710,7 @@ export default function App() {
               setView('desk');
             }}
           >
-            ← leave this rundown
+            ← leave this article
           </button>
         )}
       </nav>
@@ -971,7 +971,7 @@ export default function App() {
                       title={
                         rundownStatus === 'draft'
                           ? 'Already in drafts — it stays on the board under Draft'
-                          : 'Park this rundown in drafts: read and kept, not filed yet'
+                          : 'Park this article in drafts: read and kept, not filed yet'
                       }
                       onClick={() => setRundownState('draft')}
                     >
@@ -1046,7 +1046,7 @@ export default function App() {
                             setView('board');
                           }}
                         >
-                          Yes, discard this rundown
+                          Yes, discard this article
                         </button>
                         <button className="btn btn-sm" onClick={() => setConfirming(null)}>
                           Keep it
