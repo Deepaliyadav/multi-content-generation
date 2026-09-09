@@ -333,7 +333,12 @@ export default function App() {
       setActiveLang('Original');
       setStatus(Object.fromEntries(Object.keys(r.outputs || {}).map((k) => [k, 'done'])));
       setSelected(new Set(Object.keys(r.outputs || {})));
-      setActive(Object.keys(r.outputs || {})[0] || null);
+      // Rundowns are written concurrently, so the stored key order is whichever
+      // format finished first. The desk should open on the first section of the
+      // rail — the article — not on whatever happened to win the race.
+      setActive(
+        allFormats.find((f) => r.outputs?.[f.id])?.id ?? Object.keys(r.outputs || {})[0] ?? null
+      );
       setStage('review');
     } catch (e) {
       setError(`Could not open that rundown: ${String(e.message || e)}`);

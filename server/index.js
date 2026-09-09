@@ -168,6 +168,28 @@ app.post('/api/autopilot', (req, res) => {
   res.json(on === false ? stopAutopilot() : startAutopilot({ count, intervalMs, language }));
 });
 
+/**
+ * Retry a rundown that failed.
+ *
+ * The record keeps the cluster it was built from, so a retry needs no new
+ * discovery — and it rewrites the same id, so the board shows one card going
+ * back to work rather than a dead one beside its replacement.
+ */
+app.post('/api/rundowns/:id/retry', async (req, res) => {
+  try {
+    const rec = await getRundown(req.params.id);
+    if (!rec) return res.status(404).json({ error: 'No such rundown.' });
+    if (rec.status === STATUS.GENERATING)
+      return res.status(409).json({ error: 'That rundown is already being written.' });
+    if (!rec.cluster?.headline)
+      return res.status(409).json({ error: 'That rundown has no source story to rebuild from.' });
+
+    const { id, done } = await beginProduce(rec.cluster, { id: rec.id });
+    done.catch(() => {});
+    res.json({ id, status: 'generating' });
+  } catch (e) { fail(res, e); }
+});
+
 /** Run one cycle immediately, without waiting for the timer. */
 app.post('/api/autopilot/run', async (req, res) => {
   try {

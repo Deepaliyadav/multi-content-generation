@@ -21,6 +21,11 @@ import { saveRundown, updateRundown, newId, listRundowns, STATUS } from './store
 const DEFAULTS = {
   count: Number(process.env.LSS_AUTOPILOT_COUNT || 3),
   intervalMs: Number(process.env.LSS_AUTOPILOT_INTERVAL_MS || 5 * 60_000),
+  // A restart used to cost a full idle interval before anything ran, which on a
+  // dev machine that restarts every few minutes meant no cycle ever fired. The
+  // first cycle of a session starts here instead; the sweeper already does the
+  // same for the same reason.
+  firstDelayMs: Number(process.env.LSS_AUTOPILOT_FIRST_DELAY_MS || 30_000),
   language: process.env.LSS_AUTOPILOT_LANGUAGE || 'Hindi',
   concurrency: Number(process.env.LSS_CONCURRENCY || 13),
   // Rundowns produced at once. Total in-flight model calls is this times the
@@ -33,6 +38,10 @@ const state = {
   ...DEFAULTS,
   running: false,
   lastRunAt: null,
+  // When the cycle now in flight began. The board used to read "not swept yet
+  // this session" through eight minutes of visible work, because lastRunAt is
+  // only written once a cycle lands.
+  startedAt: null,
   nextRunAt: null,
   lastResult: null,
   produced: 0,
@@ -42,6 +51,37 @@ const state = {
 
 let timer = null;
 const listeners = new Set();
+
+/**
+ * Schedule the next cycle, `delayMs` from now.
+ *
+ * A fixed setInterval was wrong twice over: a cycle takes longer than the
+ * interval it runs on (a sweep plus three rundowns is 7-8 minutes against a
+ * 5-minute tick), so every tick landing mid-cycle hit the "already running"
+ * guard and was thrown away — the real cadence was double the advertised one —
+ * and nextRunAt, recomputed separately, spent most of a cycle pointing at a
+ * time already past, which the board renders as "due now" forever.
+ *
+ * One self-rescheduling timeout, set when the previous cycle finishes, makes
+ * the interval mean "gap between cycles" and makes nextRunAt true by
+ * construction.
+ */
+function scheduleNext(delayMs = state.intervalMs) {
+  if (timer) clearTimeout(timer);
+  timer = null;
+  if (!state.on) {
+    state.nextRunAt = null;
+    return;
+  }
+  state.nextRunAt = new Date(Date.now() + delayMs).toISOString();
+  timer = setTimeout(() => {
+    runCycle()
+      .catch(() => {})
+      .finally(() => scheduleNext());
+  }, delayMs);
+  // Node should still be allowed to exit on its own.
+  timer.unref?.();
+}
 
 /**
  * Per-format progress for rundowns currently being written.
@@ -102,9 +142,12 @@ async function pooled(items, limit, fn) {
  * that was already visibly happening. The record exists before this returns, so
  * the desk can open it and follow the progress screen; `done` resolves when the
  * writing finishes, for callers that need to wait.
+ *
+ * Pass an existing `id` to rewrite that record in place — how a failed rundown
+ * is retried without leaving a dead card behind next to its replacement.
  */
-export async function beginProduce(cluster) {
-  const id = newId();
+export async function beginProduce(cluster, { id: reuseId } = {}) {
+  const id = reuseId || newId();
   const started = Date.now();
   await saveRundown({
     id,
@@ -184,6 +227,7 @@ export async function runCycle({ count = state.count } = {}) {
   state.running = true;
   state.cycles += 1;
   const started = Date.now();
+  state.startedAt = new Date(started).toISOString();
   emit({ type: 'cycle:start', count });
 
   try {
@@ -232,9 +276,8 @@ export async function runCycle({ count = state.count } = {}) {
       if (rec) made.push(rec.id);
     });
 
-    state.lastRunAt = new Date().toISOString();
     state.lastResult = {
-      at: state.lastRunAt,
+      at: new Date().toISOString(),
       swept: sweep.clusters.length,
       picked: picks.length,
       produced: made,
@@ -253,7 +296,10 @@ export async function runCycle({ count = state.count } = {}) {
     return { error: err };
   } finally {
     state.running = false;
-    state.nextRunAt = state.on ? new Date(Date.now() + state.intervalMs).toISOString() : null;
+    state.startedAt = null;
+    // Set here, not on the success path: a cycle that errored still swept, and
+    // "not swept yet this session" after four failed attempts is a lie.
+    state.lastRunAt = new Date().toISOString();
   }
 }
 
@@ -263,15 +309,16 @@ export function startAutopilot(opts = {}) {
     intervalMs: opts.intervalMs ?? state.intervalMs,
     language: opts.language ?? state.language,
   });
-  if (state.on) return autopilotStatus();
+  if (state.on) {
+    // Already on — a changed count applies to the next cycle, and the pending
+    // timer stays as it is rather than being pushed back by every edit.
+    return autopilotStatus();
+  }
 
   state.on = true;
-  state.nextRunAt = new Date(Date.now() + state.intervalMs).toISOString();
-  timer = setInterval(() => {
-    runCycle().catch(() => {});
-  }, state.intervalMs);
-  // Node should still be allowed to exit on its own.
-  timer.unref?.();
+  // Nothing has run yet this process, so start soon rather than after a full
+  // interval of an empty board.
+  scheduleNext(state.cycles ? state.intervalMs : state.firstDelayMs);
   emit({ type: 'autopilot:on', ...autopilotStatus() });
   return autopilotStatus();
 }
@@ -279,7 +326,7 @@ export function startAutopilot(opts = {}) {
 export function stopAutopilot() {
   state.on = false;
   state.nextRunAt = null;
-  if (timer) clearInterval(timer);
+  if (timer) clearTimeout(timer);
   timer = null;
   emit({ type: 'autopilot:off' });
   return autopilotStatus();

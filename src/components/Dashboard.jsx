@@ -20,6 +20,29 @@ const STATUS_LABEL = {
   discarded: 'Discarded',
 };
 
+/**
+ * A cycle error, in words.
+ *
+ * Provider failures arrive as `400 {"type":"error","error":{"message":…}}`.
+ * The board was showing nothing at all for these — the autopilot kept its
+ * errors in state and no one rendered them, so a desk whose API key was out of
+ * credit looked identical to a desk whose timer was broken.
+ */
+const readable = (err) => {
+  const raw = String(err || '');
+  const brace = raw.indexOf('{');
+  if (brace >= 0) {
+    try {
+      const body = JSON.parse(raw.slice(brace));
+      const msg = body?.error?.message || body?.message;
+      if (msg) return msg;
+    } catch {
+      /* not JSON after all — fall through to the raw text */
+    }
+  }
+  return raw.slice(0, 200);
+};
+
 const ago = (iso) => {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return 'just now';
@@ -67,6 +90,9 @@ const AlertIcon = () => (
   </svg>
 );
 
+/** Cards per page: three rows of the three-up grid. */
+const PER_PAGE = 9;
+
 /** Group by the day it ran, so a long night reads as a timeline. */
 function groupByDay(rows) {
   const out = new Map();
@@ -88,9 +114,11 @@ export default function Dashboard({ onOpen }) {
   const [filter, setFilter] = useState('all');
   const [busy, setBusy] = useState(false);
   const [steps, setSteps] = useState([]);
+  const [pageNum, setPageNum] = useState(1);
   const [live, setLive] = useState(null);
   const [scoops, setScoops] = useState({ scoops: [], checkedAgainst: 0 });
   const [taking, setTaking] = useState(null);
+  const [retrying, setRetrying] = useState(null);
   const esRef = useRef(null);
 
   const load = async () => {
@@ -116,6 +144,21 @@ export default function Dashboard({ onOpen }) {
       /* surfaced by the board reloading without the row */
     } finally {
       setTaking(null);
+    }
+  }
+
+  /** Rebuild a rundown that failed, from the story it was already given. */
+  async function retry(rec) {
+    setRetrying(rec.id);
+    try {
+      const r = await fetch(`/api/rundowns/${rec.id}/retry`, { method: 'POST' });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Could not restart it');
+      await load();
+    } catch {
+      /* the card stays as it was; the board reload tells the truth either way */
+    } finally {
+      setRetrying(null);
     }
   }
 
@@ -215,6 +258,13 @@ export default function Dashboard({ onOpen }) {
       ];
     return data.rundowns.filter((r) => r.status === filter).map((r) => ({ ...r, _kind: 'rundown' }));
   }, [data.rundowns, unclaimed, filter]);
+
+  // Nineteen cards is four screens of scrolling before you reach the oldest.
+  // Page them, but keep the day grouping inside a page so the timeline reads.
+  const pages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
+  const page = Math.min(pageNum, pages);
+  const paged = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
   const needsReview = counts.awaiting_review || 0;
   // One flag for "the agent is mid-cycle", so the header, the orb and the last
   // step line can never disagree about whether anything is actually moving.
@@ -273,14 +323,21 @@ export default function Dashboard({ onOpen }) {
           </div>
 
           <p className="sweep-line">
-            {ap.lastRunAt ? (
+            {/* A cycle in flight is the most recent sweep there is. Reading
+                "not swept yet this session" through eight minutes of visible
+                work was the board's own status contradicting its live trail. */}
+            {ap.running && ap.startedAt ? (
+              <>
+                Sweeping now — started <b>{ago(ap.startedAt)}</b>
+              </>
+            ) : ap.lastRunAt ? (
               <>
                 Last swept <b>{ago(ap.lastRunAt)}</b>
               </>
             ) : (
               'Not swept yet this session'
             )}
-            {ap.on && ap.nextRunAt && <> · next {inMins(ap.nextRunAt)}</>}
+            {ap.on && ap.nextRunAt && !ap.running && <> · next {inMins(ap.nextRunAt)}</>}
           </p>
 
           {(working || steps.length > 0) && (
@@ -327,12 +384,23 @@ export default function Dashboard({ onOpen }) {
             </div>
           )}
 
+          {/* A failing cycle is the one thing the board must not hide: it
+              looks exactly like an idle one otherwise. */}
+          {!ap.running && !!ap.errors?.length && (
+            <p className="cycle-err">
+              <b>Last cycle failed</b> {ago(ap.errors[0].at)} — {readable(ap.errors[0].error)}
+            </p>
+          )}
+
           <div className="btn-row filters">
             {['all', 'unclaimed', 'awaiting_review', 'draft', 'failed'].map((f) => (
               <button
                 key={f}
                 className={`btn btn-sm ${filter === f ? 'btn-ink' : ''} ${f === 'unclaimed' ? 'is-unclaimed' : ''}`}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f);
+                  setPageNum(1);
+                }}
               >
                 {f === 'all' ? 'All' : f === 'unclaimed' ? 'Unclaimed' : STATUS_LABEL[f]}
                 {f === 'unclaimed' ? (unclaimed.length ? ` ${unclaimed.length}` : '') : counts[f] ? ` ${counts[f]}` : ''}
@@ -350,7 +418,7 @@ export default function Dashboard({ onOpen }) {
         </div>
       )}
 
-      {groupByDay(rows).map(([day, items]) => (
+      {groupByDay(paged).map(([day, items]) => (
         <section key={day} className="day">
           <p className={`day-label ${day === '__unclaimed__' ? 'is-unclaimed' : ''}`}>
             {day === '__unclaimed__'
@@ -414,16 +482,33 @@ export default function Dashboard({ onOpen }) {
 
                 <h3>{r.headline}</h3>
                 {r.pickReason && <p className="rd-why">Why this: {r.pickReason}</p>}
-                {r.error && <p className="rd-why err">{r.error}</p>}
+                {r.error && <p className="rd-why err">{readable(r.error)}</p>}
 
                 <div className="rd-foot">
+                  {!!r.sources?.length && (
+                    <span className="rd-source">{[...new Set(r.sources)].join(', ')}</span>
+                  )}
                   <span>{r.formats}/13 formats</span>
-                  <span className={r.approved === r.formats && r.formats ? 'ok' : ''}>
-                    {r.approved} approved
-                  </span>
-                  <span>{r.factCount} facts</span>
                   {r.genMs != null && <span>{(r.genMs / 1000).toFixed(0)}s</span>}
-                  {!!r.sources?.length && <span>{[...new Set(r.sources)].join(', ')}</span>}
+                  {r.status === 'failed' && (
+                    <button
+                      className="btn btn-sm rd-retry"
+                      disabled={retrying === r.id}
+                      onClick={(e) => {
+                        // The card itself opens the rundown; retrying must not.
+                        e.stopPropagation();
+                        retry(r);
+                      }}
+                    >
+                      {retrying === r.id ? (
+                        <>
+                          <span className="spinner" /> Restarting…
+                        </>
+                      ) : (
+                        'Regenerate'
+                      )}
+                    </button>
+                  )}
                 </div>
               </article>
               )
@@ -431,6 +516,32 @@ export default function Dashboard({ onOpen }) {
           </div>
         </section>
       ))}
+      {pages > 1 && (
+        <nav className="pager" aria-label="Rundown pages">
+          <button className="btn btn-sm" disabled={page === 1} onClick={() => setPageNum(page - 1)}>
+            ‹ Newer
+          </button>
+          <span className="pager-count">
+            {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, rows.length)} of {rows.length}
+          </span>
+          <div className="pager-dots">
+            {Array.from({ length: pages }, (_, i) => (
+              <button
+                key={i}
+                className={`pager-dot ${i + 1 === page ? 'on' : ''}`}
+                aria-label={`Page ${i + 1}`}
+                aria-current={i + 1 === page}
+                onClick={() => setPageNum(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-sm" disabled={page === pages} onClick={() => setPageNum(page + 1)}>
+            Older ›
+          </button>
+        </nav>
+      )}
     </div>
   );
 }
