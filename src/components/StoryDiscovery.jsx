@@ -11,18 +11,6 @@ import { useEffect, useRef, useState } from 'react';
  * explicitly unverified starter brief that lands in the source panel for the
  * journalist to rewrite.
  */
-const AUTO_MS = 5 * 60_000;
-
-/**
- * How many genuinely new headlines justify paying for another sweep.
- *
- * An exact fingerprint of the wire is the wrong test: these feeds push hundreds
- * of items a day, so the top of the wire differs within a minute or two and
- * every cycle would re-cluster essentially the same news. What matters is
- * whether enough NEW copy has landed to change the answer.
- */
-const NEW_ITEMS_TO_RESWEEP = 5;
-
 /** "just now" / "4 min ago" / "1 hr 20 min ago" — how stale the list is. */
 const ago = (iso) => {
   const secs = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -40,7 +28,7 @@ const countdown = (at) => {
   return m >= 1 ? `${m}m` : `${Math.ceil(left / 1000)}s`;
 };
 
-export default function StoryDiscovery({ meta, onUseStory, busy }) {
+export default function StoryDiscovery({ meta, onUseStory, onWriteMyself, busy }) {
   // Discovery leads: most sessions start by asking what is worth filing, not by
   // pasting copy that already exists. Writing it yourself is one click away.
   const [open, setOpen] = useState(true);
@@ -53,9 +41,7 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
   const [drafting, setDrafting] = useState(null);
   const [filed, setFiled] = useState(() => new Set());
   const [filter, setFilter] = useState('all');
-  const [auto, setAuto] = useState(true);
-  const [nextAt, setNextAt] = useState(null);
-  const [autoNote, setAutoNote] = useState(null);
+  const [sweeper, setSweeper] = useState(null);
   const [fetchedAt, setFetchedAt] = useState(null);
   const [, tick] = useState(0);
 
@@ -63,8 +49,6 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
   // set is new copy that sweep never considered.
   const wireSeen = useRef(null);
   const runningRef = useRef(false);
-  const busyRef = useRef(busy);
-  busyRef.current = busy;
 
   const d = meta?.discovery;
 
@@ -74,7 +58,6 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
     setRunning(true);
     setError(null);
     setResult(null);
-    setAutoNote(null);
     setPhase(automatic ? 'Auto-refresh — new copy on the wire…' : 'Starting…');
     try {
       // Cheap and cached; pins the copy this sweep is answering for.
@@ -141,71 +124,37 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
       runningRef.current = false;
       setRunning(false);
       setPhase(null);
-      setNextAt(Date.now() + AUTO_MS);
     }
   }
 
-  // Open on the list the desk already paid for, not an empty panel.
+  // The schedule lives on the server, so it keeps running while this panel is
+  // closed, while the board is showing, and while the tab is in the background.
+  // Here we only read it.
   useEffect(() => {
     let alive = true;
-    (async () => {
+    const pull = async () => {
       try {
         const last = await (await fetch('/api/discover/last')).json();
-        if (!alive || last?.empty || !last?.clusters?.length) return;
-        setResult(last);
-        setFetchedAt(last.finishedAt || null);
-        if (Array.isArray(last.wireLinks)) wireSeen.current = new Set(last.wireLinks);
-      } catch {
-        /* an empty panel is a fine fallback */
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open || !auto) {
-      setNextAt(null);
-      return;
-    }
-    setNextAt((n) => n ?? Date.now() + AUTO_MS);
-
-    const id = setInterval(async () => {
-      // Never sweep over the top of a running job, and never spend on a tab
-      // nobody is looking at.
-      if (document.hidden || runningRef.current || busyRef.current) {
-        setNextAt(Date.now() + AUTO_MS); // don't let the countdown sit at 0s
-        return;
-      }
-      try {
-        const w = await (await fetch('/api/wire')).json();
-        if (wireSeen.current) {
-          const fresh = (w.items || []).filter((i) => !wireSeen.current.has(i.link)).length;
-          if (fresh < NEW_ITEMS_TO_RESWEEP) {
-            setAutoNote(
-              `Checked ${new Date().toLocaleTimeString()} — ${fresh || 'no'} new headline${fresh === 1 ? '' : 's'} since the last sweep, not enough to re-run.`
-            );
-            setNextAt(Date.now() + AUTO_MS);
-            return;
-          }
-          setAutoNote(`${fresh} new headlines on the wire — re-sweeping.`);
+        if (!alive) return;
+        setSweeper(last.sweeper || null);
+        if (last?.clusters?.length) {
+          setResult((prev) =>
+            prev?.finishedAt === last.finishedAt ? prev : last
+          );
+          setFetchedAt(last.finishedAt || null);
+          if (Array.isArray(last.wireLinks)) wireSeen.current = new Set(last.wireLinks);
         }
       } catch {
-        /* if the wire check fails, fall through and sweep anyway */
+        /* the panel keeps whatever it last had */
       }
-      await sweep({ automatic: true });
-    }, AUTO_MS);
-
-    return () => clearInterval(id);
-  }, [open, auto]);
-
-  // Keeps the countdown honest without re-rendering every second.
-  useEffect(() => {
-    if (!nextAt && !fetchedAt) return;
-    const id = setInterval(() => tick((n) => n + 1), 15_000);
-    return () => clearInterval(id);
-  }, [nextAt, fetchedAt]);
+    };
+    pull();
+    const id = setInterval(pull, 20_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   async function useStory(cluster, i) {
     setDrafting(i);
@@ -259,13 +208,13 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
 
       <div className="panel-body">
         <div className="intake-modes">
-          <button className={`intake-mode ${!open ? 'active' : ''}`} onClick={() => setOpen(false)}>
-            <b>Write it myself</b>
-            <small>Paste filed copy into the source panel below.</small>
-          </button>
           <button className={`intake-mode ${open ? 'active' : ''}`} onClick={() => setOpen(true)}>
             <b>Find me a story</b>
             <small>Sweep competitor wires and trending search, then check the CMS.</small>
+          </button>
+          <button className="intake-mode" onClick={onWriteMyself}>
+            <b>Write it myself</b>
+            <small>Go straight to the source panel and paste filed copy.</small>
           </button>
         </div>
 
@@ -305,11 +254,30 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                   'Sweep for stories'
                 )}
               </button>
-              <label className="tick" title="Re-checks the wire every 5 minutes and only re-sweeps when new copy has landed">
-                <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+              <label className="tick" title="The server re-checks the wire every 5 minutes and only re-sweeps when new copy has landed. It keeps running whether or not this panel is open.">
+                <input
+                  type="checkbox"
+                  checked={!!sweeper?.auto}
+                  onChange={async (e) => {
+                    const on = e.target.checked;
+                    setSweeper((s) => ({ ...(s || {}), auto: on }));
+                    const r = await fetch('/api/discover/auto', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ on }),
+                    });
+                    if (r.ok) setSweeper(await r.json());
+                  }}
+                />
                 Auto
                 <span className="meter">
-                  {auto ? (nextAt ? `next check in ${countdown(nextAt)}` : 'every 5 min') : 'off'}
+                  {sweeper?.auto
+                    ? sweeper.running
+                      ? 'sweeping now…'
+                      : sweeper.nextCheckAt
+                      ? `next check in ${countdown(new Date(sweeper.nextCheckAt).getTime())}`
+                      : 'every 5 min'
+                    : 'off'}
                 </span>
               </label>
               {fetchedAt && !running && (
@@ -317,8 +285,8 @@ export default function StoryDiscovery({ meta, onUseStory, busy }) {
                   Updated {ago(fetchedAt)}
                 </span>
               )}
-              {(running || autoNote) && (
-                <span className="meter">{running ? phase || 'Working…' : autoNote}</span>
+              {(running || sweeper?.lastSkip) && (
+                <span className="meter">{running ? phase || 'Working…' : sweeper?.lastSkip}</span>
               )}
             </div>
 

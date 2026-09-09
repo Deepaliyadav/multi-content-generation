@@ -9,6 +9,7 @@ import { useState } from 'react';
  * than picking from nothing.
  */
 export default function Composer({
+  onBack,
   meta,
   story,
   setStory,
@@ -40,7 +41,13 @@ export default function Composer({
         <div className="panel-head">
           <span className="panel-num">01</span>
           <h2>Source story</h2>
-          <span className="count">step 1 of 3 · paste the copy</span>
+          {onBack ? (
+            <button className="btn btn-sm head-action" onClick={onBack}>
+              ← Back to intake
+            </button>
+          ) : (
+            <span className="count">step 1 of 3 · paste the copy</span>
+          )}
         </div>
 
         <div className="panel-body">

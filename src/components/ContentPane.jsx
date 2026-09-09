@@ -51,6 +51,7 @@ function Pane({
   format, output, stale, patches, visualBefore,
   onSave, onRegenerate, busy, error, language, story, status, publish, voice,
   languages = [], onLanguage, versions = [], activeVersion = 0, onVersion, rewriteNote,
+  onApprove, approvedAt,
 }) {
   const preview = usePreview();
   const [steer, setSteer] = useState('');
@@ -225,6 +226,15 @@ function Pane({
           <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
             {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
           </button>
+          {onApprove && (
+            <button
+              className={`btn btn-sm ${approvedAt ? 'btn-ink' : ''}`}
+              onClick={() => onApprove(!approvedAt)}
+              title={approvedAt ? `Approved ${new Date(approvedAt).toLocaleString()}` : 'Sign this format off for publication'}
+            >
+              {approvedAt ? '✓ Approved' : 'Approve'}
+            </button>
+          )}
           {!busy && rewriteNote && (
             <span className={`regen-note ${rewriteNote.changed ? 'moved' : ''}`}>
               {rewriteNote.changed

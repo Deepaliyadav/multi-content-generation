@@ -28,11 +28,19 @@ const sourceAsOutput = (story) => ({
 export default function App() {
   const [meta, setMeta] = useState(null);
   const [stage, setStage] = useState('compose'); // compose | working | review
+  // Intake is two steps, not one page: pick a story (or choose to write one),
+  // then work on it. Stacking both meant the source panel sat empty under a
+  // list you had not finished reading.
+  const [intakeDone, setIntakeDone] = useState(false);
   const [view, setView] = useState('board'); // board | desk
   // Set when the desk is reviewing a stored rundown rather than an ad-hoc one.
   const [rundownId, setRundownId] = useState(null);
   const [approvals, setApprovals] = useState({});
   const [rundownStatus, setRundownStatus] = useState(null);
+  const [rundownBusy, setRundownBusy] = useState(false);
+  // Discarding and publishing are two-step: the button arms, a second and
+  // differently-worded click commits. Both are decisions about a whole story.
+  const [confirming, setConfirming] = useState(null);
   const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
   // What the last plain rewrite actually did. A rewrite against an unchanged
   // ledger legitimately returns near-identical copy, which reads as a dead
@@ -242,6 +250,31 @@ export default function App() {
 
   /* ── targeted regeneration ──────────────────────────────────────────── */
 
+  // While an autopilot rundown is being written, follow its progress live and
+  // switch to review the moment it lands.
+  useEffect(() => {
+    if (!rundownId || stage !== 'working') return;
+    const es = new EventSource('/api/autopilot/events');
+    es.onmessage = (m) => {
+      let ev;
+      try {
+        ev = JSON.parse(m.data);
+      } catch {
+        return;
+      }
+      if (ev.id !== rundownId) return;
+      if (ev.type === 'rundown:format') {
+        setStatus((s) => ({ ...s, [ev.formatId]: ev.state }));
+        if (ev.ms) setTimes((t) => ({ ...t, [ev.formatId]: ev.ms }));
+      } else if (ev.type === 'rundown:facts') {
+        setPhase('Writing the formats');
+      } else if (ev.type === 'rundown:done' || ev.type === 'rundown:error') {
+        openRundown(rundownId);
+      }
+    };
+    return () => es.close();
+  }, [rundownId, stage]);
+
   /** Load a produced rundown into the review pane. */
   async function openRundown(id) {
     setError(null);
@@ -255,14 +288,32 @@ export default function App() {
       setOutputs(r.outputs || {});
       setApprovals(r.approvals || {});
       setRundownStatus(r.status);
-      setStatus(Object.fromEntries(Object.keys(r.outputs || {}).map((k) => [k, 'done'])));
-      setSelected(new Set(Object.keys(r.outputs || {})));
-      setActive(Object.keys(r.outputs || {})[0] || null);
       setDiff(null);
       setStaleReport({});
       setPatches({});
-      setStage('review');
       setView('desk');
+      setLedgerOpen(true);
+
+      if (r.status === 'generating') {
+        // Still being written. Open on the progress view — every format the
+        // desk will produce, with the ones already done marked — rather than an
+        // empty review pane, which is what an unfinished rundown used to give.
+        const p = r.progress || {};
+        setSelected(new Set(allFormats.map((f) => f.id)));
+        setStatus(
+          Object.fromEntries(allFormats.map((f) => [f.id, p.formats?.[f.id] || 'queued']))
+        );
+        setTimes(p.times || {});
+        setActive(null);
+        setPhase('Writing the formats');
+        setStage('working');
+        return;
+      }
+
+      setStatus(Object.fromEntries(Object.keys(r.outputs || {}).map((k) => [k, 'done'])));
+      setSelected(new Set(Object.keys(r.outputs || {})));
+      setActive(Object.keys(r.outputs || {})[0] || null);
+      setStage('review');
     } catch (e) {
       setError(`Could not open that rundown: ${String(e.message || e)}`);
     }
@@ -281,6 +332,25 @@ export default function App() {
       setRundownStatus(r.status);
     } catch (e) {
       setError(String(e.message || e));
+    }
+  }
+
+  /** Sign off every format at once. */
+  async function approveAll() {
+    if (!rundownId) return;
+    setRundownBusy(true);
+    try {
+      const r = await (await fetch(`/api/rundowns/${rundownId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved: true }),
+      })).json();
+      setApprovals(r.approvals || {});
+      setRundownStatus(r.status);
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setRundownBusy(false);
     }
   }
 
@@ -426,6 +496,9 @@ export default function App() {
 
   const showRail = stage === 'working' || (stage === 'review' && ledgerOpen);
   const activeFormat = formats.find((f) => f.id === active) || formats[0] || null;
+  const formatCount = Object.keys(outputs).length;
+  const approvedCount = Object.keys(outputs).filter((k) => approvals[k]).length;
+  const allApproved = formatCount > 0 && approvedCount === formatCount;
 
   return (
     <>
@@ -453,6 +526,7 @@ export default function App() {
               setApprovals({});
               setRundownStatus(null);
               setStage('compose');
+              setIntakeDone(false);
               setView('desk');
             }}
           >
@@ -496,7 +570,7 @@ export default function App() {
             </div>
           )}
 
-          {stage === 'compose' && (
+          {stage === 'compose' && !intakeDone && (
             <StoryDiscovery
               meta={meta}
               busy={busy}
@@ -504,11 +578,18 @@ export default function App() {
                 setStory({ headline: b.headline, body: b.body });
                 setSample(null);
                 setBrief({ ...b, from: cluster.headline, origin: cluster.origin });
+                setIntakeDone(true);
+              }}
+              onWriteMyself={() => {
+                setStory({ headline: '', body: '' });
+                setSample(null);
+                setBrief(null);
+                setIntakeDone(true);
               }}
             />
           )}
 
-          {stage === 'compose' && brief && (
+          {stage === 'compose' && intakeDone && brief && (
             <div className="banner" style={{ marginBottom: 14 }}>
               <span className="banner-mark">⚑</span>
               <div>
@@ -523,8 +604,9 @@ export default function App() {
             </div>
           )}
 
-          {stage === 'compose' && (
+          {stage === 'compose' && intakeDone && (
             <Composer
+              onBack={() => setIntakeDone(false)}
               meta={meta}
               story={story}
               setStory={setStory}
@@ -675,11 +757,121 @@ export default function App() {
                   <button className="btn btn-sm" onClick={() => setLedgerOpen((v) => !v)}>
                     {ledgerOpen ? 'Hide' : 'Show'} fact ledger · {facts.length}
                   </button>
-                  <button className="btn btn-sm" onClick={() => setStage('compose')}>
+                  {rundownId && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setRundownId(null);
+                        setApprovals({});
+                        setRundownStatus(null);
+                        setView('board');
+                      }}
+                    >
+                      ← Desk board
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => {
+                      setStage('compose');
+                      setIntakeDone(false);
+                    }}
+                  >
                     ← New story
                   </button>
                 </div>
               </div>
+
+              {rundownId && (
+                <div className={`verdict ${rundownStatus === 'published' ? 'is-published' : ''}`}>
+                  <div className="verdict-state">
+                    <b>
+                      {approvedCount} of {formatCount}
+                    </b>
+                    <span>
+                      formats approved
+                      {rundownStatus === 'published'
+                        ? ' · published'
+                        : rundownStatus === 'discarded'
+                        ? ' · discarded'
+                        : allApproved
+                        ? ' · ready to publish'
+                        : ''}
+                    </span>
+                    <div className="verdict-bar" aria-hidden="true">
+                      <i style={{ width: `${formatCount ? (approvedCount / formatCount) * 100 : 0}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="verdict-actions">
+                    {!allApproved && (
+                      <button className="btn btn-sm" disabled={rundownBusy} onClick={approveAll}>
+                        Approve all {formatCount - approvedCount} remaining
+                      </button>
+                    )}
+
+                    {confirming === 'discard' ? (
+                      <>
+                        <button
+                          className="btn btn-sm danger"
+                          disabled={rundownBusy}
+                          onClick={async () => {
+                            await setRundownState('discarded');
+                            setConfirming(null);
+                            setView('board');
+                          }}
+                        >
+                          Yes, discard this rundown
+                        </button>
+                        <button className="btn btn-sm" onClick={() => setConfirming(null)}>
+                          Keep it
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="btn btn-sm"
+                        disabled={rundownBusy || rundownStatus === 'published'}
+                        onClick={() => setConfirming('discard')}
+                      >
+                        Reject
+                      </button>
+                    )}
+
+                    {confirming === 'publish' ? (
+                      <>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          disabled={rundownBusy}
+                          onClick={async () => {
+                            await setRundownState('published');
+                            setConfirming(null);
+                          }}
+                        >
+                          Yes, mark {formatCount} formats published
+                        </button>
+                        <button className="btn btn-sm" onClick={() => setConfirming(null)}>
+                          Not yet
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        disabled={rundownBusy || !allApproved || rundownStatus === 'published'}
+                        title={
+                          rundownStatus === 'published'
+                            ? 'Already published'
+                            : allApproved
+                            ? 'Mark every approved format as published'
+                            : `Approve all ${formatCount} formats first — ${formatCount - approvedCount} still unsigned`
+                        }
+                        onClick={() => setConfirming('publish')}
+                      >
+                        {rundownStatus === 'published' ? '✓ Published' : 'Publish'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="output-grid">
                 <FormatRail

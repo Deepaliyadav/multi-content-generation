@@ -11,7 +11,8 @@ import { discover, draftBrief, trendsReady } from './discover.js';
 import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
-import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot } from './autopilot.js';
+import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery } from './sweeper.js';
+import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress } from './autopilot.js';
 import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS, MEDIA_DIR, recoverOrphans, rebuildIndex } from './store.js';
 import crypto from 'node:crypto';
 import { FORMATS, GROUPS, PROGRESS_VERB } from './formats.js';
@@ -174,7 +175,9 @@ app.get('/api/rundowns', (req, res) => {
 app.get('/api/rundowns/:id', async (req, res) => {
   const r = await getRundown(req.params.id);
   if (!r) return res.status(404).json({ error: 'No such rundown.' });
-  res.json(r);
+  // A rundown still being written carries its live progress, so opening it
+  // mid-flight shows the desk working rather than an empty pane.
+  res.json({ ...r, progress: liveProgress(req.params.id) });
 });
 
 /** Editor approves one format, or all of them. */
@@ -262,14 +265,21 @@ app.get('/api/wire', async (_req, res) => {
 /* ── story discovery (competitor wires + trending topics) ─────────────── */
 
 /**
- * The last completed sweep, kept so the desk opens on the list it already paid
- * for rather than an empty panel. In memory by design — it is a cache of a live
- * wire, and a restart should go and look again rather than serve yesterday.
+ * The last completed sweep plus the schedule that produced it, so the panel can
+ * show both what it found and when it will look again.
  */
-let lastDiscovery = null;
-
 app.get('/api/discover/last', (_req, res) => {
-  res.json(lastDiscovery || { empty: true });
+  const last = lastDiscovery();
+  res.json({ ...(last || { empty: true }), sweeper: sweeperStatus() });
+});
+
+/** Turn the standing sweep on or off, or force one immediately. */
+app.post('/api/discover/auto', (req, res) => res.json(setSweeperAuto(req.body?.on !== false)));
+
+app.post('/api/discover/now', async (req, res) => {
+  try {
+    res.json(await runSweep({ force: true, ...(req.body || {}) }));
+  } catch (e) { fail(res, e); }
 });
 
 app.post('/api/discover', async (req, res) => {
@@ -282,14 +292,7 @@ app.post('/api/discover', async (req, res) => {
   });
   const send = (o) => res.write(`${JSON.stringify(o)}\n`);
   try {
-    const out = await discover({ useRss, useTrending }, send);
-    lastDiscovery = {
-      ...out,
-      finishedAt: new Date().toISOString(),
-      // out.wireLinks comes from the sweep itself, so it is populated whether or
-      // not anything has warmed the /api/wire cache.
-      wireLinks: out.wireLinks ?? wireCache.payload?.items?.map((i) => i.link) ?? null,
-    };
+    await discover({ useRss, useTrending }, send);
   } catch (e) {
     send({ type: 'fatal', error: String(e?.message || e) });
   }
@@ -564,6 +567,8 @@ rebuildIndex()
   })
   .catch(() => {});
 
+startSweeper();
+
 app.listen(PORT, () => {
   console.log(`\n  Living Story Sync — API on http://localhost:${PORT}`);
   // Names only — a value is never printed, logged, or sent to the browser.
@@ -574,6 +579,8 @@ app.listen(PORT, () => {
   console.log(`  Images: ${imageProviderLabel}`);
   console.log(`  Anchor voice: ${voiceReady() ? `ElevenLabs · ${voiceModel()}` : `off — ${voiceHint()}`}`);
   console.log(`  Discovery: ${configuredFeeds().length} competitor feeds · trending ${trendsReady ? 'on' : 'off'} · ${cmsLabel}`);
+  const sw = sweeperStatus();
+  console.log(`  Standing sweep: ${sw.auto ? `every ${Math.round(sw.intervalMs / 60000)} min` : 'off'} (server-side)`);
   console.log(
     `  Instagram publishing: ${
       !zernioReady()

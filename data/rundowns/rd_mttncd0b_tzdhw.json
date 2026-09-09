@@ -1,0 +1,148 @@
+{
+  "id": "rd_mttncd0b_tzdhw",
+  "status": "generating",
+  "cluster": {
+    "headline": "Government clears satellite spectrum allocation, easing way for Starlink in India",
+    "summary": "The Digital Communications Commission approved TRAI's recommendations on satellite spectrum allocation, clearing the path for satellite broadband from Starlink, Eutelsat OneWeb and Reliance Jio in India.",
+    "beat": "Tech",
+    "topics": [
+      "Starlink",
+      "satellite spectrum",
+      "TRAI",
+      "broadband"
+    ],
+    "sources": [
+      {
+        "source": "NDTV Hindi",
+        "title": "बिना टावर कोने-कोने में चलेगा रॉकेट-स्पीड इंटरनेट! Starlink को सरकार से मिली हरी झंडी",
+        "link": "https://ndtv.in/tech/elon-musk-starlink-gets-green-light-for-satellite-broadband-india-12021395#publisher=newsstand",
+        "published": "2026-09-09T04:43:24.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.5,
+      "corroboration": 0.33,
+      "recency": 0.96,
+      "trending": 0,
+      "beatWeight": 0.6,
+      "demand": 0.505
+    },
+    "pickReason": "Satellite spectrum clearance reshapes broadband access and telecom economics for millions of readers",
+    "priority": 3
+  },
+  "pickReason": "Satellite spectrum clearance reshapes broadband access and telecom economics for millions of readers",
+  "score": 0.505,
+  "story": {
+    "headline": "Panel clears satellite spectrum allocation rules, opening door for Starlink in India",
+    "body": "The Digital Communications Commission has approved TRAI's recommendations on satellite spectrum allocation, according to the intake note on this story, a step that would clear the way for satellite broadband services in India from Starlink, Eutelsat OneWeb and Reliance Jio.\n\nNDTV Hindi reported on September 9 that Starlink has received a green light from the government, framing the development as opening the way for high-speed internet reach in areas without conventional tower infrastructure. That characterisation is NDTV Hindi's and has not been independently confirmed by this desk.\n\nThe wire material available so far does not specify the pricing method for the spectrum, the duration of any allocation, or the conditions attached to it. Those details are not yet confirmed.\n\nNo statement from the Department of Telecommunications, TRAI, Starlink, Eutelsat OneWeb or Reliance Jio is contained in the material seen so far. No official quotes should be used until obtained directly.\n\nIt is also not confirmed from the available material whether this approval is the final regulatory step before commercial launch, or whether separate licensing and security clearances remain outstanding for any of the named operators.\n\nBefore publication the desk must confirm: the date and exact wording of the Digital Communications Commission decision; the specific TRAI recommendations accepted, including spectrum pricing and tenure; the current licensing status of Starlink, Eutelsat OneWeb and Reliance Jio; any expected service launch timeline; and on-record comment from the government and the companies. The single wire item here is a Hindi-language report and should be checked against the primary official announcement."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Approving body",
+      "value": "Digital Communications Commission",
+      "type": "name",
+      "evidence": "The Digital Communications Commission has approved TRAI's recommendations on satellite spectrum allocation",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Decision",
+      "value": "approved TRAI recommendations on satellite spectrum allocation",
+      "type": "status",
+      "evidence": "has approved TRAI's recommendations on satellite spectrum allocation",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Named operators",
+      "value": "Starlink, Eutelsat OneWeb, Reliance Jio",
+      "type": "name",
+      "evidence": "satellite broadband services in India from Starlink, Eutelsat OneWeb and Reliance Jio",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Country",
+      "value": "India",
+      "type": "location",
+      "evidence": "satellite broadband services in India",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Reporting outlet",
+      "value": "NDTV Hindi",
+      "type": "attribution",
+      "evidence": "NDTV Hindi reported on September 9",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Report date",
+      "value": "September 9",
+      "type": "date",
+      "evidence": "NDTV Hindi reported on September 9",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Starlink status claim",
+      "value": "green light from government",
+      "type": "status",
+      "evidence": "Starlink has received a green light from the government",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Pricing details",
+      "value": "not specified",
+      "type": "status",
+      "evidence": "does not specify the pricing method for the spectrum, the duration of any allocation, or the conditions attached to it",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Official statements",
+      "value": "none available",
+      "type": "status",
+      "evidence": "No statement from the Department of Telecommunications, TRAI, Starlink, Eutelsat OneWeb or Reliance Jio is contained in the material seen so far.",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Finality of approval",
+      "value": "not confirmed",
+      "type": "status",
+      "evidence": "not confirmed from the available material whether this approval is the final regulatory step before commercial launch",
+      "grounded": true
+    },
+    {
+      "id": "f11",
+      "label": "Source count",
+      "value": "1",
+      "type": "number",
+      "evidence": "The single wire item here is a Hindi-language report",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T05:17:04.859Z",
+  "updatedAt": "2026-09-09T05:17:22.073Z",
+  "brief": {
+    "headline": "Panel clears satellite spectrum allocation rules, opening door for Starlink in India",
+    "body": "The Digital Communications Commission has approved TRAI's recommendations on satellite spectrum allocation, according to the intake note on this story, a step that would clear the way for satellite broadband services in India from Starlink, Eutelsat OneWeb and Reliance Jio.\n\nNDTV Hindi reported on September 9 that Starlink has received a green light from the government, framing the development as opening the way for high-speed internet reach in areas without conventional tower infrastructure. That characterisation is NDTV Hindi's and has not been independently confirmed by this desk.\n\nThe wire material available so far does not specify the pricing method for the spectrum, the duration of any allocation, or the conditions attached to it. Those details are not yet confirmed.\n\nNo statement from the Department of Telecommunications, TRAI, Starlink, Eutelsat OneWeb or Reliance Jio is contained in the material seen so far. No official quotes should be used until obtained directly.\n\nIt is also not confirmed from the available material whether this approval is the final regulatory step before commercial launch, or whether separate licensing and security clearances remain outstanding for any of the named operators.\n\nBefore publication the desk must confirm: the date and exact wording of the Digital Communications Commission decision; the specific TRAI recommendations accepted, including spectrum pricing and tenure; the current licensing status of Starlink, Eutelsat OneWeb and Reliance Jio; any expected service launch timeline; and on-record comment from the government and the companies. The single wire item here is a Hindi-language report and should be checked against the primary official announcement.",
+    "unverified": true,
+    "sourcedFrom": [
+      "NDTV Hindi"
+    ]
+  }
+}

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
  * only ever fills the queue.
  */
 const STATUS_LABEL = {
-  generating: 'Generating',
+  generating: 'Processing…',
   awaiting_review: 'Needs review',
   approved: 'Approved',
   published: 'Published',
@@ -222,7 +222,10 @@ export default function Dashboard({ onOpen }) {
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen?.(r.id)}
               >
                 <div className="rd-top">
-                  <span className={`chip st st-${r.status}`}>{STATUS_LABEL[r.status] || r.status}</span>
+                  <span className={`chip st st-${r.status}`}>
+                    {r.status === 'generating' && <span className="spinner" />}
+                    {STATUS_LABEL[r.status] || r.status}
+                  </span>
                   {r.beat && <span className="chip">{r.beat}</span>}
                   <span className="rd-time" title={new Date(r.createdAt).toLocaleString()}>
                     {ago(r.createdAt)}
@@ -234,7 +237,9 @@ export default function Dashboard({ onOpen }) {
                 {r.error && <p className="rd-why err">{r.error}</p>}
 
                 <div className="rd-foot">
-                  <span>{r.formats}/13 formats</span>
+                  <span>
+                    {r.formats}/13 formats{r.status === 'generating' ? ' so far' : ''}
+                  </span>
                   <span className={r.approved === r.formats && r.formats ? 'ok' : ''}>
                     {r.approved} approved
                   </span>

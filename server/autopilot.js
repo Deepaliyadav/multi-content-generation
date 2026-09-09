@@ -13,6 +13,7 @@
  */
 import './env.js';
 import { discover } from './discover.js';
+import { freshEnough } from './sweeper.js';
 import { draftBrief } from './discover.js';
 import { selectStories } from './rank.js';
 import { extractFacts, generateOne } from './pipeline.js';
@@ -44,6 +45,20 @@ const state = {
 
 let timer = null;
 const listeners = new Set();
+
+/**
+ * Per-format progress for rundowns currently being written.
+ *
+ * Kept in memory rather than written to disk on every format: an editor opening
+ * a story mid-production needs to see it working, and thirteen extra full-record
+ * writes per rundown buys nothing once it has finished. Cleared when the
+ * rundown lands, because the record itself then tells the whole story.
+ */
+const live = new Map();
+
+export function liveProgress(id) {
+  return live.get(id) || null;
+}
 
 export function onAutopilot(fn) {
   listeners.add(fn);
@@ -106,15 +121,27 @@ async function produce(cluster) {
     const story = { headline: brief.headline, body: brief.body };
     const facts = await extractFacts(story);
     await updateRundown(id, { story, facts, brief });
+    live.set(id, { facts: facts.length, formats: {}, times: {}, startedAt: Date.now() });
     emit({ type: 'rundown:facts', id, facts: facts.length });
 
     const outputs = {};
     const errors = {};
+    const progress = { facts: facts.length, formats: {}, times: {}, startedAt: Date.now() };
+    live.set(id, progress);
+
     await pooled(FORMATS.map((f) => f.id), state.concurrency, async (formatId) => {
+      progress.formats[formatId] = 'running';
+      emit({ type: 'rundown:format', id, formatId, state: 'running' });
+      const t = Date.now();
       try {
         outputs[formatId] = await generateOne({ formatId, story, facts, language: state.language });
+        progress.formats[formatId] = 'done';
+        progress.times[formatId] = Date.now() - t;
+        emit({ type: 'rundown:format', id, formatId, state: 'done', ms: Date.now() - t });
       } catch (e) {
         errors[formatId] = String(e?.message || e);
+        progress.formats[formatId] = 'error';
+        emit({ type: 'rundown:format', id, formatId, state: 'error', error: errors[formatId] });
       }
     });
 
@@ -125,9 +152,11 @@ async function produce(cluster) {
       genMs: Date.now() - started,
     });
     state.produced += 1;
+    live.delete(id);
     emit({ type: 'rundown:done', id, formats: Object.keys(outputs).length, ms: Date.now() - started });
     return rec;
   } catch (e) {
+    live.delete(id);
     await updateRundown(id, { status: STATUS.FAILED, error: String(e?.message || e) });
     emit({ type: 'rundown:error', id, error: String(e?.message || e) });
     return null;
@@ -152,8 +181,11 @@ export async function runCycle({ count = state.count } = {}) {
   emit({ type: 'cycle:start', count: Math.min(count, room) });
 
   try {
-    const sweep = await discover({ useRss: true, useTrending: true });
-    emit({ type: 'cycle:swept', clusters: sweep.clusters.length });
+    // The standing sweep already runs every five minutes; reuse its result
+    // rather than paying for a second identical one.
+    const cached = freshEnough();
+    const sweep = cached || (await discover({ useRss: true, useTrending: true }));
+    emit({ type: 'cycle:swept', clusters: sweep.clusters.length, reused: !!cached });
 
     const { picks, ranked, skipped, rejected } = await selectStories(sweep.clusters, {
       count: Math.min(count, room),

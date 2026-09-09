@@ -20,7 +20,11 @@ export default function ProgressPanel({ formats, status, times, phase }) {
                 {st === 'error' && ' — failed'}
               </span>
               <span className="prow-time">
-                {st === 'done' && times[f.id] ? `${(times[f.id] / 1000).toFixed(1)}s` : st === 'running' ? '···' : ''}
+                {st === 'done' && times[f.id]
+                  ? `${(times[f.id] / 1000).toFixed(1)}s`
+                  : st === 'running'
+                  ? 'processing…'
+                  : ''}
               </span>
             </div>
           );
