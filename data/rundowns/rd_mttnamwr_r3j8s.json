@@ -1,6 +1,6 @@
 {
   "id": "rd_mttnamwr_r3j8s",
-  "status": "awaiting_review",
+  "status": "published",
   "cluster": {
     "headline": "NIA probes Rs 17.29 crore fake currency found in Saharanpur PNB chest",
     "summary": "The NIA is investigating how counterfeit notes worth Rs 17.29 crore reached a Punjab National Bank currency chest in Saharanpur, and what role bank staff played. An arrested bank manager is expected to be questioned about the network.",
@@ -1518,9 +1518,23 @@
       "ms": 64474
     }
   },
-  "approvals": {},
+  "approvals": {
+    "highlights": "2026-09-09T05:21:21.911Z",
+    "newsletter": "2026-09-09T05:21:21.911Z",
+    "video_script": "2026-09-09T05:21:21.911Z",
+    "twitter": "2026-09-09T05:21:21.911Z",
+    "tv_script": "2026-09-09T05:21:21.911Z",
+    "push": "2026-09-09T05:21:21.911Z",
+    "infographic": "2026-09-09T05:21:21.911Z",
+    "translation": "2026-09-09T05:21:21.911Z",
+    "insta_post": "2026-09-09T05:21:21.911Z",
+    "reel": "2026-09-09T05:21:21.911Z",
+    "insta_story": "2026-09-09T05:21:21.911Z",
+    "insta_carousel": "2026-09-09T05:21:21.911Z",
+    "photostory": "2026-09-09T05:21:21.911Z"
+  },
   "createdAt": "2026-09-09T05:15:44.379Z",
-  "updatedAt": "2026-09-09T05:17:04.792Z",
+  "updatedAt": "2026-09-09T05:21:25.130Z",
   "brief": {
     "headline": "NIA said to be probing Rs 17.29 crore fake currency at Saharanpur bank chest",
     "body": "The National Investigation Agency is looking into how counterfeit notes with a face value of Rs 17.29 crore reached a Punjab National Bank currency chest in Saharanpur, according to the intake note on this story.\n\nNDTV Hindi reported on the case, framing its coverage around the question of how the fake currency made its way into the bank's chest and whether an arrested bank manager will disclose details of the network behind it.\n\nThe intake note says investigators are examining what role bank staff played, and that the arrested manager is expected to be questioned about the wider network. Neither the manager's name nor the date of the arrest is available in what we have so far.\n\nNo details are currently confirmed on when the counterfeit notes were detected, who detected them, the denominations involved, or whether any other arrests have been made. There is no comment on record from Punjab National Bank, the NIA or Saharanpur police in the material seen on the wire.\n\nBefore this can run, the desk needs to independently confirm: that the NIA has in fact taken over the case, and under what sections; the Rs 17.29 crore figure and its source; the identity and designation of the arrested manager and the arresting agency; the timeline of detection; and on-record responses from the NIA, PNB and local police. NDTV Hindi's reporting should not be treated as established fact until matched.",

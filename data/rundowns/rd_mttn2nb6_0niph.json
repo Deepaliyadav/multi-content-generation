@@ -1,6 +1,6 @@
 {
   "id": "rd_mttn2nb6_0niph",
-  "status": "awaiting_review",
+  "status": "approved",
   "cluster": {
     "headline": "Heavy rain and landslides shut 12 roads in Uttarakhand's Bageshwar",
     "summary": "Rain and landslides have worsened conditions in Uttarakhand, with a highway and 12 roads closed in Bageshwar and weather warnings for hill districts including Pithoragarh, Chamoli and Uttarkashi.",
@@ -1416,9 +1416,23 @@
       "ms": 84558
     }
   },
-  "approvals": {},
+  "approvals": {
+    "push": "2026-09-09T05:27:50.603Z",
+    "highlights": "2026-09-09T05:27:50.603Z",
+    "newsletter": "2026-09-09T05:27:50.603Z",
+    "video_script": "2026-09-09T05:27:50.603Z",
+    "tv_script": "2026-09-09T05:27:50.603Z",
+    "translation": "2026-09-09T05:27:50.603Z",
+    "infographic": "2026-09-09T05:27:50.603Z",
+    "twitter": "2026-09-09T05:27:50.603Z",
+    "insta_post": "2026-09-09T05:27:50.603Z",
+    "reel": "2026-09-09T05:27:50.603Z",
+    "insta_carousel": "2026-09-09T05:27:50.603Z",
+    "insta_story": "2026-09-09T05:27:50.603Z",
+    "photostory": "2026-09-09T05:27:50.603Z"
+  },
   "createdAt": "2026-09-09T05:09:31.650Z",
-  "updatedAt": "2026-09-09T05:11:11.535Z",
+  "updatedAt": "2026-09-09T05:27:50.610Z",
   "brief": {
     "headline": "Rain, landslides close highway and 12 roads in Uttarakhand's Bageshwar",
     "body": "Heavy rain and landslides have worsened conditions across parts of Uttarakhand, with a highway and 12 roads reported closed in Bageshwar district, according to News18 Hindi.\n\nThe same report said weather warnings are in place for hill districts, and its headline referred to the day's forecast across 13 districts of the state. The intake note lists Pithoragarh, Chamoli and Uttarkashi among the districts covered by warnings.\n\nNews18 Hindi published the report on the morning of September 9. The wire item is the only source currently available to this desk, and no other outlet has been seen matching it.\n\nWhat the report does not specify, at least in the material seen here, is the nature or severity level of the weather warning, which agency issued it, or how long the closed roads are expected to remain shut. No casualties, injuries or damage figures appear in the intake material, and their absence should not be read as confirmation that there are none.\n\nBefore this runs, the desk needs to confirm directly with the India Meteorological Department or the state disaster management authority: the specific warning category and the districts it covers; official confirmation from Bageshwar district administration of the number and identity of blocked roads, including which highway is affected; whether there are any reported casualties or displaced residents; and the expected timeline for restoring traffic. The full News18 Hindi story should also be read in the original Hindi to check whether it carries named officials, quotes or figures not captured in the intake note. Every detail above is currently attributed to a single competitor's report and none of it is independently verified.",

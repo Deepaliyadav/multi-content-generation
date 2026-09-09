@@ -11,7 +11,8 @@ import { discover, draftBrief, trendsReady } from './discover.js';
 import { cms, cmsLabel, cmsSimulated, cmsCanFile, cmsPartial } from './cms.js';
 import { configuredFeeds } from './feeds.js';
 import { fetchAll } from './rss.js';
-import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery } from './sweeper.js';
+import { dispatch, firePending, destinationFor, DESTINATIONS, cmsDraftReady, mailTo } from './destinations.js';
+import { startSweeper, runSweep, sweeperStatus, setSweeperAuto, lastDiscovery, recordSweep } from './sweeper.js';
 import { startAutopilot, stopAutopilot, autopilotStatus, runCycle, onAutopilot, liveProgress } from './autopilot.js';
 import { listRundowns, getRundown, updateRundown, counts as rundownCounts, STATUS, MEDIA_DIR, recoverOrphans, rebuildIndex } from './store.js';
 import crypto from 'node:crypto';
@@ -91,6 +92,11 @@ app.get('/api/meta', (_req, res) => {
       cmsSimulated,
       cmsCanFile,
       cmsPartial,
+    },
+    destinations: {
+      map: DESTINATIONS,
+      cmsDraftReady: cmsDraftReady(),
+      mailTo: mailTo() || null,
     },
     languages: LANGUAGES,
     voice: {
@@ -180,6 +186,38 @@ app.get('/api/rundowns/:id', async (req, res) => {
   res.json({ ...r, progress: liveProgress(req.params.id) });
 });
 
+/**
+ * Send one format to its destination. This is the sign-off: an editor who has
+ * drafted it to the CMS has plainly approved it.
+ */
+app.post('/api/rundowns/:id/dispatch', async (req, res) => {
+  try {
+    const r = await getRundown(req.params.id);
+    if (!r) return res.status(404).json({ error: 'No such rundown.' });
+    const { formatId } = req.body || {};
+    if (!formatId || !r.outputs?.[formatId])
+      return res.status(400).json({ error: 'That format has not been written yet.' });
+
+    const result = await dispatch({
+      formatId,
+      output: r.outputs[formatId],
+      story: r.story,
+      rundownId: r.id,
+    });
+
+    const dispatches = { ...(r.dispatches || {}), [formatId]: { ...result, at: new Date().toISOString() } };
+    const approvals = { ...(r.approvals || {}), [formatId]: new Date().toISOString() };
+    const done = Object.keys(r.outputs).every((k) => approvals[k]);
+
+    const saved = await updateRundown(req.params.id, {
+      dispatches,
+      approvals,
+      status: done ? STATUS.APPROVED : r.status,
+    });
+    res.json({ ...saved, result });
+  } catch (e) { fail(res, e); }
+});
+
 /** Editor approves one format, or all of them. */
 app.post('/api/rundowns/:id/approve', async (req, res) => {
   try {
@@ -203,9 +241,17 @@ app.post('/api/rundowns/:id/status', async (req, res) => {
     const { status } = req.body || {};
     if (!Object.values(STATUS).includes(status))
       return res.status(400).json({ error: `Unknown status "${status}".` });
-    const r = await updateRundown(req.params.id, { status });
-    if (!r) return res.status(404).json({ error: 'No such rundown.' });
-    res.json(r);
+    const cur = await getRundown(req.params.id);
+    if (!cur) return res.status(404).json({ error: 'No such rundown.' });
+
+    let dispatches = cur.dispatches || {};
+    let fired = [];
+    if (status === STATUS.PUBLISHED) {
+      fired = await firePending(cur);
+      for (const f of fired) dispatches = { ...dispatches, [f.formatId]: { ...dispatches[f.formatId], ...f } };
+    }
+    const r = await updateRundown(req.params.id, { status, dispatches });
+    res.json({ ...r, fired });
   } catch (e) { fail(res, e); }
 });
 
@@ -292,7 +338,9 @@ app.post('/api/discover', async (req, res) => {
   });
   const send = (o) => res.write(`${JSON.stringify(o)}\n`);
   try {
-    await discover({ useRss, useTrending }, send);
+    // A sweep run from the panel is still a sweep: record it so a refresh, the
+    // board, and the autopilot all see the same list.
+    recordSweep(await discover({ useRss, useTrending }, send));
   } catch (e) {
     send({ type: 'fatal', error: String(e?.message || e) });
   }

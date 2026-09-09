@@ -28,6 +28,11 @@ const ago = (iso) => {
   return h < 24 ? `${h} hr ago` : `${Math.floor(h / 24)} d ago`;
 };
 
+const inMins = (iso) => {
+  const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  return m <= 0 ? 'due now' : m === 1 ? 'in 1 min' : `in ${m} min`;
+};
+
 /** Group by the day it ran, so a long night reads as a timeline. */
 function groupByDay(rows) {
   const out = new Map();
@@ -170,6 +175,17 @@ export default function Dashboard({ onOpen }) {
             </div>
           </div>
 
+          <p className="sweep-line">
+            {ap.lastRunAt ? (
+              <>
+                Last swept <b>{ago(ap.lastRunAt)}</b>
+              </>
+            ) : (
+              'Not swept yet this session'
+            )}
+            {ap.on && ap.nextRunAt && !ap.capReached && <> · next {inMins(ap.nextRunAt)}</>}
+          </p>
+
           {(live || ap.running) && (
             <div className="live">
               <span className="spinner" /> {live || 'Working…'}
@@ -178,8 +194,7 @@ export default function Dashboard({ onOpen }) {
 
           {ap.capReached && (
             <p className="hint warn-hint">
-              Hourly ceiling reached ({ap.producedLastHour}/{ap.maxPerHour}). Cycles will skip until
-              the hour rolls over — this is the spend guard, not a fault.
+              Hourly ceiling reached ({ap.producedLastHour}/{ap.maxPerHour}) — cycles resume next hour.
             </p>
           )}
 

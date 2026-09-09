@@ -41,6 +41,7 @@ export default function App() {
   // Discarding and publishing are two-step: the button arms, a second and
   // differently-worded click commits. Both are decisions about a whole story.
   const [confirming, setConfirming] = useState(null);
+  const [dispatches, setDispatches] = useState({});
   const [brief, setBrief] = useState(null); // starter brief pulled in from discovery
   // What the last plain rewrite actually did. A rewrite against an unchanged
   // ledger legitimately returns near-identical copy, which reads as a dead
@@ -287,6 +288,7 @@ export default function App() {
       setFacts(r.facts || []);
       setOutputs(r.outputs || {});
       setApprovals(r.approvals || {});
+      setDispatches(r.dispatches || {});
       setRundownStatus(r.status);
       setDiff(null);
       setStaleReport({});
@@ -319,6 +321,33 @@ export default function App() {
     }
   }
 
+  /**
+   * Send one format where it actually goes. This is the sign-off — a format
+   * drafted to the CMS or mailed to a producer has plainly been approved.
+   */
+  async function dispatchFormat(formatId) {
+    if (!rundownId) return;
+    setRundownBusy(true);
+    try {
+      const r = await (await fetch(`/api/rundowns/${rundownId}/dispatch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formatId }),
+      })).json();
+      if (r.error) throw new Error(r.error);
+      setApprovals(r.approvals || {});
+      setDispatches(r.dispatches || {});
+      setRundownStatus(r.status);
+      // A mail destination hands back a prefilled draft for the desk's own
+      // client rather than sending anything itself.
+      if (r.result?.mailto) window.location.href = r.result.mailto;
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setRundownBusy(false);
+    }
+  }
+
   /** Editor signs off one format. An edit later un-approves it again. */
   async function approveFormat(formatId, approved = true) {
     if (!rundownId) return;
@@ -346,6 +375,7 @@ export default function App() {
         body: JSON.stringify({ approved: true }),
       })).json();
       setApprovals(r.approvals || {});
+      setDispatches(r.dispatches || {});
       setRundownStatus(r.status);
     } catch (e) {
       setError(String(e.message || e));
@@ -805,7 +835,7 @@ export default function App() {
 
                   <div className="verdict-actions">
                     {!allApproved && (
-                      <button className="btn btn-sm" disabled={rundownBusy} onClick={approveAll}>
+                      <button className="btn btn-sm btn-approve" disabled={rundownBusy} onClick={approveAll}>
                         Approve all {formatCount - approvedCount} remaining
                       </button>
                     )}
@@ -829,7 +859,7 @@ export default function App() {
                       </>
                     ) : (
                       <button
-                        className="btn btn-sm"
+                        className="btn btn-sm btn-reject"
                         disabled={rundownBusy || rundownStatus === 'published'}
                         onClick={() => setConfirming('discard')}
                       >
@@ -916,6 +946,9 @@ export default function App() {
                   onRegenerate={(steer) => regenerate(activeFormat.id, steer)}
                   rewriteNote={rewriteNote[activeFormat.id]}
                   approvedAt={approvals[activeFormat.id] || null}
+                  destination={meta?.destinations?.map?.[activeFormat.id] || null}
+                  dispatched={dispatches[activeFormat.id] || null}
+                  onDispatch={rundownId ? () => dispatchFormat(activeFormat.id) : null}
                   onApprove={rundownId ? (v) => approveFormat(activeFormat.id, v) : null}
                 />
               </div>

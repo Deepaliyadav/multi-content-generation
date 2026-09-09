@@ -1,6 +1,6 @@
 {
   "id": "rd_mttnamwq_s3s32",
-  "status": "awaiting_review",
+  "status": "published",
   "cluster": {
     "headline": "Bihar floods widen as Ganga sets record level at Bhagalpur gauge",
     "summary": "Bihar's Disaster Management Department reported the Ganga at Sultanganj in Bhagalpur reading 36.80 metres at 8 am on 8 September, above the previous record of 36.75 metres from 17 August 2021, with more than 34 lakh people affected. Earlier copy in the week counted 19.57 lakh people in 330 gram panchayats across 11 districts, rising to 22 lakh across 14 districts, with the Gandak, Kosi, Burhi Gandak and Ganga running high.",
@@ -1556,9 +1556,23 @@
       "ms": 64890
     }
   },
-  "approvals": {},
+  "approvals": {
+    "highlights": "2026-09-09T05:27:21.387Z",
+    "newsletter": "2026-09-09T05:27:21.387Z",
+    "twitter": "2026-09-09T05:27:21.387Z",
+    "video_script": "2026-09-09T05:27:21.387Z",
+    "push": "2026-09-09T05:27:21.387Z",
+    "tv_script": "2026-09-09T05:27:21.387Z",
+    "infographic": "2026-09-09T05:27:21.387Z",
+    "translation": "2026-09-09T05:27:21.387Z",
+    "insta_post": "2026-09-09T05:27:21.387Z",
+    "reel": "2026-09-09T05:27:21.387Z",
+    "insta_story": "2026-09-09T05:27:21.387Z",
+    "insta_carousel": "2026-09-09T05:27:21.387Z",
+    "photostory": "2026-09-09T05:27:21.387Z"
+  },
   "createdAt": "2026-09-09T05:15:44.378Z",
-  "updatedAt": "2026-09-09T05:17:08.276Z",
+  "updatedAt": "2026-09-09T05:27:29.813Z",
   "brief": {
     "headline": "Ganga reported at record level in Bhagalpur as Bihar flood toll widens",
     "body": "The Ganga at Sultanganj in Bhagalpur was recorded at 36.80 metres at 8 am on 8 September, according to figures attributed to Bihar's Disaster Management Department in the intake note for this story. That reading is described as being above the previous high of 36.75 metres, logged on 17 August 2021.\n\nThe same departmental figures put the number of people affected by flooding in the state at more than 34 lakh. The intake note does not break that total down by district, nor does it specify how the department counts an affected person.\n\nEarlier reporting during the week, as summarised in the intake note, gave lower and rising counts: 19.57 lakh people across 330 gram panchayats in 11 districts, then 22 lakh people across 14 districts. The Gandak, Kosi, Burhi Gandak and Ganga were all described as running high.\n\nNo wire copy has been located for this brief. The intake note flags PTI-datelined material from 6 September and a freshest wire item roughly 19 hours old, but neither has been read or verified for this draft, and no quotes or on-the-record comments are available.\n\nThis is a working draft and not for publication as it stands. Before it runs, the desk needs to obtain the Disaster Management Department bulletin directly and confirm the 36.80-metre reading, the record-comparison claim and the 34 lakh affected figure; establish a district-wise breakdown and current warning levels for the four rivers; check whether there are casualties, displacement or relief-camp numbers, none of which appear in the intake note; and pull the original PTI copy. Whether river levels have since risen or receded is not confirmed.",

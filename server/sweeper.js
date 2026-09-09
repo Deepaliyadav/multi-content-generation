@@ -11,19 +11,49 @@
  * the result.
  */
 import './env.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { discover } from './discover.js';
 import { fetchAll } from './rss.js';
 import { configuredFeeds } from './feeds.js';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const CACHE = path.join(here, '..', 'data', 'last-sweep.json');
 
 const INTERVAL_MS = Number(process.env.LSS_SWEEP_INTERVAL_MS || 5 * 60_000);
 /** New headlines needed before re-clustering is worth the spend. */
 const NEW_ITEMS_TO_RESWEEP = Number(process.env.LSS_SWEEP_NEW_ITEMS || 5);
 
+/**
+ * The last sweep survives a restart.
+ *
+ * It is a cache of a live wire, but an empty desk after every restart is worse
+ * than a list that is twenty minutes old and says so — the panel shows its age,
+ * and the next scheduled check refreshes it.
+ */
+function loadCache() {
+  try {
+    return JSON.parse(fs.readFileSync(CACHE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function saveCache(last) {
+  try {
+    fs.mkdirSync(path.dirname(CACHE), { recursive: true });
+    fs.writeFileSync(CACHE, JSON.stringify(last));
+  } catch {
+    /* a cache that cannot be written is not worth failing a sweep over */
+  }
+}
+
 const state = {
   auto: process.env.LSS_SWEEP_AUTO !== '0',
   intervalMs: INTERVAL_MS,
   running: false,
-  last: null,
+  last: loadCache(),
   lastCheckAt: null,
   lastSkip: null,
   nextCheckAt: null,
@@ -74,7 +104,7 @@ export async function runSweep({ force = false, useRss = true, useTrending = tru
   state.lastSkip = null;
   try {
     const out = await discover({ useRss, useTrending });
-    state.last = { ...out, finishedAt: new Date().toISOString() };
+    recordSweep(out);
     return state.last;
   } finally {
     state.running = false;
@@ -82,9 +112,25 @@ export async function runSweep({ force = false, useRss = true, useTrending = tru
   }
 }
 
+/** Store a completed sweep, wherever it was run from. */
+export function recordSweep(out) {
+  state.last = { ...out, finishedAt: new Date().toISOString() };
+  saveCache(state.last);
+  return state.last;
+}
+
 export function startSweeper() {
   if (timer) clearInterval(timer);
   state.nextCheckAt = new Date(Date.now() + state.intervalMs).toISOString();
+
+  // A restart used to mean five minutes of empty desk before the first tick.
+  // If there is nothing cached, look shortly after boot instead of waiting.
+  if (!state.last && state.auto) {
+    const first = setTimeout(() => {
+      if (state.auto) runSweep({ force: true }).catch(() => {});
+    }, Number(process.env.LSS_SWEEP_FIRST_DELAY_MS || 15_000));
+    first.unref?.();
+  }
   timer = setInterval(() => {
     if (state.auto) runSweep().catch(() => {});
   }, state.intervalMs);

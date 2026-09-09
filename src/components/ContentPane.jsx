@@ -51,7 +51,7 @@ function Pane({
   format, output, stale, patches, visualBefore,
   onSave, onRegenerate, busy, error, language, story, status, publish, voice,
   languages = [], onLanguage, versions = [], activeVersion = 0, onVersion, rewriteNote,
-  onApprove, approvedAt,
+  onApprove, approvedAt, destination, dispatched, onDispatch,
 }) {
   const preview = usePreview();
   const [steer, setSteer] = useState('');
@@ -226,14 +226,30 @@ function Pane({
           <button className="btn-regen" disabled={busy} onClick={() => onRegenerate(steer)}>
             {busy ? <><span className="spinner" /> Rewriting…</> : 'Regenerate'}
           </button>
-          {onApprove && (
+          {onDispatch && destination && (
+            <button
+              className={`btn btn-sm ${dispatched ? 'btn-ink' : 'btn-primary'}`}
+              disabled={busy}
+              onClick={onDispatch}
+              title={
+                dispatched
+                  ? `${dispatched.note || ''} ${new Date(dispatched.at).toLocaleString()}`
+                  : `Send this format to its destination — this also signs it off`
+              }
+            >
+              {dispatched ? `✓ ${destination.verb}` : destination.label}
+            </button>
+          )}
+          {onApprove && !onDispatch && (
             <button
               className={`btn btn-sm ${approvedAt ? 'btn-ink' : ''}`}
               onClick={() => onApprove(!approvedAt)}
-              title={approvedAt ? `Approved ${new Date(approvedAt).toLocaleString()}` : 'Sign this format off for publication'}
             >
               {approvedAt ? '✓ Approved' : 'Approve'}
             </button>
+          )}
+          {dispatched?.note && (
+            <span className={`regen-note ${dispatched.delivered ? 'moved' : ''}`}>{dispatched.note}</span>
           )}
           {!busy && rewriteNote && (
             <span className={`regen-note ${rewriteNote.changed ? 'moved' : ''}`}>

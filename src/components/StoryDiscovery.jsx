@@ -127,6 +127,14 @@ export default function StoryDiscovery({ meta, onUseStory, onWriteMyself, busy }
     }
   }
 
+  // Relative times have to move on their own: the poll is every 20 seconds, so
+  // without this the countdown and the "ago" labels sit stale between polls and
+  // look frozen until something else re-renders the panel.
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // The schedule lives on the server, so it keeps running while this panel is
   // closed, while the board is showing, and while the tab is in the background.
   // Here we only read it.
@@ -281,8 +289,20 @@ export default function StoryDiscovery({ meta, onUseStory, onWriteMyself, busy }
                 </span>
               </label>
               {fetchedAt && !running && (
-                <span className="meter updated" title={new Date(fetchedAt).toLocaleString()}>
-                  Updated {ago(fetchedAt)}
+                <span
+                  className="meter updated"
+                  title={`Wire last checked ${
+                    sweeper?.lastCheckAt ? ago(sweeper.lastCheckAt) : 'unknown'
+                  }. Results last changed ${new Date(fetchedAt).toLocaleString()}. A check only
+re-sweeps when enough new copy has landed.`}
+                >
+                  {sweeper?.lastCheckAt && new Date(sweeper.lastCheckAt) > new Date(fetchedAt) ? (
+                    <>
+                      Checked {ago(sweeper.lastCheckAt)} · stories {ago(fetchedAt)}
+                    </>
+                  ) : (
+                    <>Updated {ago(fetchedAt)}</>
+                  )}
                 </span>
               )}
               {(running || sweeper?.lastSkip) && (
