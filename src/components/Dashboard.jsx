@@ -393,7 +393,7 @@ export default function Dashboard({ onOpen }) {
           )}
 
           <div className="btn-row filters">
-            {['all', 'unclaimed', 'awaiting_review', 'draft', 'failed'].map((f) => (
+            {['all', 'unclaimed', 'generating', 'awaiting_review', 'draft', 'failed'].map((f) => (
               <button
                 key={f}
                 className={`btn btn-sm ${filter === f ? 'btn-ink' : ''} ${f === 'unclaimed' ? 'is-unclaimed' : ''}`}
@@ -483,6 +483,18 @@ export default function Dashboard({ onOpen }) {
                 <h3>{r.headline}</h3>
                 {r.pickReason && <p className="rd-why">Why this: {r.pickReason}</p>}
                 {r.error && <p className="rd-why err">{readable(r.error)}</p>}
+
+                {r.status === 'generating' && (
+                  <div className="writing">
+                    <div className="writing-bar">
+                      <i style={{ width: `${((r.formats || 0) / (r.totalFormats || 13)) * 100}%` }} />
+                    </div>
+                    <span>
+                      {r.formats || 0} of {r.totalFormats || 13} written
+                      {r.writing ? ` · ${r.writing} in hand` : ''}
+                    </span>
+                  </div>
+                )}
 
                 <div className="rd-foot">
                   {!!r.sources?.length && (

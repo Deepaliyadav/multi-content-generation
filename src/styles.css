@@ -2407,3 +2407,59 @@ html, body { max-width: 100%; overflow-x: hidden; }
 }
 .pager-dot:hover { border-color: var(--line-strong); color: var(--text); }
 .pager-dot.on { border-color: var(--teal); color: var(--teal); background: var(--teal-wash); }
+
+/* ── a rundown being written ──────────────────────────────────────────── */
+/* Gold rail like the unclaimed board, but breathing — the one card on the
+   screen where something is happening right now should say so without a
+   spinner shouting over the review queue. */
+
+.rd-generating {
+  border-left-color: var(--gold);
+  background: linear-gradient(180deg, rgba(217, 164, 65, .05), transparent 60%), var(--bg-panel);
+}
+.rd-generating .chip.st-generating { animation: soft-pulse 1.9s ease-in-out infinite; }
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}
+
+.writing { margin: 2px 0 10px; }
+.writing-bar {
+  height: 3px;
+  background: var(--bg-sunken);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  position: relative;
+}
+.writing-bar i {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transition: width .5s var(--ease, ease);
+}
+/* A sheen travelling the track: progress is real, but between formats landing
+   nothing moves for several seconds, and a frozen bar reads as a hang. */
+.writing-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(217, 164, 65, .5), transparent);
+  transform: translateX(-100%);
+  animation: sheen 1.8s ease-in-out infinite;
+}
+@keyframes sheen {
+  to { transform: translateX(100%); }
+}
+
+.writing span {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-generating .chip.st-generating { animation: none; }
+  .writing-bar::after { animation: none; opacity: 0; }
+}

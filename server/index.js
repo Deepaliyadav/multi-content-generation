@@ -217,8 +217,24 @@ app.get('/api/autopilot/events', (req, res) => {
 
 app.get('/api/rundowns', (req, res) => {
   const { status, limit } = req.query;
+  // Outputs are only written once a rundown finishes, so a card being produced
+  // would otherwise sit at 0/13 for the whole minute it takes. Merge the live
+  // counter in so the board can show it actually moving.
+  const rows = listRundowns({ status, limit: limit ? Number(limit) : undefined }).map((r) => {
+    if (r.status !== STATUS.GENERATING) return r;
+    const p = liveProgress(r.id);
+    if (!p) return r;
+    const states = Object.values(p.formats || {});
+    return {
+      ...r,
+      factCount: p.facts ?? r.factCount,
+      writing: states.filter((v) => v === 'running').length,
+      formats: states.filter((v) => v === 'done').length,
+      totalFormats: 13,
+    };
+  });
   res.json({
-    rundowns: listRundowns({ status, limit: limit ? Number(limit) : undefined }),
+    rundowns: rows,
     counts: rundownCounts(),
     autopilot: autopilotStatus(),
   });

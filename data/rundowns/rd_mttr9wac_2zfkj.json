@@ -1,0 +1,156 @@
+{
+  "id": "rd_mttr9wac_2zfkj",
+  "status": "generating",
+  "cluster": {
+    "headline": "US moves to sanction Iran's aviation industry, targeting IRGC amid Hormuz tensions",
+    "summary": "Reports say the United States is expanding pressure on Iran beyond the Strait of Hormuz by targeting the country's aviation industry and the IRGC.",
+    "beat": "World",
+    "topics": [
+      "Iran",
+      "US sanctions",
+      "IRGC",
+      "Hormuz"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "अमेरिका का 'दमघोंटू' प्लान एक्टिव, ईरान की गर्दन दबोचकर IRGC को करेगा चोक, होर्मुज का बदला आसमान में",
+        "link": "https://hindi.news18.com/world/middle-east-us-sanctions-iran-aviation-industry-chokes-27-airlines-with-third-country-firm-targeted-ws-l-10819080.html",
+        "published": "2026-09-09T06:27:33.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.7,
+      "corroboration": 0.33,
+      "recency": 0.95,
+      "trending": 0,
+      "beatWeight": 0.8,
+      "demand": 0.553
+    },
+    "pickReason": "Sanctions on Iran aviation and IRGC carry real consequence for oil, airfares and Indian trade exposure",
+    "priority": 1
+  },
+  "pickReason": "Sanctions on Iran aviation and IRGC carry real consequence for oil, airfares and Indian trade exposure",
+  "score": 0.553,
+  "story": {
+    "headline": "Report: US weighing new pressure on Iran's aviation sector, IRGC",
+    "body": "The United States is preparing to widen its pressure campaign against Iran by targeting the country's aviation industry and the Islamic Revolutionary Guard Corps, according to a News18 Hindi report published on September 9.\n\nThe News18 Hindi item frames the move as an extension of US pressure beyond the Strait of Hormuz, the shipping chokepoint that has been at the centre of recent tensions. The report links the aviation focus to that maritime standoff, but the specific connection is not spelled out in the material available to this desk.\n\nNo details of the measures themselves have been confirmed. The intake note and the single source item seen on the wire do not identify which Iranian airlines, aircraft, companies or individuals would be affected, nor do they name the US agency or department said to be behind the step.\n\nThere is no timeline in the available material for when any action would be announced or take effect, and no indication of whether the reported plan involves formal sanctions designations, export restrictions or some other mechanism.\n\nThe desk has not seen any Iranian or US official comment on the report, and no response from the IRGC or Iran's civil aviation authorities has been reported in the material at hand. Reuters, AP and other wires have not been checked against this item.\n\nBefore publication, the desk needs to confirm: whether any US action has in fact been announced and by which body; the legal instrument and named targets; the factual basis for tying the aviation measures to the Strait of Hormuz; official comment from Washington and Tehran; and independent corroboration from at least one international wire, since this brief currently rests on a single News18 Hindi report."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Source outlet",
+      "value": "News18 Hindi",
+      "type": "name",
+      "evidence": "according to a News18 Hindi report",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Publication date",
+      "value": "September 9",
+      "type": "date",
+      "evidence": "a News18 Hindi report published on September 9",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Country targeted",
+      "value": "Iran",
+      "type": "location",
+      "evidence": "preparing to widen its pressure campaign against Iran",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Sectors targeted",
+      "value": "aviation industry, Islamic Revolutionary Guard Corps",
+      "type": "other",
+      "evidence": "targeting the country's aviation industry and the Islamic Revolutionary Guard Corps",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Acting state",
+      "value": "United States",
+      "type": "name",
+      "evidence": "The United States is preparing to widen its pressure campaign",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Linked chokepoint",
+      "value": "Strait of Hormuz",
+      "type": "location",
+      "evidence": "an extension of US pressure beyond the Strait of Hormuz",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Measures status",
+      "value": "unconfirmed",
+      "type": "status",
+      "evidence": "No details of the measures themselves have been confirmed.",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "Named targets",
+      "value": "none identified",
+      "type": "status",
+      "evidence": "do not identify which Iranian airlines, aircraft, companies or individuals would be affected",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "US body",
+      "value": "unnamed",
+      "type": "attribution",
+      "evidence": "nor do they name the US agency or department said to be behind the step",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Timeline",
+      "value": "none",
+      "type": "status",
+      "evidence": "There is no timeline in the available material",
+      "grounded": true
+    },
+    {
+      "id": "f11",
+      "label": "Official comment",
+      "value": "none seen",
+      "type": "status",
+      "evidence": "The desk has not seen any Iranian or US official comment on the report",
+      "grounded": true
+    },
+    {
+      "id": "f12",
+      "label": "Wire corroboration",
+      "value": "not checked",
+      "type": "status",
+      "evidence": "Reuters, AP and other wires have not been checked against this item.",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T07:07:08.340Z",
+  "updatedAt": "2026-09-09T07:07:26.362Z",
+  "brief": {
+    "headline": "Report: US weighing new pressure on Iran's aviation sector, IRGC",
+    "body": "The United States is preparing to widen its pressure campaign against Iran by targeting the country's aviation industry and the Islamic Revolutionary Guard Corps, according to a News18 Hindi report published on September 9.\n\nThe News18 Hindi item frames the move as an extension of US pressure beyond the Strait of Hormuz, the shipping chokepoint that has been at the centre of recent tensions. The report links the aviation focus to that maritime standoff, but the specific connection is not spelled out in the material available to this desk.\n\nNo details of the measures themselves have been confirmed. The intake note and the single source item seen on the wire do not identify which Iranian airlines, aircraft, companies or individuals would be affected, nor do they name the US agency or department said to be behind the step.\n\nThere is no timeline in the available material for when any action would be announced or take effect, and no indication of whether the reported plan involves formal sanctions designations, export restrictions or some other mechanism.\n\nThe desk has not seen any Iranian or US official comment on the report, and no response from the IRGC or Iran's civil aviation authorities has been reported in the material at hand. Reuters, AP and other wires have not been checked against this item.\n\nBefore publication, the desk needs to confirm: whether any US action has in fact been announced and by which body; the legal instrument and named targets; the factual basis for tying the aviation measures to the Strait of Hormuz; official comment from Washington and Tehran; and independent corroboration from at least one international wire, since this brief currently rests on a single News18 Hindi report.",
+    "unverified": true,
+    "sourcedFrom": [
+      "News18 Hindi"
+    ]
+  }
+}

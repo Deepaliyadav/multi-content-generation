@@ -1,0 +1,140 @@
+{
+  "id": "rd_mttr9wac_unqlz",
+  "status": "generating",
+  "cluster": {
+    "headline": "Supreme Court asks complainant to file proper plea in Rahul Gandhi defamation case",
+    "summary": "The Supreme Court told the complainant seeking an early hearing in the criminal defamation case against Rahul Gandhi to file a proper application. CJI Suryakant said all litigants are equal before the court.",
+    "beat": "Politics",
+    "topics": [
+      "Supreme Court",
+      "Rahul Gandhi",
+      "defamation",
+      "CJI Suryakant"
+    ],
+    "sources": [
+      {
+        "source": "News18 Hindi",
+        "title": "'राहुल गांधी कोई VVIP नहीं', सुप्रीम कोर्ट में दी दलील तो CJI सूर्यकांत बोले- हमारे लिए सब बराबर",
+        "link": "https://hindi.news18.com/news/nation/cji-suryakant-says-all-are-equal-before-supreme-court-in-rahul-gandhi-defamation-case-hearing-10819144.html",
+        "published": "2026-09-09T07:03:34.000Z"
+      }
+    ],
+    "origin": "rss",
+    "candidates": [],
+    "status": "recommend",
+    "reason": "Nothing close to this in the CMS.",
+    "match": null,
+    "signals": {
+      "outlets": 1,
+      "items": 1,
+      "ageHours": 0.1,
+      "corroboration": 0.33,
+      "recency": 1,
+      "trending": 0,
+      "beatWeight": 0.95,
+      "demand": 0.603
+    },
+    "pickReason": "Fresh Supreme Court development with legal and political stakes; CJI's equality remark is producible from record",
+    "priority": 2
+  },
+  "pickReason": "Fresh Supreme Court development with legal and political stakes; CJI's equality remark is producible from record",
+  "score": 0.603,
+  "story": {
+    "headline": "Supreme Court tells complainant to file proper plea in Rahul Gandhi defamation case",
+    "body": "The Supreme Court has asked a complainant seeking an early hearing in a criminal defamation case against Congress leader Rahul Gandhi to move a proper application, according to the intake note on this story.\n\nNews18 Hindi reported that during the mentioning, the complainant's side argued that Rahul Gandhi was not a VVIP and that the matter should be taken up sooner. The outlet reported that Chief Justice Suryakant responded that all litigants are equal before the court.\n\nThe intake note records the same exchange, saying the CJI observed that everyone is equal so far as the court is concerned, and that the complainant was directed to file a proper plea rather than press for urgent listing orally.\n\nWhich of the several criminal defamation complaints against the Congress MP this relates to is not stated in the material available on the wire, and the desk should not assume it is any particular case. The identity of the complainant, the forum the matter came from, and the alleged defamatory remarks at issue are also not confirmed here.\n\nNor is there anything in the available material on what the court said about a future listing date, whether any other party was represented, or whether Rahul Gandhi's counsel was present.\n\nBefore publication the desk needs to confirm: the specific case and its origin court; the complainant's name; the exact wording of the CJI's remarks from the court record or a reporter present; the composition of the bench; and whether any date has been fixed. Independent confirmation of the News18 Hindi account is required — none of it should run as established fact until then."
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Court",
+      "value": "Supreme Court",
+      "type": "name",
+      "evidence": "The Supreme Court has asked a complainant seeking an early hearing",
+      "grounded": true
+    },
+    {
+      "id": "f2",
+      "label": "Case type",
+      "value": "criminal defamation",
+      "type": "other",
+      "evidence": "criminal defamation case against Congress leader Rahul Gandhi",
+      "grounded": true
+    },
+    {
+      "id": "f3",
+      "label": "Accused",
+      "value": "Rahul Gandhi",
+      "type": "name",
+      "evidence": "criminal defamation case against Congress leader Rahul Gandhi",
+      "grounded": true
+    },
+    {
+      "id": "f4",
+      "label": "Court direction",
+      "value": "file proper application",
+      "type": "status",
+      "evidence": "to move a proper application",
+      "grounded": true
+    },
+    {
+      "id": "f5",
+      "label": "Chief Justice",
+      "value": "Suryakant",
+      "type": "name",
+      "evidence": "Chief Justice Suryakant responded that all litigants are equal before the court",
+      "grounded": true
+    },
+    {
+      "id": "f6",
+      "label": "Reporting outlet",
+      "value": "News18 Hindi",
+      "type": "attribution",
+      "evidence": "News18 Hindi reported that during the mentioning",
+      "grounded": true
+    },
+    {
+      "id": "f7",
+      "label": "Complainant argument",
+      "value": "Rahul Gandhi not VVIP",
+      "type": "attribution",
+      "evidence": "the complainant's side argued that Rahul Gandhi was not a VVIP",
+      "grounded": true
+    },
+    {
+      "id": "f8",
+      "label": "CJI observation",
+      "value": "everyone equal before court",
+      "type": "attribution",
+      "evidence": "the CJI observed that everyone is equal so far as the court is concerned",
+      "grounded": true
+    },
+    {
+      "id": "f9",
+      "label": "Listing status",
+      "value": "no date stated",
+      "type": "status",
+      "evidence": "whether any date has been fixed",
+      "grounded": true
+    },
+    {
+      "id": "f10",
+      "label": "Complainant identity",
+      "value": "not confirmed",
+      "type": "status",
+      "evidence": "The identity of the complainant, the forum the matter came from, and the alleged defamatory remarks at issue are also not confirmed here.",
+      "grounded": true
+    }
+  ],
+  "outputs": {},
+  "approvals": {},
+  "createdAt": "2026-09-09T07:07:08.340Z",
+  "updatedAt": "2026-09-09T07:07:24.468Z",
+  "brief": {
+    "headline": "Supreme Court tells complainant to file proper plea in Rahul Gandhi defamation case",
+    "body": "The Supreme Court has asked a complainant seeking an early hearing in a criminal defamation case against Congress leader Rahul Gandhi to move a proper application, according to the intake note on this story.\n\nNews18 Hindi reported that during the mentioning, the complainant's side argued that Rahul Gandhi was not a VVIP and that the matter should be taken up sooner. The outlet reported that Chief Justice Suryakant responded that all litigants are equal before the court.\n\nThe intake note records the same exchange, saying the CJI observed that everyone is equal so far as the court is concerned, and that the complainant was directed to file a proper plea rather than press for urgent listing orally.\n\nWhich of the several criminal defamation complaints against the Congress MP this relates to is not stated in the material available on the wire, and the desk should not assume it is any particular case. The identity of the complainant, the forum the matter came from, and the alleged defamatory remarks at issue are also not confirmed here.\n\nNor is there anything in the available material on what the court said about a future listing date, whether any other party was represented, or whether Rahul Gandhi's counsel was present.\n\nBefore publication the desk needs to confirm: the specific case and its origin court; the complainant's name; the exact wording of the CJI's remarks from the court record or a reporter present; the composition of the bench; and whether any date has been fixed. Independent confirmation of the News18 Hindi account is required — none of it should run as established fact until then.",
+    "unverified": true,
+    "sourcedFrom": [
+      "News18 Hindi"
+    ]
+  }
+}
