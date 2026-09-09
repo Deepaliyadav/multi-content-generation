@@ -134,7 +134,10 @@ export const FORMATS = [
     group: 'social',
     kind: 'text',
     blurb: '5–7 swipe slides, hook first, CTA last',
-    maxTokens: 2400,
+    // 2400 was the budget when this was slides only. Adding the Caption and
+    // Hashtags blocks meant a seven-slide carousel ran out of room and dropped
+    // exactly the two blocks that come last.
+    maxTokens: 3600,
     rules: () => [
       'Exactly 5 to 7 slides.',
       'Each slide has TWO lines: line 1 is a short slide headline (max 8 words), line 2 is a one-line supporting caption (max 20 words).',

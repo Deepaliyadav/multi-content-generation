@@ -232,7 +232,7 @@ function Pane({
               those formats. */}
           {onDispatch && destination && destination.kind !== 'instagram' && (
             <button
-              className={`btn btn-sm ${dispatched ? 'btn-ink' : 'btn-primary'}`}
+              className={`btn btn-dest ${dispatched ? 'btn-ink' : 'btn-primary'}`}
               disabled={busy}
               onClick={onDispatch}
               title={

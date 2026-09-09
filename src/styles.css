@@ -2291,3 +2291,20 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .rd-foot .take { margin-left: auto; }
 
 .btn.is-unclaimed:not(.btn-ink) { color: var(--gold); border-color: rgba(217, 164, 65, .4); }
+
+/* The destination button sits in the same row as Regenerate and has to match
+   it. .btn-primary declares its own larger padding, which beats .btn-sm on
+   source order, so the sizing is pinned here — after both — to the same metrics
+   .btn-regen uses. */
+.btn-dest {
+  padding: 8px 18px;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: none;
+  /* .btn-regen has no border; without this the destination button is 2px
+     taller than the one immediately beside it. */
+  border: none;
+}
